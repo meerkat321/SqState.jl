@@ -11,7 +11,7 @@
 The Wigner function is calculate by Moyal function in Fock basis
 
 $$
-W_{mn}(x, p) = \frac{1}{2\pi} \int_{-\infty}^{\infty} dy e^{-ipy/h} <x+\frac{y}{2}|m> <n|x-\frac{y}{2}>
+W_{mn}(x, p) = \frac{1}{2\pi} \int_{-\infty}^{\infty} dy e^{-ipy/h} \psi_m^*(x+\frac{y}{2}) \psi_n(x-\frac{y}{2})
 $$
 
 Owing to the Moyal function is a generalization of the Wigner function. We can therefore implies that
