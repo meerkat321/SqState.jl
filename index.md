@@ -23,3 +23,7 @@ $$
 The squeezed vacuum state shown as below
 
 ![Wigner function heatmap](assets/index/wigner_heatmap.png)
+
+## Example
+
+* [Plot Wigner function](notebook/plot_wigner.jl.html)
