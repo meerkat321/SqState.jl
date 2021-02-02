@@ -1,5 +1,11 @@
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
+## Source code status
+
+![CI](https://github.com/foldfelis/SqState.jl/workflows/CI/badge.svg)
+[![codecov](https://codecov.io/gh/foldfelis/SqState.jl/branch/master/graph/badge.svg?token=LIVF96N05K)](https://codecov.io/gh/foldfelis/SqState.jl)
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
+
 ## Render Wigner function
 
 The Wigner function is calculate by Moyal function in Fock basis
