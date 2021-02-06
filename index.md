@@ -22,7 +22,7 @@ $$
 
 The squeezed vacuum state shown as below
 
-![Wigner function heatmap](assets/index/wigner_heatmap.png)
+![Wigner function surface](assets/index/wigner_surface_banner.png)
 
 ## Example
 
