@@ -4,8 +4,9 @@ using Plots
 export
     Heatmap,
     Contour,
+    Surface,
     plot_wigner,
-    Surface
+    plot_ρ
 
 abstract type PlotMethod end
 
@@ -72,7 +73,7 @@ function plot_wigner(
 )
     gr(size=size)
     lim = maximum(abs.(w))
-    p = surface(
+    p = Plots.surface(
 		wf.xs, wf.ps, w,
 		title="Wigner Function",
         xlabel="X",
@@ -82,6 +83,24 @@ function plot_wigner(
 		c=C_GRAD,
 		camera=(40, 30),
 	)
+
+    isnothing(file_path) || savefig(p, file_path)
+
+    return p
+end
+
+function plot_ρ(ρ::AbstractMatrix; size=(700, 630), file_path=nothing)
+    gr(size=size)
+    ρ² = real(ρ * ρ)
+    lim = maximum(ρ²)
+    p = heatmap(
+        ρ²,
+        title="Density Matrix",
+        xlabel="m",
+        ylabel="n",
+        c=C_GRAD,
+        clim=(-lim, lim)
+    )
 
     isnothing(file_path) || savefig(p, file_path)
 
