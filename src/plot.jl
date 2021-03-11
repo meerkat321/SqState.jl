@@ -89,12 +89,23 @@ function plot_wigner(
     return p
 end
 
-function plot_ρ(ρ::AbstractMatrix; size=(700, 630), file_path=nothing)
-    gr(size=size)
+function plot_ρ(
+    ρ::AbstractMatrix;
+    state_n=0,
+    size=(700, 630),
+    file_path=nothing
+)
     ρ² = real(ρ * ρ)
+    if state_n != 0
+        ρ² = ρ²[1:state_n+1, 1:state_n+1]
+    else
+        state_n = Base.size(ρ²)[1] - 1
+    end
+
+    gr(size=size)
     lim = maximum(ρ²)
     p = heatmap(
-        ρ²,
+        0:state_n, 0:state_n, ρ²,
         title="Density Matrix",
         xlabel="m",
         ylabel="n",

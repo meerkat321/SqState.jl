@@ -23,6 +23,11 @@ function main()
     ########
     # plot #
     ########
+    file_path = joinpath(SqState.PROJECT_PATH, "../data/render", "density_matrix_total.png")
+    p = plot_ρ(ρ, file_path=file_path)
+    file_path = joinpath(SqState.PROJECT_PATH, "../data/render", "density_matrix.png")
+    p = plot_ρ(ρ, state_n=5, file_path=file_path)
+
     file_path = joinpath(SqState.PROJECT_PATH, "../data/render", "wigner_contour.png")
     p = plot_wigner(wf, w, Contour, file_path=file_path)
     file_path = joinpath(SqState.PROJECT_PATH, "../data/render", "wigner_heatmap.png")
