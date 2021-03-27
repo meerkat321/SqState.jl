@@ -37,6 +37,8 @@ function main()
     file_path = joinpath(SqState.PROJECT_PATH, "../data/render", "wigner_surface_banner.png")
     p = plot_wigner(wf, w, Surface, size=(1280, 640), file_path=file_path)
 
+    p = plot_all(wf, w, ρ)
+
     return p
 end
 

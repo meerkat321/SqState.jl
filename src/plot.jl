@@ -6,7 +6,8 @@ export
     Contour,
     Surface,
     plot_wigner,
-    plot_ρ
+    plot_ρ,
+    plot_all
 
 abstract type PlotMethod end
 
@@ -27,7 +28,11 @@ function plot_wigner(
     size=(700, 630),
     file_path=nothing
 )
-    gr(size=size)
+    if isnothing(size)
+        gr()
+    else
+        gr(size=size)
+    end
     lim = maximum(abs.(w))
     p = Plots.heatmap(
         wf.xs, wf.ps, w,
@@ -48,7 +53,11 @@ function plot_wigner(
     size=(700, 630),
     file_path=nothing
 )
-    gr(size=size)
+    if isnothing(size)
+        gr()
+    else
+        gr(size=size)
+    end
     lim = maximum(abs.(w))
     p = Plots.contour(
         wf.xs, wf.ps, w,
@@ -71,7 +80,11 @@ function plot_wigner(
     size=(700, 630),
     file_path=nothing
 )
-    gr(size=size)
+    if isnothing(size)
+        gr()
+    else
+        gr(size=size)
+    end
     lim = maximum(abs.(w))
     p = Plots.surface(
 		wf.xs, wf.ps, w,
@@ -102,9 +115,13 @@ function plot_ρ(
         state_n = Base.size(ρᵣ)[1] - 1
     end
 
-    gr(size=size)
+    if isnothing(size)
+        gr()
+    else
+        gr(size=size)
+    end
     lim = maximum(ρᵣ)
-    p = heatmap(
+    p = Plots.heatmap(
         0:state_n, 0:state_n, ρᵣ,
         title="Density Matrix (Real part)",
         xlabel="m",
@@ -114,6 +131,32 @@ function plot_ρ(
     )
 
     isnothing(file_path) || savefig(p, file_path)
+
+    return p
+end
+
+function plot_all(
+    wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix;
+    state_n=0,
+    size=nothing,
+    file_path=nothing
+)
+    if isnothing(size)
+        gr()
+    else
+        gr(size=size)
+    end
+
+    l = @layout [
+        a{0.6w} grid(2, 1)
+    ]
+
+    p = plot(
+        plot_wigner(wf, w, Surface, size=nothing),
+        plot_wigner(wf, w, Contour, size=nothing),
+        plot_ρ(ρ, state_n=state_n, size=nothing),
+        layout=l
+    )
 
     return p
 end
