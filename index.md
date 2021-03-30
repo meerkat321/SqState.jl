@@ -27,3 +27,4 @@ The squeezed vacuum state shown as below
 ## Example
 
 * [Plot Wigner function](notebook/plot_wigner.jl.html)
+* [Plot Fock state Wigner function](notebook/fock_state.jl.html)
