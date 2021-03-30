@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.20
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -33,13 +33,21 @@ end;
 # ╔═╡ 2fe499fe-6533-11eb-0bcd-9d00d9b4e1d0
 md"
 ## Render Wigner function
+
+The squeezed state data showing bellow is measured in Prof. RK Lee's Lab.
 "
 
 # ╔═╡ 125c6e66-6533-11eb-03b4-7122cc3e5806
 begin
+	# read from HDF5 file:
 	data_path = joinpath(SqState.PROJECT_PATH, "../data", "dm.hdf5")
     data_name = "SQ4"
     ρ = read_ρ(data_path, data_name)
+	
+	# generate Fock state
+	#=
+	ρ = fock_state(0)
+	=#
     w = wf(ρ)
 end;
 
