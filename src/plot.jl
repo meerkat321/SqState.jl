@@ -28,11 +28,8 @@ function plot_wigner(
     size=(700, 630),
     file_path=nothing
 )
-    if isnothing(size)
-        gr()
-    else
-        gr(size=size)
-    end
+    !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
+
     lim = maximum(abs.(w))
     p = Plots.heatmap(
         wf.xs, wf.ps, w,
@@ -53,11 +50,8 @@ function plot_wigner(
     size=(700, 630),
     file_path=nothing
 )
-    if isnothing(size)
-        gr()
-    else
-        gr(size=size)
-    end
+    !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
+
     lim = maximum(abs.(w))
     p = Plots.contour(
         wf.xs, wf.ps, w,
@@ -80,11 +74,8 @@ function plot_wigner(
     size=(700, 630),
     file_path=nothing
 )
-    if isnothing(size)
-        gr()
-    else
-        gr(size=size)
-    end
+    !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
+
     lim = maximum(abs.(w))
     p = Plots.surface(
 		wf.xs, wf.ps, w,
@@ -115,11 +106,8 @@ function plot_ρ(
         state_n = Base.size(ρᵣ)[1] - 1
     end
 
-    if isnothing(size)
-        gr()
-    else
-        gr(size=size)
-    end
+    !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
+
     lim = maximum(ρᵣ)
     p = Plots.heatmap(
         0:state_n, 0:state_n, ρᵣ,
@@ -138,25 +126,18 @@ end
 function plot_all(
     wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix;
     state_n=0,
-    size=nothing,
     file_path=nothing
 )
-    if isnothing(size)
-        gr()
-    else
-        gr(size=size)
-    end
-
-    l = @layout [
-        a{0.6w} grid(2, 1)
-    ]
-
+    gr()
+    l = @layout [a{0.6w} grid(2, 1)]
     p = plot(
         plot_wigner(wf, w, Surface, size=nothing),
         plot_wigner(wf, w, Contour, size=nothing),
         plot_ρ(ρ, state_n=state_n, size=nothing),
         layout=l
     )
+
+    isnothing(file_path) || savefig(p, file_path)
 
     return p
 end
