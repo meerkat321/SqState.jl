@@ -1,12 +1,20 @@
 export
-    fock_state
+    AbstractState,
+    FockState,
+    ρ
 
-function fock_state(n::Integer; ρ_size=35)
+abstract type AbstractState end
+
+struct FockState <: AbstractState
+    n::Int64
+end
+
+function ρ(state::FockState; ρ_size=35)
     # rebase 0-based index system to 1-based
-    n += 1
+    n = state.n + 1
 
-    ρ = zeros(Complex, 35, 35)
-    ρ[n, n] = 1
+    ρ_fock = zeros(Complex, ρ_size, ρ_size)
+    ρ_fock[n, n] = 1
 
-    return ρ
+    return ρ_fock
 end
