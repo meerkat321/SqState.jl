@@ -6,6 +6,7 @@
         ρ_fock[n+1, n+1] = 1
 
         @test ρ(state) == ρ_fock
+        @test purity(state) == 1
     end
 
     for n in 0:34

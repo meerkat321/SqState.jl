@@ -1,9 +1,19 @@
+using LinearAlgebra
+
 export
     AbstractState,
     FockState,
-    ρ
+    ρ,
+    purity
 
 abstract type AbstractState end
+
+function purity(state::AbstractState)
+    _ρ = ρ(state)
+    _ρ /= tr(_ρ)
+
+    return tr(_ρ^2)
+end
 
 struct FockState <: AbstractState
     n::Int64
@@ -17,4 +27,7 @@ function ρ(state::FockState; ρ_size=35)
     ρ_fock[n, n] = 1
 
     return ρ_fock
+end
+
+mutable struct State
 end
