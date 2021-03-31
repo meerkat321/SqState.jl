@@ -12,6 +12,8 @@
     for n in 0:34
         test_ρ_fock_state(n)
     end
+
+    @test VacuumState() == FockState(0)
 end
 
 @testset "superposition state" begin

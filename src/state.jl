@@ -6,6 +6,7 @@ export
     ρ,
 
     FockState,
+    VacuumState,
     Arg,
     SuperpositionState
 
@@ -16,6 +17,8 @@ purity(state::AbstractState) =  tr(ρ(state)^2)
 struct FockState <: AbstractState
     n::Int64
 end
+
+VacuumState() = FockState(0)
 
 function ρ(state::FockState; ρ_size=35)
     # rebase 0-based index system to 1-based
