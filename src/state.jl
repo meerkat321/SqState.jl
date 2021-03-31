@@ -7,6 +7,7 @@ export
 
     FockState,
     VacuumState,
+    SinglePhotonState,
     Arg,
     SuperpositionState
 
@@ -19,6 +20,8 @@ struct FockState <: AbstractState
 end
 
 VacuumState() = FockState(0)
+
+SinglePhotonState() = FockState(1)
 
 function ρ(state::FockState; ρ_size=35)
     # rebase 0-based index system to 1-based

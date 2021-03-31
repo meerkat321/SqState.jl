@@ -14,6 +14,7 @@
     end
 
     @test VacuumState() == FockState(0)
+    @test SinglePhotonState() == FockState(1)
 end
 
 @testset "superposition state" begin
