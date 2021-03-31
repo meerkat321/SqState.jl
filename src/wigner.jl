@@ -56,8 +56,8 @@ function WignerFunction(xs::Vector, ps::Vector)
     return WignerFunction(0, 0, xs, ps)
 end
 
-function WignerFunction(xs::StepRangeLen, ps::StepRangeLen; ρ_size=35)
-    return WignerFunction(ρ_size, ρ_size, xs, ps)
+function WignerFunction(xs::StepRangeLen, ps::StepRangeLen; dim=35)
+    return WignerFunction(dim, dim, xs, ps)
 end
 
 function (wf::WignerFunction)(ρ::AbstractMatrix)

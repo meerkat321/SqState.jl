@@ -15,6 +15,7 @@ export
     create,
 
     Arg,
+    displacement,
     CoherentState
 
 abstract type AbstractState end
@@ -28,9 +29,11 @@ end
 
 struct Zero <: AbstractState end
 
-Base.show(io::IO, zero::Zero) = print(io, "0")
+Base.show(io::IO, ::Zero) = print(io, "0")
 
-ρ(zero::Zero; ρ_size=35) = 0
+Base.vec(::Zero; dim=35) = 0
+
+ρ(::Zero; dim=35) = 0
 
 struct FockState <: AbstractState
     n::Int64
@@ -56,11 +59,21 @@ function create(state::FockState)
     return FockState(state.n+1, state.w*sqrt(state.n+1))
 end
 
-function ρ(state::FockState; ρ_size=35)
+function Base.vec(state::FockState; dim=35)
     # rebase 0-based index system to 1-based
     n = state.n + 1
 
-    ρ_fock = zeros(Complex, ρ_size, ρ_size)
+    v_fock = zeros(Complex, 35)
+    v_fock[n] = state.w
+
+    return v_fock
+end
+
+function ρ(state::FockState; dim=35)
+    # rebase 0-based index system to 1-based
+    n = state.n + 1
+
+    ρ_fock = zeros(Complex, dim, dim)
     ρ_fock[n, n] = state.w
 
     return ρ_fock
@@ -81,10 +94,10 @@ end
 
 Base.show(io::IO, state::CoherentState) = print(io, "D($(state.α))|0⟩")
 
-function displacement(α::Arg, ρ_size::Integer)
+function displacement(α::Arg, dim::Integer)
     α₀ = exp(-(abs(α.r)^2)/2)
 
-    c(n::Integer) = z(α)^n / factorial(big(n))
+    c(n::Integer) = ComplexF64(z(α)^n / factorial(big(n)))
 
     function creationⁿ(n::Integer, state::FockState)
         for i in 1:n
@@ -94,9 +107,12 @@ function displacement(α::Arg, ρ_size::Integer)
         return state
     end
 
-    return (s::FockState) -> α₀ * sum([ComplexF64(c(n)) * ρ(creationⁿ(n, s)) for n in 0:ρ_size-1])
+    return (s::FockState) -> α₀ * sum([c(n) * vec(creationⁿ(n, s)) for n in 0:dim-1])
 end
 
-function ρ(state::CoherentState; ρ_size=35)
-    return displacement(state.α, ρ_size)(VacuumState())
+Base.vec(state::CoherentState; dim=35) = displacement(state.α, dim)(VacuumState())
+
+function ρ(state::CoherentState; dim=35)
+    coherent_state_vec = vec(state, dim=dim)
+    return coherent_state_vec * coherent_state_vec'
 end
