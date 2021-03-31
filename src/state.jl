@@ -11,7 +11,8 @@ export
     VacuumState,
     SinglePhotonState,
     NumberState,
-    a,
+    destroy,
+    create,
 
     Arg,
     SuperpositionState
@@ -46,9 +47,13 @@ SinglePhotonState() = FockState(1)
 
 NumberState(n::Integer) = FockState(n)
 
-function a(state::FockState)
+function destroy(state::FockState)
     (state.n == 0) && (return Zero())
     return FockState(state.n-1, state.w*sqrt(state.n))
+end
+
+function create(state::FockState)
+    return FockState(state.n+1, state.w*sqrt(state.n+1))
 end
 
 function ρ(state::FockState; ρ_size=35)

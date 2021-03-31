@@ -26,25 +26,34 @@ end
 end
 
 @testset "a and a†" begin
-    fock_state = FockState(5)
+    fock_state = VacuumState()
+    fock_state = destroy(fock_state)
+    @test fock_state isa Zero
 
-    fock_state = a(fock_state)
+    fock_state = FockState(5)
+    fock_state = destroy(fock_state)
     @test fock_state.n == 4
     @test fock_state.w == sqrt(5)
-
-    fock_state = a(fock_state)
+    fock_state = destroy(fock_state)
     @test fock_state.n == 3
     @test fock_state.w == sqrt(5) * sqrt(4)
-
-    fock_state = a(fock_state)
+    fock_state = destroy(fock_state)
     @test fock_state.n == 2
     @test fock_state.w == sqrt(5) * sqrt(4) * sqrt(3)
 
 
     fock_state = VacuumState()
+    fock_state = create(fock_state)
+    @test fock_state.n == 1
+    @test fock_state.w == sqrt(1)
 
-    fock_state = a(fock_state)
-    @test fock_state isa Zero
+    fock_state = create(fock_state)
+    @test fock_state.n == 2
+    @test fock_state.w == sqrt(1) * sqrt(2)
+
+    fock_state = create(fock_state)
+    @test fock_state.n == 3
+    @test fock_state.w == sqrt(1) * sqrt(2) * sqrt(3)
 end
 
 @testset "Arg" begin
