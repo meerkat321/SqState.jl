@@ -29,6 +29,6 @@ end
     wf.n_dim = n_dim
     @test size(wf.W) == (m_dim, n_dim, length(xs), length(ps))
 
-    wf = WignerFunction(xs, ps, ρ_size=m_dim)
+    wf = WignerFunction(xs, ps, dim=m_dim)
     @test size(wf.W) == (m_dim, n_dim, length(xs), length(ps))
 end
