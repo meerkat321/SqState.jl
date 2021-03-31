@@ -2,18 +2,16 @@ using LinearAlgebra
 
 export
     AbstractState,
-    FockState,
+    purity,
     ρ,
-    purity
+
+    FockState,
+    Arg,
+    SuperpositionState
 
 abstract type AbstractState end
 
-function purity(state::AbstractState)
-    _ρ = ρ(state)
-    _ρ /= tr(_ρ)
-
-    return tr(_ρ^2)
-end
+purity(state::AbstractState) =  tr(ρ(state)^2)
 
 struct FockState <: AbstractState
     n::Int64
@@ -29,5 +27,34 @@ function ρ(state::FockState; ρ_size=35)
     return ρ_fock
 end
 
-mutable struct State
+struct Arg
+    r::Real
+    θ::Real
+end
+
+z(arg::Arg) = arg.r * exp(im*arg.θ)
+
+mutable struct SuperpositionState
+    states::Vector{AbstractState}
+    args::Vector{Arg}
+end
+
+SuperpositionState() = SuperpositionState(Vector{AbstractState}(), Vector{Arg}())
+
+function Base.push!(
+    superposition_state::SuperpositionState,
+    state::AbstractState,
+    arg::Arg
+)
+    push!(superposition_state.states, state)
+    push!(superposition_state.args, arg)
+
+    return superposition_state
+end
+
+function ρ(state::SuperpositionState; ρ_size=35)
+    ρ_superposition = sum(z.(state.args) .* ρ.(state.states))
+    ρ_superposition /= tr(ρ_superposition)
+
+    return ρ_superposition
 end
