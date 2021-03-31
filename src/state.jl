@@ -103,8 +103,4 @@ function Base.push!(
     return superposition_state
 end
 
-function ρ(state::SuperpositionState; ρ_size=35)
-    ρ_superposition = sum(z.(state.args) .* ρ.(state.states))
-
-    return ρ_superposition
-end
+ρ(state::SuperpositionState; ρ_size=35) = sum(z.(state.args) .* ρ.(state.states))
