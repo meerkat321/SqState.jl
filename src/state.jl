@@ -8,6 +8,7 @@ export
     FockState,
     VacuumState,
     SinglePhotonState,
+    NumberState,
     Arg,
     SuperpositionState
 
@@ -22,6 +23,8 @@ end
 VacuumState() = FockState(0)
 
 SinglePhotonState() = FockState(1)
+
+NumberState(n::Integer) = FockState(n)
 
 function ρ(state::FockState; ρ_size=35)
     # rebase 0-based index system to 1-based
