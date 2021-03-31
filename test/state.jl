@@ -1,3 +1,9 @@
+@testset "zero" begin
+    state = Zero()
+    @test ρ(state) == 0
+    @test repr(state) == "0"
+end
+
 @testset "fock state" begin
     function test_ρ_fock_state(n)
         state = FockState(n)
@@ -7,6 +13,7 @@
 
         @test ρ(state) == ρ_fock
         @test purity(state) == 1
+        @test repr(state) == "(1.0 + 0.0im)|$n⟩"
     end
 
     for n in 0:34
@@ -16,6 +23,16 @@
     @test VacuumState() == FockState(0)
     @test SinglePhotonState() == FockState(1)
     @test NumberState(5) == FockState(5)
+end
+
+@testset "a and a†" begin
+
+end
+
+@testset "Arg" begin
+    arg = Arg(2, π/4)
+    @test SqState.z(arg) == arg.r * exp(im*arg.θ)
+    @test repr(arg) == "2exp[$(π/4)im]"
 end
 
 @testset "superposition state" begin
@@ -36,10 +53,10 @@ end
         for col in 1:35
             if (row == 0+1 && col == 0+1)
                 @test ρ_superposition[row, col] ==
-                    (arg0.r * exp(im*arg0.θ)) * 1 / normalize_c
+                    (arg0.r * exp(im*arg0.θ)) * 1
             elseif (row == 2+1 && col == 2+1)
                 @test ρ_superposition[row, col] ==
-                    (arg2.r * exp(im*arg2.θ)) * 1 / normalize_c
+                    (arg2.r * exp(im*arg2.θ)) * 1
             else
                 @test ρ_superposition[row, col] == 0
             end
@@ -50,4 +67,5 @@ end
         ((arg0.r * exp(im*arg0.θ)) * 1 / normalize_c)^2 +
         ((arg2.r * exp(im*arg2.θ)) * 1 / normalize_c)^2
     )
+    @test repr(superposition_state) == "($arg0)(1.0 + 0.0im)|0⟩ + ($arg2)(1.0 + 0.0im)|2⟩"
 end
