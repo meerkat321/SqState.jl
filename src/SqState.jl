@@ -2,7 +2,7 @@ module SqState
 
     const PROJECT_PATH = @__DIR__
 
-    include("data_generator/data_generator.jl")
+    include("state.jl")
 
     include("read.jl")
     include("utils.jl")
