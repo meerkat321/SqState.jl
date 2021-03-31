@@ -45,4 +45,9 @@ end
             end
         end
     end
+
+    @test purity(superposition_state) == real(
+        ((arg0.r * exp(im*arg0.θ)) * 1 / normalize_c)^2 +
+        ((arg2.r * exp(im*arg2.θ)) * 1 / normalize_c)^2
+    )
 end

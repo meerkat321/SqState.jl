@@ -14,7 +14,7 @@ export
 
 abstract type AbstractState end
 
-purity(state::AbstractState) =  tr(ρ(state)^2)
+purity(state::AbstractState) =  real(tr(ρ(state)^2))
 
 struct FockState <: AbstractState
     n::Int64
@@ -43,7 +43,7 @@ end
 
 z(arg::Arg) = arg.r * exp(im*arg.θ)
 
-mutable struct SuperpositionState
+mutable struct SuperpositionState <: AbstractState
     states::Vector{AbstractState}
     args::Vector{Arg}
 end
