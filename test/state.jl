@@ -61,38 +61,3 @@ end
     @test SqState.z(arg) == arg.r * exp(im*arg.θ)
     @test repr(arg) == "2.0 exp[$(π/4)im]"
 end
-
-@testset "superposition state" begin
-    s0 = FockState(0)
-    arg0 = Arg(2, π/4)
-    s2 = FockState(2)
-    arg2 = Arg(5, π/4)
-
-    superposition_state = SuperpositionState()
-    push!(superposition_state, s0, arg0)
-    push!(superposition_state, s2, arg2)
-
-    ρ_superposition = ρ(superposition_state)
-
-    normalize_c = (arg0.r * exp(im*arg0.θ))*1 + (arg2.r * exp(im*arg2.θ))*1
-
-    for row in 1:35
-        for col in 1:35
-            if (row == 0+1 && col == 0+1)
-                @test ρ_superposition[row, col] ==
-                    (arg0.r * exp(im*arg0.θ)) * 1
-            elseif (row == 2+1 && col == 2+1)
-                @test ρ_superposition[row, col] ==
-                    (arg2.r * exp(im*arg2.θ)) * 1
-            else
-                @test ρ_superposition[row, col] == 0
-            end
-        end
-    end
-
-    @test purity(superposition_state) == real(
-        ((arg0.r * exp(im*arg0.θ)) * 1 / normalize_c)^2 +
-        ((arg2.r * exp(im*arg2.θ)) * 1 / normalize_c)^2
-    )
-    @test repr(superposition_state) == "($arg0)(1.0 + 0.0im)|0⟩ + ($arg2)(1.0 + 0.0im)|2⟩"
-end

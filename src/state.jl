@@ -14,8 +14,7 @@ export
     destroy,
     create,
 
-    Arg,
-    SuperpositionState
+    Arg
 
 abstract type AbstractState end
 
@@ -74,33 +73,3 @@ end
 Base.show(io::IO, arg::Arg) = print(io, "$(arg.r) exp[$(arg.θ)im]")
 
 z(arg::Arg) = arg.r * exp(im*arg.θ)
-
-mutable struct SuperpositionState <: AbstractState
-    states::Vector{AbstractState}
-    args::Vector{Arg}
-end
-
-function Base.show(io::IO, state::SuperpositionState)
-    superposition_state_str = ""
-    for (i, (w, s)) in enumerate(zip(state.args, state.states))
-        (i != 1) && (superposition_state_str *= " + ")
-        superposition_state_str *= "($w)$s"
-    end
-
-    print(io, superposition_state_str)
-end
-
-SuperpositionState() = SuperpositionState(Vector{AbstractState}(), Vector{Arg}())
-
-function Base.push!(
-    superposition_state::SuperpositionState,
-    state::AbstractState,
-    arg::Arg
-)
-    push!(superposition_state.states, state)
-    push!(superposition_state.args, arg)
-
-    return superposition_state
-end
-
-ρ(state::SuperpositionState; ρ_size=35) = sum(z.(state.args) .* ρ.(state.states))
