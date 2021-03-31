@@ -42,17 +42,18 @@ begin
 	# read from HDF5 file:
 	data_path = joinpath(SqState.PROJECT_PATH, "../data", "dm.hdf5")
     data_name = "SQ4"
-    ρ = read_ρ(data_path, data_name)
+    ρ_data = read_ρ(data_path, data_name)
 	
 	# generate Fock state
 	#=
-	ρ = fock_state(0)
+	state = FockState(0)
+    ρ_data = ρ(state)
 	=#
-    w = wf(ρ)
+    w = wf(ρ_data)
 end;
 
 # ╔═╡ ce5a611a-689c-11eb-0bc0-11a765ac2ffa
-@benchmark wf($ρ)
+@benchmark wf($ρ_data)
 
 # ╔═╡ 6cb3a712-6533-11eb-34f3-6339e020be33
 md"
