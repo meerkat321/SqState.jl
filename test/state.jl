@@ -89,4 +89,5 @@ end
     coherent_state = CoherentState(Arg(r, θ))
     @test vec(coherent_state) == displacement(Arg(r, θ), 35)(VacuumState())
     @test ρ(coherent_state) == vec(coherent_state) * vec(coherent_state)'
+    @test repr(coherent_state) == "D($(Arg(r, θ)))|0⟩"
 end
