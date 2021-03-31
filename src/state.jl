@@ -14,7 +14,8 @@ export
     destroy,
     create,
 
-    Arg
+    Arg,
+    CoherentState
 
 abstract type AbstractState end
 
@@ -70,6 +71,32 @@ struct Arg
     θ::Float64
 end
 
-Base.show(io::IO, arg::Arg) = print(io, "$(arg.r) exp[$(arg.θ)im]")
+Base.show(io::IO, arg::Arg) = print(io, "$(arg.r) exp[-$(arg.θ)im]")
 
-z(arg::Arg) = arg.r * exp(im*arg.θ)
+z(arg::Arg) = arg.r * exp(-im*arg.θ)
+
+struct CoherentState <: AbstractState
+    α::Arg
+end
+
+Base.show(io::IO, state::CoherentState) = print(io, "D($(state.α))|0⟩")
+
+function displacement(α::Arg, ρ_size::Integer)
+    α₀ = exp(-(abs(α.r)^2)/2)
+
+    c(n::Integer) = z(α)^n / factorial(big(n))
+
+    function creationⁿ(n::Integer, state::FockState)
+        for i in 1:n
+            state = create(state)
+        end
+
+        return state
+    end
+
+    return (s::FockState) -> α₀ * sum([ComplexF64(c(n)) * ρ(creationⁿ(n, s)) for n in 0:ρ_size-1])
+end
+
+function ρ(state::CoherentState; ρ_size=35)
+    return displacement(state.α, ρ_size)(VacuumState())
+end
