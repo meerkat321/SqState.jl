@@ -67,11 +67,11 @@ function ρ(state::FockState; ρ_size=35)
 end
 
 struct Arg
-    r::Real
-    θ::Real
+    r::Float64
+    θ::Float64
 end
 
-Base.show(io::IO, arg::Arg) = print(io, "$(arg.r)exp[$(arg.θ)im]")
+Base.show(io::IO, arg::Arg) = print(io, "$(arg.r) exp[$(arg.θ)im]")
 
 z(arg::Arg) = arg.r * exp(im*arg.θ)
 

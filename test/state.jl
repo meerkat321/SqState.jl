@@ -59,7 +59,7 @@ end
 @testset "Arg" begin
     arg = Arg(2, π/4)
     @test SqState.z(arg) == arg.r * exp(im*arg.θ)
-    @test repr(arg) == "2exp[$(π/4)im]"
+    @test repr(arg) == "2.0 exp[$(π/4)im]"
 end
 
 @testset "superposition state" begin
