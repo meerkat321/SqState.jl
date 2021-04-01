@@ -15,6 +15,7 @@ export
     create,
 
     Arg,
+    createⁿ,
     displacement,
     CoherentState
 
@@ -94,23 +95,23 @@ end
 
 Base.show(io::IO, state::CoherentState) = print(io, "D($(state.α))|0⟩")
 
-function displacement(α::Arg, dim::Integer)
-    α₀ = exp(-(abs(α.r)^2)/2)
-
-    c(n::Integer) = ComplexF64(z(α)^n / factorial(big(n)))
-
-    function creationⁿ(n::Integer, state::FockState)
-        for i in 1:n
-            state = create(state)
-        end
-
-        return state
+function createⁿ(state::FockState, n::Integer)
+    for i in 1:n
+        state = create(state)
     end
 
-    return (s::FockState) -> α₀ * sum([c(n) * vec(creationⁿ(n, s)) for n in 0:dim-1])
+    return state
 end
 
-Base.vec(state::CoherentState; dim=35) = displacement(state.α, dim)(VacuumState())
+c(n::Integer, α::Arg) = ComplexF64(z(α)^n / factorial(big(n)))
+
+function displacement(α::Arg; dim::Integer=35)
+    α₀ = exp(-(abs(α.r)^2)/2)
+
+    return (s::FockState) -> α₀ * sum([c(n, α) * vec(createⁿ(s, n)) for n in 0:dim-1])
+end
+
+Base.vec(state::CoherentState; dim=35) = displacement(state.α, dim=dim)(VacuumState())
 
 function ρ(state::CoherentState; dim=35)
     coherent_state_vec = vec(state, dim=dim)
