@@ -67,19 +67,18 @@ end
 end
 
 @testset "displacement" begin
-    α₀(r) = exp(-(abs(r)^2)/2)
-    c(n, r, θ) = ComplexF64((r * exp(-im*θ))^n / factorial(big(n)))
-    function creationⁿ(n::Integer, state::FockState)
-        for i in 1:n
-            state = create(state)
-        end
-        return state
-    end
+    @test createⁿ(SinglePhotonState(), 3).n == 4
 
     r = 2
     θ = π/4
-    @test displacement(Arg(r, θ), 35)(VacuumState()) ==
-        α₀(r) * sum([c(n, r, θ) * vec(creationⁿ(n, VacuumState())) for n in 0:35-1])
+    α = Arg(r, θ)
+
+    α₀ = exp(-(abs(r)^2)/2)
+    @test displacement(Arg(r, θ))(VacuumState()) == α₀ * sum([
+        ComplexF64((α.r * exp(-im*α.θ))^n / factorial(big(n))) *
+        vec(createⁿ(VacuumState(), n))
+        for n in 0:35-1
+    ])
 
 end
 
@@ -87,7 +86,7 @@ end
     r = 2
     θ = π/4
     coherent_state = CoherentState(Arg(r, θ))
-    @test vec(coherent_state) == displacement(Arg(r, θ), 35)(VacuumState())
+    @test vec(coherent_state) == displacement(Arg(r, θ), dim=35)(VacuumState())
     @test ρ(coherent_state) == vec(coherent_state) * vec(coherent_state)'
     @test repr(coherent_state) == "D($(Arg(r, θ)))|0⟩"
 end
