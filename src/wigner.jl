@@ -19,10 +19,10 @@ wigner(m::Integer, n::Integer) = (x, p)->wigner(m, n, x, p)
 
 function create_wigner(m_dim::Integer, n_dim::Integer, xs, ps)
     W = Array{ComplexF64,4}(undef, m_dim, n_dim, length(xs), length(ps))
-    Threads.@threads for m = 1:m_dim
-        Threads.@threads for n = 1:n_dim
-            Threads.@threads for (x_i, x) = collect(enumerate(xs))
-                Threads.@threads for (p_j, p) = collect(enumerate(ps))
+    @sync for m = 1:m_dim
+        for n = 1:n_dim
+            for (x_i, x) = collect(enumerate(xs))
+                Threads.@spawn for (p_j, p) = collect(enumerate(ps))
                     W[m, n, x_i, p_j] = wigner(m ,n, x, p)
                 end
             end
