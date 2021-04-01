@@ -77,15 +77,15 @@ function plot_wigner(
 
     lim = maximum(abs.(w))
     p = Plots.surface(
-		wf.xs, wf.ps, w,
-		title="Wigner Function",
+        wf.xs, wf.ps, w,
+        title="Wigner Function",
         xlabel="X",
         ylabel="P",
         clim=(-lim, lim),
-		zlim=(-lim, lim),
-		c=C_GRAD,
-		camera=(40, 30),
-	)
+        zlim=(-lim, lim),
+        c=C_GRAD,
+        camera=(40, 30),
+    )
 
     isnothing(file_path) || savefig(p, file_path)
 
