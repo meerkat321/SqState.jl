@@ -11,7 +11,7 @@ export
     VacuumState,
     SinglePhotonState,
     NumberState,
-    destroy,
+    annihilate,
     create,
 
     Arg,
@@ -51,7 +51,7 @@ SinglePhotonState() = FockState(1)
 
 NumberState(n::Integer) = FockState(n)
 
-function destroy(state::FockState)
+function annihilate(state::FockState)
     (state.n == 0) && (return Zero())
     return FockState(state.n-1, state.w*sqrt(state.n))
 end
