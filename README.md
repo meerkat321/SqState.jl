@@ -208,7 +208,7 @@ julia> ρ(state)
 
 ### Initial Wigner Function
 
-The Wigner function is calculate by Moyal function in Fock basis. And due to the fact that the Moyal function is a generalization of the Wigner function. We can therefore implies that
+The Wigner function is calculated by Moyal function in Fock basis. And due to the fact that the Moyal function is a generalization of the Wigner function. We can therefore imply that
 
 **W(x, p) = ∑ ρₘₙ Wₘₙ(x, p)**
 
