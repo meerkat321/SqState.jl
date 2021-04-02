@@ -12,6 +12,24 @@ Squeezed state solver for quantum optics.
 
 ![](gallery/wigner_surface_banner.png)
 
+## Initial Wigner Function
+
+The Wigner function is calculate by Moyal function in Fock basis. And due to the fact that the Moyal function is a generalization of the Wigner function. We can therefore implies that
+
+**W(x, p) = ∑ ρₘₙ Wₘₙ(x, p)**
+
+We can initialize Wigner function as following
+
+```julia
+julia> x_range = -10:0.1:10
+-10.0:0.1:10.0
+
+julia> p_range = -10:0.1:10
+-10.0:0.1:10.0
+
+julia> wf = WignerFunction(x_range, p_range);
+```
+
 ## State
 
 ### Fock state
