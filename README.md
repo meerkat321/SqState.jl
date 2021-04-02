@@ -10,7 +10,7 @@ Squeezed state solver for quantum optics.
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 ![GitHub](https://img.shields.io/github/license/foldfelis/SqState.jl)
 
-![](gallery/wigner_surface_banner.png)
+![](gallery/wigner_surface_|0>.png)
 
 ## Initial Wigner Function
 
@@ -168,5 +168,28 @@ julia> ρ(FockState(3))
  0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
  0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
  0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
-
 ```
+
+## Plot state
+
+### Rander state
+
+```julia
+julia> w = wf(ρ(SinglePhotonState()));
+```
+
+### Plot **Surface** of the state
+
+```julia
+julia> plot_wigner(wf, w, Surface, size=(640, 320))
+```
+
+![](gallary/../gallery/wigner_surface_|1>.png)
+
+### Plot **Contour** of the state
+
+```julia
+julia> plot_wigner(wf, w, Contour, size=(640, 600))
+```
+
+![](gallary/../gallery/wigner_contour_|1>.png)
