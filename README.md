@@ -81,3 +81,74 @@ julia> createⁿ(VacuumState(), 3)
 julia> annihilateⁿ(FockState(5), 3)
 (7.745966692414834 + 0.0im)|2⟩
 ```
+
+State vector of Fock state
+
+```julia
+julia> vec(VacuumState())
+35-element Vector{Complex}:
+ 1.0 + 0.0im
+   0 + 0im
+   0 + 0im
+   0 + 0im
+     ⋮
+   0 + 0im
+   0 + 0im
+
+julia> vec(SinglePhotonState())
+35-element Vector{Complex}:
+   0 + 0im
+ 1.0 + 0.0im
+   0 + 0im
+   0 + 0im
+     ⋮
+   0 + 0im
+   0 + 0im
+
+   julia> vec(FockState(3))
+35-element Vector{Complex}:
+   0 + 0im
+   0 + 0im
+   0 + 0im
+ 1.0 + 0.0im
+     ⋮
+   0 + 0im
+   0 + 0im
+   0 + 0im
+```
+
+Density matrix of Fock state
+
+```julia
+julia> ρ(VacuumState())
+35×35 Matrix{Complex}:
+ 1.0+0.0im  0+0im  0+0im  0+0im  …  0+0im  0+0im  0+0im  0+0im  0+0im
+   0+0im    0+0im  0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+   0+0im    0+0im  0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+   0+0im    0+0im  0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+    ⋮                            ⋱   ⋮
+   0+0im    0+0im  0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+   0+0im    0+0im  0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+
+julia> ρ(SinglePhotonState())
+35×35 Matrix{Complex}:
+ 0+0im    0+0im    0+0im  0+0im  …  0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im  1.0+0.0im  0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im    0+0im    0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im    0+0im    0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+  ⋮                              ⋱   ⋮
+ 0+0im    0+0im    0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im    0+0im    0+0im  0+0im     0+0im  0+0im  0+0im  0+0im  0+0im
+
+julia> ρ(FockState(3))
+35×35 Matrix{Complex}:
+ 0+0im  0+0im  0+0im    0+0im    …  0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im  0+0im  0+0im  1.0+0.0im     0+0im  0+0im  0+0im  0+0im  0+0im
+  ⋮                              ⋱   ⋮
+ 0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
+ 0+0im  0+0im  0+0im    0+0im       0+0im  0+0im  0+0im  0+0im  0+0im
+
+```
