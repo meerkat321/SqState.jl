@@ -18,7 +18,7 @@ Squeezed state solver for quantum optics.
 
 The following example shows how to construct Fock states.
 
-```julia-repl
+```julia
 julia> FockState(0)
 (1.0 + 0.0im)|0⟩
 
@@ -31,7 +31,7 @@ julia> FockState(2)
 
 The alias is also acceptable.
 
-```julia-repl
+```julia
 julia> VacuumState()
 (1.0 + 0.0im)|0⟩
 
@@ -44,7 +44,7 @@ julia> NumberState(2)
 
 The Fock state can be also constructed by applying `create` operator to vacuum state, or by applying `annihilate` operator to `FockState(n)`.
 
-```julia-repl
+```julia
 julia> state = VacuumState()
 (1.0 + 0.0im)|0⟩
 
@@ -58,7 +58,7 @@ julia> create(create(create(state)))
 (2.4494897427831783 + 0.0im)|3⟩
 ```
 
-```julia-repl
+```julia
 julia> state = FockState(5)
 (1.0 + 0.0im)|5⟩
 
@@ -74,7 +74,7 @@ julia> annihilate(annihilate(annihilate(state)))
 
 Or simply use `createⁿ` operator and `annihilateⁿ` operator.
 
-```julia-repl
+```julia
 julia> createⁿ(VacuumState(), 3)
 (2.4494897427831783 + 0.0im)|3⟩
 
