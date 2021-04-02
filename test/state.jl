@@ -3,6 +3,11 @@
     @test vec(state) == 0
     @test ρ(state) == 0
     @test repr(state) == "0"
+
+    @test annihilate(state) isa Zero
+    @test create(state) isa Zero
+    @test annihilateⁿ(state, 5) isa Zero
+    @test createⁿ(state, 5) isa Zero
 end
 
 @testset "fock state" begin
@@ -31,33 +36,37 @@ end
 
 @testset "a and a†" begin
     fock_state = VacuumState()
-    fock_state = destroy(fock_state)
+    fock_state = annihilate(fock_state)
     @test fock_state isa Zero
 
     fock_state = FockState(5)
-    fock_state = destroy(fock_state)
+    fock_state = annihilate(fock_state)
     @test fock_state.n == 4
     @test fock_state.w == sqrt(5)
-    fock_state = destroy(fock_state)
+    fock_state = annihilate(fock_state)
     @test fock_state.n == 3
     @test fock_state.w == sqrt(5) * sqrt(4)
-    fock_state = destroy(fock_state)
+    fock_state = annihilate(fock_state)
     @test fock_state.n == 2
     @test fock_state.w == sqrt(5) * sqrt(4) * sqrt(3)
-
 
     fock_state = VacuumState()
     fock_state = create(fock_state)
     @test fock_state.n == 1
     @test fock_state.w == sqrt(1)
-
     fock_state = create(fock_state)
     @test fock_state.n == 2
     @test fock_state.w == sqrt(1) * sqrt(2)
-
     fock_state = create(fock_state)
     @test fock_state.n == 3
     @test fock_state.w == sqrt(1) * sqrt(2) * sqrt(3)
+
+    @test createⁿ(SinglePhotonState(), 3).n == 4
+    @test annihilateⁿ(FockState(5), 3).n == 2
+    @test annihilateⁿ(FockState(5), 5).n == 0
+    @test annihilateⁿ(FockState(5), 6) isa Zero
+    @test annihilateⁿ(FockState(5), 7) isa Zero
+    @test annihilateⁿ(FockState(5), 9) isa Zero
 end
 
 @testset "Arg" begin
@@ -67,8 +76,6 @@ end
 end
 
 @testset "displacement" begin
-    @test createⁿ(SinglePhotonState(), 3).n == 4
-
     r = 2
     θ = π/4
     α = Arg(r, θ)

@@ -11,11 +11,12 @@ export
     VacuumState,
     SinglePhotonState,
     NumberState,
-    destroy,
+    annihilate,
     create,
+    createⁿ,
+    annihilateⁿ,
 
     Arg,
-    createⁿ,
     displacement,
     CoherentState
 
@@ -29,6 +30,14 @@ function purity(state::AbstractState)
 end
 
 struct Zero <: AbstractState end
+
+annihilate(state::Zero) = state
+
+annihilateⁿ(state::Zero, ::Integer) = state
+
+create(state::Zero) = state
+
+createⁿ(state::Zero, ::Integer) = state
 
 Base.show(io::IO, ::Zero) = print(io, "0")
 
@@ -51,13 +60,29 @@ SinglePhotonState() = FockState(1)
 
 NumberState(n::Integer) = FockState(n)
 
-function destroy(state::FockState)
+function annihilate(state::FockState)
     (state.n == 0) && (return Zero())
     return FockState(state.n-1, state.w*sqrt(state.n))
 end
 
+function annihilateⁿ(state::FockState, n::Integer)
+    for i in 1:n
+        state = annihilate(state)
+    end
+
+    return state
+end
+
 function create(state::FockState)
     return FockState(state.n+1, state.w*sqrt(state.n+1))
+end
+
+function createⁿ(state::FockState, n::Integer)
+    for i in 1:n
+        state = create(state)
+    end
+
+    return state
 end
 
 function Base.vec(state::FockState; dim=35)
@@ -94,14 +119,6 @@ struct CoherentState <: AbstractState
 end
 
 Base.show(io::IO, state::CoherentState) = print(io, "D($(state.α))|0⟩")
-
-function createⁿ(state::FockState, n::Integer)
-    for i in 1:n
-        state = create(state)
-    end
-
-    return state
-end
 
 c(n::Integer, α::Arg) = ComplexF64(z(α)^n / factorial(big(n)))
 
