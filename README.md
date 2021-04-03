@@ -29,7 +29,7 @@ julia> FockState(2)
 (1.0 + 0.0im)|2⟩
 ```
 
-The alias is also acceptable.
+The alias are also acceptable.
 
 ```julia
 julia> VacuumState()
