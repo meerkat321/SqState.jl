@@ -1,6 +1,15 @@
 module SqState
+    using DataDeps
 
-    const PROJECT_PATH = @__DIR__
+    function __init__()
+        register(DataDep(
+            "SqState",
+            """
+            Data for SqState.
+            """,
+            ""
+        ))
+    end
 
     include("state.jl")
 
@@ -9,5 +18,4 @@ module SqState
     include("polynomial.jl")
     include("wigner.jl")
     include("plot.jl")
-
 end

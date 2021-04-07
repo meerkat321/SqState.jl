@@ -10,7 +10,7 @@ Squeezed state solver for quantum optics.
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 ![GitHub](https://img.shields.io/github/license/foldfelis/SqState.jl)
 
-![](gallery/wigner_surface_0.png)
+![](gallery/wigner_surface_banner.png)
 
 ## State
 
