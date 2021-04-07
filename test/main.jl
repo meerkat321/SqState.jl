@@ -46,7 +46,7 @@ function plot_data(wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix)
     p = plot_all(wf, w, ρ, file_path=file_path)
 end
 
-function run_main()
+function main()
     x_range = -10:0.1:10
     p_range = -10:0.1:10
     wf = init_wigner(x_range, p_range)
@@ -55,3 +55,5 @@ function run_main()
 
     plot_data(wf, w, ρ)
 end
+
+main()
