@@ -10,7 +10,7 @@ Squeezed state solver for quantum optics.
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 ![GitHub](https://img.shields.io/github/license/foldfelis/SqState.jl)
 
-![](gallery/wigner_surface_|0>.png)
+![](gallery/wigner_surface_0.png)
 
 ## State
 
@@ -236,7 +236,7 @@ julia> w = wf(ρ(SinglePhotonState()));
 julia> plot_wigner(wf, w, Surface, size=(640, 320))
 ```
 
-![](gallary/../gallery/wigner_surface_|1>.png)
+![](gallery/wigner_surface_1.png)
 
 ### Plot **Contour** of the state
 
@@ -244,4 +244,4 @@ julia> plot_wigner(wf, w, Surface, size=(640, 320))
 julia> plot_wigner(wf, w, Contour, size=(640, 600))
 ```
 
-![](gallary/../gallery/wigner_contour_|1>.png)
+![](gallery/wigner_contour_1.png)
