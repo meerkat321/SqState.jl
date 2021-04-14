@@ -17,18 +17,6 @@ end
         @test e == ans[i]
     end
 
-    wf = WignerFunction(m_dim, n_dim)
-    @test size(wf.W) == (0, 0, 0, 0)
-    wf.xs = xs
-    wf.ps = ps
-    @test size(wf.W) == (m_dim, n_dim, length(xs), length(ps))
-
-    wf = WignerFunction(collect(xs), collect(ps))
-    @test size(wf.W) == (0, 0, 0, 0)
-    wf.m_dim = m_dim
-    wf.n_dim = n_dim
-    @test size(wf.W) == (m_dim, n_dim, length(xs), length(ps))
-
     wf = WignerFunction(xs, ps, dim=m_dim)
     @test size(wf.W) == (m_dim, n_dim, length(xs), length(ps))
 end

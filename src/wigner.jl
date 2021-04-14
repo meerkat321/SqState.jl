@@ -19,7 +19,7 @@ end
 
 wigner(m::Integer, n::Integer) = (x, p)->wigner(m, n, x, p)
 
-function create_wigner(m_dim::Integer, n_dim::Integer, xs, ps)
+function create_wigner(m_dim::Integer, n_dim::Integer, xs::AbstractRange, ps::AbstractRange)
     W = Array{ComplexF64,4}(undef, m_dim, n_dim, length(xs), length(ps))
     @sync for m in 1:m_dim
         for n in 1:n_dim
@@ -48,7 +48,7 @@ mutable struct WignerFunction{T<:Integer}
     ps
     W::Array{ComplexF64,4}
 
-    function WignerFunction(m_dim::T, n_dim::T, xs, ps) where {T<:Integer}
+    function WignerFunction(m_dim::T, n_dim::T, xs::AbstractRange, ps::AbstractRange) where {T<:Integer}
         path = @datadep_str "SqState"
         bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(xs)_$(ps).bin")
         if isfile(bin_path)
@@ -69,15 +69,7 @@ mutable struct WignerFunction{T<:Integer}
     end
 end
 
-function WignerFunction(m_dim::T, n_dim::T) where {T<:Integer}
-    return WignerFunction(m_dim, n_dim, [], [])
-end
-
-function WignerFunction(xs::Vector, ps::Vector)
-    return WignerFunction(0, 0, xs, ps)
-end
-
-function WignerFunction(xs::StepRangeLen, ps::StepRangeLen; dim=35)
+function WignerFunction(xs::AbstractRange, ps::AbstractRange; dim=35)
     return WignerFunction(dim, dim, xs, ps)
 end
 
