@@ -19,12 +19,12 @@ end
 
 wigner(m::Integer, n::Integer) = (x, p)->wigner(m, n, x, p)
 
-function create_wigner(m_dim::Integer, n_dim::Integer, xs::AbstractRange, ps::AbstractRange)
-    W = Array{ComplexF64,4}(undef, m_dim, n_dim, length(xs), length(ps))
+function create_wigner(m_dim::Integer, n_dim::Integer, x_range::AbstractRange, p_range::AbstractRange)
+    W = Array{ComplexF64,4}(undef, m_dim, n_dim, length(x_range), length(p_range))
     @sync for m in 1:m_dim
         for n in 1:n_dim
-            for (x_i, x) in enumerate(xs)
-                Threads.@spawn for (p_j, p) in enumerate(ps)
+            for (x_i, x) in enumerate(x_range)
+                Threads.@spawn for (p_j, p) in enumerate(p_range)
                     W[m, n, x_i, p_j] = wigner(m ,n, x, p)
                 end
             end
@@ -32,7 +32,7 @@ function create_wigner(m_dim::Integer, n_dim::Integer, xs::AbstractRange, ps::Ab
     end
 
     path = @datadep_str "SqState"
-    bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(xs)_$(ps).bin")
+    bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(x_range)_$(p_range).bin")
     @info "Save W_{m,n,x,p} to $bin_path"
     mem = open(bin_path, "w+")
     write(mem, W)
@@ -44,51 +44,39 @@ end
 mutable struct WignerFunction{T<:Integer}
     m_dim::T
     n_dim::T
-    xs
-    ps
+    x_range
+    p_range
     W::Array{ComplexF64,4}
 
-    function WignerFunction(m_dim::T, n_dim::T, xs::AbstractRange, ps::AbstractRange) where {T<:Integer}
+    function WignerFunction(m_dim::T, n_dim::T, x_range::AbstractRange, p_range::AbstractRange) where {T<:Integer}
         path = @datadep_str "SqState"
-        bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(xs)_$(ps).bin")
+        bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(x_range)_$(p_range).bin")
         if isfile(bin_path)
             @info "Load W_{m,n,x,p} from $bin_path"
             mem = open(bin_path)
-            W = Mmap.mmap(mem, Array{ComplexF64,4}, (m_dim, n_dim, length(xs), length(ps)))
+            W = Mmap.mmap(mem, Array{ComplexF64,4}, (m_dim, n_dim, length(x_range), length(p_range)))
 
-            return new{T}(m_dim, n_dim, xs, ps, W)
+            return new{T}(m_dim, n_dim, x_range, p_range, W)
         end
 
-        if check_zero(m_dim, n_dim) && check_empty(xs, ps)
-            W = create_wigner(m_dim, n_dim, xs, ps)
+        if check_zero(m_dim, n_dim) && check_empty(x_range, p_range)
+            W = create_wigner(m_dim, n_dim, x_range, p_range)
         else
             W = Array{ComplexF64,4}(undef, 0, 0, 0, 0)
         end
 
-        return new{T}(m_dim, n_dim, xs, ps, W)
+        return new{T}(m_dim, n_dim, x_range, p_range, W)
     end
 end
 
-function WignerFunction(xs::AbstractRange, ps::AbstractRange; dim=35)
-    return WignerFunction(dim, dim, xs, ps)
+function WignerFunction(x_range::AbstractRange, p_range::AbstractRange; dim=35)
+    return WignerFunction(dim, dim, x_range, p_range)
 end
 
 function (wf::WignerFunction)(ρ::AbstractMatrix)
-    reshape(real(sum(ρ .* wf.W, dims=(1, 2))), length(wf.xs), length(wf.ps))
-end
-
-function Base.setproperty!(wf::WignerFunction, name::Symbol, x)
-    setfield!(wf, name, x)
-    m_dim = getproperty(wf, :m_dim)
-    n_dim = getproperty(wf, :n_dim)
-    xs = getproperty(wf, :xs)
-    ps = getproperty(wf, :ps)
-    if check_zero(m_dim, n_dim) && check_empty(xs, ps)
-        W = create_wigner(m_dim, n_dim, xs, ps)
-        setfield!(wf, :W, W)
-    end
+    reshape(real(sum(ρ .* wf.W, dims=(1, 2))), length(wf.x_range), length(wf.p_range))
 end
 
 check_zero(m_dim, n_dim) = !iszero(m_dim) && !iszero(n_dim)
 
-check_empty(xs, ps) = !isempty(xs) && !isempty(ps)
+check_empty(x_range, p_range) = !isempty(x_range) && !isempty(p_range)
