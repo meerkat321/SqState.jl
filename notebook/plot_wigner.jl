@@ -41,7 +41,7 @@ The squeezed state data showing bellow is measured in Prof. RK Lee's Lab.
 # ╔═╡ 125c6e66-6533-11eb-03b4-7122cc3e5806
 begin
 	# read from HDF5 file:
-	data_path = @datadep_str "SqState/dm.h5"
+	data_path = @datadep_str "SqState/data/dm.h5"
     data_name = "SQ4"
     ρ_data = read_ρ(data_path, data_name)
 	
