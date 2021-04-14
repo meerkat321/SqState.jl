@@ -56,6 +56,9 @@ mutable struct WignerFunction{T<:Integer, U<:AbstractRange}
         x_range::U,
         p_range::U
     ) where {T<:Integer, U<:AbstractRange}
+        !check_argv(m_dim, n_dim, x_range, p_range) && throw(ArgumentError)
+
+        # load from Mmap
         path = datadep"SqState"
         bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(x_range)_$(p_range).bin")
         if isfile(bin_path)
@@ -63,12 +66,7 @@ mutable struct WignerFunction{T<:Integer, U<:AbstractRange}
             return new{T, U}(m_dim, n_dim, x_range, p_range, 𝐰)
         end
 
-        if check_zero(m_dim, n_dim) && check_empty(x_range, p_range)
-            𝐰 = create_wigner(m_dim, n_dim, x_range, p_range)
-        else
-            𝐰 = Array{ComplexF64,4}(undef, 0, 0, 0, 0)
-        end
-
+        𝐰 = create_wigner(m_dim, n_dim, x_range, p_range)
         return new{T, U}(m_dim, n_dim, x_range, p_range, 𝐰)
     end
 end
@@ -110,3 +108,7 @@ end
 check_zero(m_dim, n_dim) = !iszero(m_dim) && !iszero(n_dim)
 
 check_empty(x_range, p_range) = !isempty(x_range) && !isempty(p_range)
+
+function check_argv(m_dim, n_dim, x_range, p_range)
+    return check_zero(m_dim, n_dim) && check_empty(x_range, p_range)
+end
