@@ -12,7 +12,7 @@ function init_wigner(x_range, p_range)
 end
 
 function load_data()
-    data_path = @datadep_str "SqState/data/dm.h5"
+    data_path = datadep"SqState/data/dm.h5"
     data_name = "SQ4"
     ρ = read_ρ(data_path, data_name)
 
@@ -26,7 +26,7 @@ function render_wigner(wf::WignerFunction, ρ::AbstractMatrix)
 end
 
 function plot_data(wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix)
-    path = @datadep_str "SqState/render"
+    path = datadep"SqState/render"
 
     file_path = joinpath(path, "density_matrix_total.png")
     p = plot_ρ(ρ, file_path=file_path)

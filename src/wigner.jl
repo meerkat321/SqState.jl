@@ -36,7 +36,7 @@ function create_wigner(
         end
     end
 
-    path = @datadep_str "SqState"
+    path = datadep"SqState"
     bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(x_range)_$(p_range).bin")
     save_𝐰(bin_path, 𝐰)
 
@@ -56,7 +56,7 @@ mutable struct WignerFunction{T<:Integer, U<:AbstractRange}
         x_range::U,
         p_range::U
     ) where {T<:Integer, U<:AbstractRange}
-        path = @datadep_str "SqState"
+        path = datadep"SqState"
         bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(x_range)_$(p_range).bin")
         if isfile(bin_path)
             𝐰 = load_𝐰(m_dim, n_dim, x_range, p_range, bin_path)
