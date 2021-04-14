@@ -12,7 +12,7 @@ function init_wigner(x_range, p_range)
 end
 
 function load_data()
-    data_path = @datadep_str "SqState/dm.h5"
+    data_path = @datadep_str "SqState/data/dm.h5"
     data_name = "SQ4"
     ρ = read_ρ(data_path, data_name)
 
