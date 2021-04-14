@@ -9,6 +9,8 @@ module SqState
             """,
             ""
         ))
+
+        mkpath(joinpath(DataDeps.standard_loadpath[1], "SqState"))
     end
 
     include("state.jl")
