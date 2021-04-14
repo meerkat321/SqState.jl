@@ -31,7 +31,7 @@ function plot_wigner(
 
     lim = maximum(abs.(w))
     p = Plots.heatmap(
-        wf.xs, wf.ps, w,
+        wf.x_range, wf.p_range, w,
         title="Wigner Function",
         xlabel="X",
         ylabel="P",
@@ -53,7 +53,7 @@ function plot_wigner(
 
     lim = maximum(abs.(w))
     p = Plots.contour(
-        wf.xs, wf.ps, w,
+        wf.x_range, wf.p_range, w,
         title="Wigner Function",
         xlabel="X",
         ylabel="P",
@@ -77,7 +77,7 @@ function plot_wigner(
 
     lim = maximum(abs.(w))
     p = Plots.surface(
-        wf.xs, wf.ps, w,
+        wf.x_range, wf.p_range, w,
         title="Wigner Function",
         xlabel="X",
         ylabel="P",
