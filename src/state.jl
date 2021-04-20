@@ -89,7 +89,7 @@ function Base.vec(state::FockState; dim=35)
     # rebase 0-based index system to 1-based
     n = state.n + 1
 
-    v_fock = zeros(Complex, 35)
+    v_fock = zeros(Complex, dim)
     v_fock[n] = state.w
 
     return v_fock
@@ -125,7 +125,7 @@ c(n::Integer, α::Arg) = ComplexF64(z(α)^n / factorial(big(n)))
 function displacement(α::Arg; dim::Integer=35)
     α₀ = exp(-(abs(α.r)^2)/2)
 
-    return (s::FockState) -> α₀ * sum([c(n, α) * vec(createⁿ(s, n)) for n in 0:dim-1])
+    return (s::FockState) -> α₀ * sum([c(n, α) * vec(createⁿ(s, n), dim=dim) for n in 0:dim-1])
 end
 
 Base.vec(state::CoherentState; dim=35) = displacement(state.α, dim=dim)(VacuumState())

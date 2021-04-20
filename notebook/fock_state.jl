@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.1
+# v0.14.2
 
 using Markdown
 using InteractiveUtils
@@ -24,8 +24,8 @@ md"
 
 # ╔═╡ 4ef3ca9a-914d-11eb-1e78-83bfe054f318
 begin
-	x_range = -10:0.05:10
-	p_range = -10:0.05:10
+	x_range = -10:0.02:10
+	p_range = -10:0.02:10
 	wf = WignerFunction(x_range, p_range)
 end;
 

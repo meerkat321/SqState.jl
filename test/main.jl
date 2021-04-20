@@ -26,29 +26,31 @@ function render_wigner(wf::WignerFunction, ρ::AbstractMatrix)
 end
 
 function plot_data(wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix)
-    path = datadep"SqState/render"
+    path = datadep"SqState"
+    render_path = joinpath(path, "render")
+    mkpath(render_path)
 
-    file_path = joinpath(path, "density_matrix_total.png")
+    file_path = joinpath(render_path, "density_matrix_total.png")
     p = plot_ρ(ρ, file_path=file_path)
-    file_path = joinpath(path, "density_matrix.png")
+    file_path = joinpath(render_path, "density_matrix.png")
     p = plot_ρ(ρ, state_n=5, file_path=file_path)
 
-    file_path = joinpath(path, "wigner_contour.png")
+    file_path = joinpath(render_path, "wigner_contour.png")
     p = plot_wigner(wf, w, Contour, file_path=file_path)
-    file_path = joinpath(path, "wigner_heatmap.png")
+    file_path = joinpath(render_path, "wigner_heatmap.png")
     p = plot_wigner(wf, w, Heatmap, file_path=file_path)
-    file_path = joinpath(path, "wigner_surface.png")
+    file_path = joinpath(render_path, "wigner_surface.png")
     p = plot_wigner(wf, w, Surface, file_path=file_path)
-    file_path = joinpath(path, "wigner_surface_banner.png")
+    file_path = joinpath(render_path, "wigner_surface_banner.png")
     p = plot_wigner(wf, w, Surface, size=(1280, 640), file_path=file_path)
 
-    file_path = joinpath(path, "all.png")
+    file_path = joinpath(render_path, "all.png")
     p = plot_all(wf, w, ρ, file_path=file_path)
 end
 
 function main()
-    x_range = -10:0.1:10
-    p_range = -10:0.1:10
+    x_range = -10:0.02:10
+    p_range = -10:0.02:10
     wf = init_wigner(x_range, p_range)
     ρ = load_data()
     w = render_wigner(wf, ρ)
