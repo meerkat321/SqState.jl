@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.1
+# v0.14.2
 
 using Markdown
 using InteractiveUtils
@@ -26,7 +26,8 @@ md"
 begin
     x_range = -10:0.1:10
     p_range = -10:0.1:10
-    wf = WignerFunction(x_range, p_range)
+	truncated_photon_number = 100
+    wf = WignerFunction(x_range, p_range, dim=truncated_photon_number)
 end;
 
 # ╔═╡ b0623b86-9242-11eb-3f51-5bc55266146d
@@ -40,7 +41,7 @@ begin
 	θ = π/4
 	
 	state = CoherentState(Arg(r, θ))
-	w = wf(ρ(state))
+	w = wf(ρ(state, dim=truncated_photon_number))
 end;
 
 # ╔═╡ be689f2c-9242-11eb-0131-8fb39a4495e0
