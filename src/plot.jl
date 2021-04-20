@@ -16,12 +16,6 @@ struct Contour <: PlotMethod end
 
 struct Surface <: PlotMethod end
 
-const C_GRAD = cgrad([
-    RGBA(53/255, 157/255, 219/255, 1),
-    RGBA(240/255, 240/255, 240/255, 1),
-    RGBA(219/255, 64/255, 68/255, 1)
-])
-
 function plot_wigner(
     wf::WignerFunction, w::AbstractMatrix, ::Type{Heatmap};
     size=(700, 630),
@@ -36,7 +30,7 @@ function plot_wigner(
         xlabel="X",
         ylabel="P",
         clim=(-lim, lim),
-        c=C_GRAD,
+        c=:coolwarm,
     )
 
     isnothing(file_path) || savefig(p, file_path)
@@ -60,7 +54,7 @@ function plot_wigner(
         clim=(-lim, lim),
         fill=true,
         levels=20,
-        c=C_GRAD,
+        c=:coolwarm,
     )
 
     isnothing(file_path) || savefig(p, file_path)
@@ -83,7 +77,8 @@ function plot_wigner(
         ylabel="P",
         clim=(-lim, lim),
         zlim=(-lim, lim),
-        c=C_GRAD,
+        c=:coolwarm,
+        fillalpha=0.99,
         camera=(40, 30),
     )
 
@@ -113,7 +108,7 @@ function plot_ρ(
         title="Density Matrix (Real part)",
         xlabel="m",
         ylabel="n",
-        c=C_GRAD,
+        c=:coolwarm,
         clim=(-lim, lim)
     )
 
