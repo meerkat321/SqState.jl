@@ -76,7 +76,14 @@ function WignerFunction(x_range::AbstractRange, p_range::AbstractRange; dim=35)
 end
 
 function (wf::WignerFunction)(ρ::AbstractMatrix)
-    reshape(real(sum(ρ .* wf.𝐰, dims=(1, 2))), length(wf.x_range), length(wf.p_range))
+    𝐰_surface = Matrix{Float64}(undef, length(wf.x_range), length(wf.p_range))
+    @sync for i in 1:length(wf.x_range)
+        Threads.@spawn for j in 1:length(wf.p_range)
+            𝐰_surface[i, j] = real(sum(ρ .* wf.𝐰[:, :, i, j]))
+        end
+    end
+
+    return 𝐰_surface
 end
 
 function save_𝐰(bin_path::String, 𝐰::Array{ComplexF64,4})
