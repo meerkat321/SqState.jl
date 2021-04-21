@@ -40,6 +40,7 @@ end
 
 function plot_wigner(
     wf::WignerFunction, w::AbstractMatrix, ::Type{Contour};
+    levels=20,
     size=(700, 630),
     file_path=nothing
 )
@@ -53,7 +54,7 @@ function plot_wigner(
         ylabel="P",
         clim=(-lim, lim),
         fill=true,
-        levels=20,
+        levels=levels,
         c=:coolwarm,
     )
 
@@ -119,14 +120,18 @@ end
 
 function plot_all(
     wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix;
+    levels=20,
     state_n=0,
     file_path=nothing
 )
     gr()
-    l = @layout [a{0.6w} grid(2, 1)]
+    l = @layout [
+		a{0.5h}
+		grid(1, 2)
+	]
     p = plot(
         plot_wigner(wf, w, Surface, size=nothing),
-        plot_wigner(wf, w, Contour, size=nothing),
+        plot_wigner(wf, w, Contour, levels=levels, size=nothing),
         plot_ρ(ρ, state_n=state_n, size=nothing),
         layout=l
     )
