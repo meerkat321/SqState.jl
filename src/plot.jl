@@ -122,11 +122,13 @@ function plot_all(
     wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix;
     levels=20,
     state_n=0,
+    size=(700, 630),
     file_path=nothing
 )
-    gr()
+    !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
+
     l = @layout [
-		a{0.5h}
+		a{0.55h}
 		grid(1, 2)
 	]
     p = plot(
