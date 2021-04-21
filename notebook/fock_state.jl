@@ -31,32 +31,34 @@ end;
 
 # ╔═╡ 624e0452-914d-11eb-0ad1-cd95271e1db1
 md"
-## Generate Wigner function and plot
+## Render and plot
 "
 
 # ╔═╡ 607ddac6-914d-11eb-2bdb-bb3af2bc5497
-function plot_fock_state(n::Integer, wf::WignerFunction)
-    w = wf(ρ(FockState(n)))
+function render_state(n::Integer)
+    ψ = FockState(n)
+	𝛒 = ρ(ψ)
+	w = wf(𝛒)
 	plot_wigner(wf, w, Surface) |> DisplayAs.PNG
 end;
 
 # ╔═╡ ba6ac636-914d-11eb-0071-ab847f743e39
-plot_fock_state(0, wf)
+render_state(0)
 
 # ╔═╡ cbc52896-914d-11eb-1b30-3b7c8969b315
-plot_fock_state(1, wf)
+render_state(1)
 
 # ╔═╡ d6f4f0b6-914d-11eb-04be-d5393f28d908
-plot_fock_state(2, wf)
+render_state(2)
 
 # ╔═╡ dcfef6b6-914d-11eb-3b9e-13da0d651cba
-plot_fock_state(3, wf)
+render_state(3)
 
 # ╔═╡ 7217e9f6-914e-11eb-2203-a99fa64f085f
-plot_fock_state(4, wf)
+render_state(4)
 
 # ╔═╡ 77f5b092-914e-11eb-066b-5f8f6f38aeec
-plot_fock_state(5, wf)
+render_state(5)
 
 # ╔═╡ Cell order:
 # ╟─2700b804-914d-11eb-3d64-49496a4560c5
