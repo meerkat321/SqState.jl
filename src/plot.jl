@@ -78,7 +78,7 @@ function plot_wigner(
         clim=(-lim, lim),
         zlim=(-lim, lim),
         c=:coolwarm,
-        # fillalpha=0.99, # this cause Pluto crash
+        fillalpha=0.99, # this cause Pluto crash, work with DisplayAs
         camera=(40, 30),
     )
 

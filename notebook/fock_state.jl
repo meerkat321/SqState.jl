@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ 5781b9ce-914d-11eb-0dd6-c19da262033c
 begin
 	using SqState
-	using Plots: gr; gr(fmt=:png)
+    using DisplayAs
 end
 
 # ╔═╡ 2700b804-914d-11eb-3d64-49496a4560c5
@@ -37,7 +37,7 @@ md"
 # ╔═╡ 607ddac6-914d-11eb-2bdb-bb3af2bc5497
 function plot_fock_state(n::Integer, wf::WignerFunction)
     w = wf(ρ(FockState(n)))
-	plot_wigner(wf, w, Surface)
+	plot_wigner(wf, w, Surface) |> DisplayAs.PNG
 end;
 
 # ╔═╡ ba6ac636-914d-11eb-0071-ab847f743e39
