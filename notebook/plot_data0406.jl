@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.2
+# v0.14.3
 
 using Markdown
 using InteractiveUtils
@@ -81,6 +81,11 @@ function render_data(file_name)
 
 	# render Wigner
     w = wf(𝛒)
+
+	# write w into h5
+	h5open(joinpath(data_path, "WignerSurface.h5"), "cw") do file
+    	write(file, file_name, w)
+    end
 
 	# plot
 	plot_all(wf, w, 𝛒, levels=10)
