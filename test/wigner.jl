@@ -1,3 +1,5 @@
+include("utils.jl")
+
 @testset "wigner" begin
     m, n = 40, 3
     x = p = collect(-2:0.1:2)

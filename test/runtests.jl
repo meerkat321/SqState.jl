@@ -7,7 +7,6 @@ using Test
 
     include("read.jl")
     include("polynomial.jl")
-    include("utils.jl")
     include("wigner.jl")
     include("plot.jl")
 
