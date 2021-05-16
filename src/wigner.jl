@@ -37,7 +37,10 @@ function create_wigner(
     end
 
     path = datadep"SqState"
-    bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(x_range)_$(p_range).bin")
+    bin_path = joinpath(
+        path,
+        "W m=$(m_dim) n=$(n_dim) x=$(replace(string(x_range), ":" => "_")) p=$(replace(string(p_range), ":" => "_")).bin"
+    )
     save_𝐰(bin_path, 𝐰)
 
     return 𝐰
@@ -60,7 +63,10 @@ mutable struct WignerFunction{T<:Integer, U<:AbstractRange}
 
         # load from Mmap
         path = datadep"SqState"
-        bin_path = joinpath(path, "W_$(m_dim)_$(n_dim)_$(x_range)_$(p_range).bin")
+        bin_path = joinpath(
+            path,
+            "W m=$(m_dim) n=$(n_dim) x=$(replace(string(x_range), ":" => "_")) p=$(replace(string(p_range), ":" => "_")).bin"
+        )
         if isfile(bin_path)
             𝐰 = load_𝐰(m_dim, n_dim, x_range, p_range, bin_path)
             return new{T, U}(m_dim, n_dim, x_range, p_range, 𝐰)

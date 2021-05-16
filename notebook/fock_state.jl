@@ -1,14 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.14.2
+# v0.14.5
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 5781b9ce-914d-11eb-0dd6-c19da262033c
-begin
-	using SqState
-    using DisplayAs
-end
+using SqState
 
 # ╔═╡ 2700b804-914d-11eb-3d64-49496a4560c5
 md"
@@ -24,8 +21,8 @@ md"
 
 # ╔═╡ 4ef3ca9a-914d-11eb-1e78-83bfe054f318
 begin
-	x_range = -10:0.02:10
-	p_range = -10:0.02:10
+	x_range = -10:0.1:10
+	p_range = -10:0.1:10
 	wf = WignerFunction(x_range, p_range)
 end;
 
@@ -39,7 +36,7 @@ function render_state(n::Integer)
     ψ = FockState(n)
 	𝛒 = ρ(ψ)
 	w = wf(𝛒)
-	plot_wigner(wf, w, Surface) |> DisplayAs.PNG
+	plot_wigner(wf, w, Surface)
 end;
 
 # ╔═╡ ba6ac636-914d-11eb-0071-ab847f743e39
