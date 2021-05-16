@@ -18,18 +18,6 @@ end
     @test SqState.z(xs, ps) == sqrt(2.).*(xs .+ ps' .* im)
 end
 
-@testset "α" begin
-    m_range = n_range = 1:35
-
-    for m in m_range, n in m:n_range.stop
-        @test SqState.α(m, n) == max(m, n) - min(m, n)
-    end
-
-    ms = collect(m_range)
-    ns = collect(n_range)
-    @test SqState.α(ms, ns) == max.(ms, ns') .- min.(ms, ns')
-end
-
 @testset "gaussian_function" begin
     tol = 1e-14
 
@@ -68,10 +56,6 @@ end
             atol=tol
         )
     end
-
-    ms = collect(m_range)
-    ns = collect(n_range)
-    @test SqState.coefficient_of_wave_function(ms, ns) == SqState.coefficient_of_wave_function.(ms, ns')
 end
 
 @testset "z_to_power" begin
@@ -86,13 +70,31 @@ end
         @test SqState.z_to_power(m, n, x, p) == z^(max(m, n) - min(m, n))
     end
 
-    ms = collect(m_range)
-    ns = collect(n_range)
     xs = collect(x_range)
     ps = collect(p_range)
-    xs_ = reshape(collect(x_range), 1, 1, length(x_range))
-    ps_ = reshape(collect(p_range), 1, 1, 1, length(p_range))
-    @test SqState.z_to_power(ms, ns, xs, ps) == SqState.z_to_power.(ms, ns', xs_, ps_)
-    @test SqState.z_to_power(ms, ns)(xs, ps) == SqState.z_to_power.(ms, ns', xs_, ps_)
-    @test SqState.z_to_power(xs, ps)(ms, ns) == SqState.z_to_power.(ms, ns', xs_, ps_)
+
+    for m in m_range, n in n_range
+        @test SqState.z_to_power(m, n, xs, ps) == SqState.z_to_power.(m, n, xs, ps')
+    end
+end
+
+@testset "laguerre" begin
+    m_range = n_range = 1:35
+    x_range = -1:0.1:1
+    p_range = -0.6:0.1:0.6
+
+    # n >= m
+    for m in m_range, n in m:n_range.stop, x in x_range, p in p_range
+        @test abs(laguerre(m, n, x, p) - laguerre(m-1, n-m, 2(x^2 + p^2))) < 1e-5
+    end
+    # n < m
+    for n in n_range, m in n:m_range.stop, x in x_range, p in p_range
+        @test abs(laguerre(m, n, x, p) - laguerre(n-1, m-n, 2(x^2 + p^2))) < 1e-5
+    end
+
+    xs = collect(x_range)
+    ps = collect(p_range)
+    for m in m_range, n in n_range
+        @test laguerre(m, n, xs, ps) == laguerre.(m, n, xs, ps')
+    end
 end

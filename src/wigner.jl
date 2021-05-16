@@ -11,14 +11,14 @@ export
 const DIM = 35
 
 abstract type CreateWignerMethod end
-struct LoadW <: CreateWignerMethod end
-struct CalcW <: CreateWignerMethod end
+struct Load𝐖 <: CreateWignerMethod end
+struct Calc𝐖 <: CreateWignerMethod end
 
-function wigner(m::Integer, n::Integer, x::Real, p::Real)
-    w = gaussian_function(x, p)
-    w *= coefficient_of_wave_function(m, n)
-    w *= z_to_power(m, n, x, p)
-    w *= laguerre(m, n, x, p)
+function wigner(m::Integer, n::Integer, x::Vector{<:Real}, p::Vector{<:Real})
+    w = gaussian_function(x, p) .*
+        coefficient_of_wave_function(m, n) .*
+        z_to_power(m, n, x, p) .*
+        laguerre(m, n, x, p)
 
     return w
 end
@@ -28,16 +28,12 @@ function create_wigner(
     n_dim::Integer,
     x_range::AbstractRange,
     p_range::AbstractRange,
-    ::Type{CalcW}
+    ::Type{Calc𝐖}
 )
     𝐰 = Array{ComplexF64,4}(undef, m_dim, n_dim, length(x_range), length(p_range))
     @sync for m in 1:m_dim
-        for n in 1:n_dim
-            for (x_i, x) in enumerate(x_range)
-                Threads.@spawn for (p_j, p) in enumerate(p_range)
-                    𝐰[m, n, x_i, p_j] = wigner(m ,n, x, p)
-                end
-            end
+        Threads.@spawn for n in 1:n_dim
+            𝐰[m, n, :, :] = wigner(m, n, collect(x_range), collect(p_range))
         end
     end
 
@@ -50,7 +46,7 @@ function create_wigner(
     x_range::AbstractRange,
     p_range::AbstractRange,
     bin_path::String,
-    ::Type{LoadW}
+    ::Type{Load𝐖}
 )
     return load_𝐰(m_dim, n_dim, x_range, p_range, bin_path)
 end
@@ -64,11 +60,11 @@ function create_wigner(
     bin_path = gen_wigner_bin_path(m_dim, n_dim, x_range, p_range)
 
     if isfile(bin_path)
-        return create_wigner(m_dim, n_dim, x_range, p_range, bin_path, LoadW)
+        return create_wigner(m_dim, n_dim, x_range, p_range, bin_path, Load𝐖)
     end
 
-    𝐰 = create_wigner(m_dim, n_dim, x_range, p_range, CalcW)
-    save_𝐰(bin_path, 𝐰)
+    𝐰 = create_wigner(m_dim, n_dim, x_range, p_range, Calc𝐖)
+    # save_𝐰(bin_path, 𝐰)
 
     return 𝐰
 end
