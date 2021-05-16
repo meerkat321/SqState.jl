@@ -149,7 +149,7 @@ function gen_wigner_bin_path(
         path,
         "W " *
         "m=$(m_dim) n=$(n_dim) " *
-        "x=$(range2str(x_range)) p=$(range2str(p_range))).bin"
+        "x=$(range2str(x_range)) p=$(range2str(p_range)).bin"
     )
 
     return bin_path
