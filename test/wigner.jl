@@ -1,6 +1,13 @@
+include("utils.jl")
+
 @testset "wigner" begin
-    m, n, x, p = 40, 3, -9.1, 10.5
-    @test wigner(m, n)(x, p) == wigner(m, n, x, p)
+    m, n = 40, 3
+    x = p = collect(-2:0.1:2)
+    @test wigner(m, n, x, p) ==
+        SqState.gaussian_function(x, p) .*
+        SqState.coefficient_of_wave_function(m, n) .*
+        SqState.z_to_power(m, n, x, p) .*
+        laguerre(m, n, x, p)
 end
 
 @testset "WignerFunction" begin
