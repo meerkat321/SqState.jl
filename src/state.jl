@@ -1,6 +1,8 @@
 using LinearAlgebra
+using Crayons
 
 export
+    StateVector,
     FockState,
     NumberState,
     VacuumState,
@@ -20,6 +22,22 @@ abstract type AbstractState end
 mutable struct StateVector{T <: Number} <: AbstractState
     v::Vector{T}
     dim::Int64
+end
+
+function Base.show(io::IO, state::StateVector{T}) where {T}
+    print(io, "StateVector{$T}\n  ")
+    v = abs2.(state.v)
+    v /= maximum(v)
+    for p in v
+        c = convert(RGB, HSL(0, p, 0.7))
+        print(io, "$(Crayon(foreground=(
+                round(Int, c.r * 255),
+                round(Int, c.g * 255),
+                round(Int, c.b * 255)
+            )))\u2587"
+        )
+    end
+    print(io, "$(Crayon(reset=true))")
 end
 
 function FockState(T::Type{<:Number}, n::Integer; dim::Integer)
