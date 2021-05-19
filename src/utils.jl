@@ -1,13 +1,14 @@
+########################
+# fractions of formula #
+########################
+
 factorial_ij(i::Integer, j::Integer) = factorial(big(min(i,j))) / factorial(big(max(i,j)))
 
 z(x::Real, p::Real) = sqrt(2.)*(x + p*im)
 z(x::Vector{<:Real}, p::Vector{<:Real}) = z.(x, p')
 
-α(m::Integer, n::Integer) = n - m
-α(m::Vector{<:Integer}, n::Vector{<:Integer}) = α.(min.(m, n'), max.(m, n'))
-
 gaussian_function(x::Real, p::Real) = exp(-0.5 * abs2(z(x,p))) / π
-gaussian_function(x::Vector{<:Real}, p::Vector{<:Real}) = gaussian_function.(x,p')
+gaussian_function(x::Vector{<:Real}, p::Vector{<:Real}) = gaussian_function.(x, p')
 
 neg_one_to_power_of(i::Integer) = (i % 2 == 0) ? 1 : -1
 
@@ -21,8 +22,6 @@ function coefficient_of_wave_function(m::Integer, n::Integer)
     end
 end
 
-coefficient_of_wave_function(m::Vector{<:Integer}, n::Vector{<:Integer}) = coefficient_of_wave_function.(m, n')
-
 function z_to_power(m::Integer, n::Integer, x::Real, p::Real)
     if n ≥ m
         return conj(z(x, p'))^(n - m)
@@ -31,26 +30,77 @@ function z_to_power(m::Integer, n::Integer, x::Real, p::Real)
     end
 end
 
-function z_to_power(m::Vector{<:Integer}, n::Vector{<:Integer}, x::Vector{<:Real}, p::Vector{<:Real})
-    x = reshape(x, 1, 1, length(x))
-    p = reshape(p, 1, 1, 1, length(p))
-    z_to_power.(m, n', x, p)
+function z_to_power(m::Integer, n::Integer, x::Vector{<:Real}, p::Vector{<:Real})
+    z_to_power.(m, n, x, p')
 end
 
-function z_to_power(m::Vector{<:Integer}, n::Vector{<:Integer})
-    function z_to_power_xp(x::Vector{<:Real}, p::Vector{<:Real})
-        x = reshape(x, 1, 1, length(x))
-        p = reshape(p, 1, 1, 1, length(p))
-        z_to_power.(m, n', x, p)
+function laguerre(m::Integer, n::Integer, x::Real, p::Real)
+    if n ≥ m
+        # adjust index bases for number state on `m`
+        return laguerre(m-1, n - m, abs2(z(x, p)))
+    else
+        # adjust index bases for number state on `n`
+        return laguerre(n-1, m - n, abs2(z(x, p)))
     end
-    return z_to_power_xp
 end
 
-function z_to_power(x::Vector{<:Real}, p::Vector{<:Real})
-    x = reshape(x, 1, 1, length(x))
-    p = reshape(p, 1, 1, 1, length(p))
-    function z_to_power_mn(m::Vector{<:Integer}, n::Vector{<:Integer})
-        z_to_power.(m, n', x, p)
-    end
-    return z_to_power_mn
+function laguerre(m::Integer, n::Integer, x::Vector{<:Real}, p::Vector{<:Real})
+    return laguerre.(m, n, x, p')
+end
+
+#########
+# utils #
+#########
+
+function save_𝐰(bin_path::String, 𝐰::Array{ComplexF64,4})
+    @info "Save W_{m,n,x,p} to $bin_path"
+    mem = open(bin_path, "w+")
+    write(mem, 𝐰)
+    close(mem)
+end
+
+function load_𝐰(
+    m_dim::Integer,
+    n_dim::Integer,
+    x_range::AbstractRange,
+    p_range::AbstractRange,
+    bin_path::String
+)
+    @info "Load W_{m,n,x,p} from $bin_path"
+    mem = open(bin_path)
+    𝐰 = Mmap.mmap(
+        mem,
+        Array{ComplexF64,4},
+        (m_dim, n_dim, length(x_range), length(p_range))
+    )
+    close(mem)
+
+    return 𝐰
+end
+
+function gen_wigner_bin_path(
+    m_dim::Integer,
+    n_dim::Integer,
+    x_range::AbstractRange,
+    p_range::AbstractRange,
+)
+    path = datadep"SqState"
+    bin_path = joinpath(
+        path,
+        "W " *
+        "m=$(m_dim) n=$(n_dim) " *
+        "x=$(range2str(x_range)) p=$(range2str(p_range)).bin"
+    )
+
+    return bin_path
+end
+
+range2str(range::AbstractRange) = replace(string(range), ":" => "_")
+
+check_zero(m_dim, n_dim) = !iszero(m_dim) && !iszero(n_dim)
+
+check_empty(x_range, p_range) = !isempty(x_range) && !isempty(p_range)
+
+function check_argv(m_dim, n_dim, x_range, p_range)
+    return check_zero(m_dim, n_dim) && check_empty(x_range, p_range)
 end

@@ -1,6 +1,8 @@
 module SqState
     using DataDeps
 
+    const DIM = 35
+
     function __init__()
         register(DataDep(
             "SqState",
@@ -16,7 +18,6 @@ module SqState
     include("state.jl")
 
     include("read.jl")
-    include("utils.jl")
     include("polynomial.jl")
     include("wigner.jl")
     include("plot.jl")

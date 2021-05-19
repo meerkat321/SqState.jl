@@ -1,99 +1,72 @@
-@testset "zero" begin
-    state = Zero()
-    @test vec(state) == 0
-    @test ρ(state) == 0
-    @test repr(state) == "0"
+using LinearAlgebra
 
-    @test annihilate(state) isa Zero
-    @test create(state) isa Zero
-    @test annihilateⁿ(state, 5) isa Zero
-    @test createⁿ(state, 5) isa Zero
+Base.:(==)(s1::StateVector, s2::StateVector) = (s1.v == s2.v) && (s1.dim == s2.dim)
+
+@testset "StateVector" begin
+    dim = 35
+    vacuum_state = FockState(ComplexF64, 0, dim=dim)
+
+    state = zeros(ComplexF64, dim)
+    state[0+1] = 1
+
+    @test vacuum_state.v == state
+    @test vacuum_state.dim == dim
+
+    @test repr(vacuum_state) == "StateVector{ComplexF64}( " *
+        "\e[38;2;255;102;102m⬤" *
+        "\e[38;2;178;178;178m⬤"^(dim-1) *
+        "\e[0m )"
 end
 
-@testset "fock state" begin
-    function test_ρ_fock_state(n)
-        state = FockState(n)
-
-        v_fock = zeros(Complex, 35)
-        v_fock[n+1] = 1
-        ρ_fock = zeros(Complex, 35, 35)
-        ρ_fock[n+1, n+1] = 1
-
-        @test vec(state) == v_fock
-        @test ρ(state) == ρ_fock
-        @test purity(state) == 1
-        @test repr(state) == "(1.0 + 0.0im)|$n⟩"
-    end
-
-    for n in 0:34
-        test_ρ_fock_state(n)
-    end
-
+@testset "Alias" begin
+    @test NumberState(0) == FockState(0)
     @test VacuumState() == FockState(0)
     @test SinglePhotonState() == FockState(1)
-    @test NumberState(5) == FockState(5)
 end
 
 @testset "a and a†" begin
-    fock_state = VacuumState()
-    fock_state = annihilate(fock_state)
-    @test fock_state isa Zero
+    dim = 35
+    @test Creation() == diagm(-1 => sqrt.(1:dim-1))
+    @test Annihilation() == diagm(1 => sqrt.(1:dim-1))
 
-    fock_state = FockState(5)
-    fock_state = annihilate(fock_state)
-    @test fock_state.n == 4
-    @test fock_state.w == sqrt(5)
-    fock_state = annihilate(fock_state)
-    @test fock_state.n == 3
-    @test fock_state.w == sqrt(5) * sqrt(4)
-    fock_state = annihilate(fock_state)
-    @test fock_state.n == 2
-    @test fock_state.w == sqrt(5) * sqrt(4) * sqrt(3)
-
-    fock_state = VacuumState()
-    fock_state = create(fock_state)
-    @test fock_state.n == 1
-    @test fock_state.w == sqrt(1)
-    fock_state = create(fock_state)
-    @test fock_state.n == 2
-    @test fock_state.w == sqrt(1) * sqrt(2)
-    fock_state = create(fock_state)
-    @test fock_state.n == 3
-    @test fock_state.w == sqrt(1) * sqrt(2) * sqrt(3)
-
-    @test createⁿ(SinglePhotonState(), 3).n == 4
-    @test annihilateⁿ(FockState(5), 3).n == 2
-    @test annihilateⁿ(FockState(5), 5).n == 0
-    @test annihilateⁿ(FockState(5), 6) isa Zero
-    @test annihilateⁿ(FockState(5), 7) isa Zero
-    @test annihilateⁿ(FockState(5), 9) isa Zero
+    @test create!(VacuumState()) == SinglePhotonState()
+    @test annihilate!(SinglePhotonState()) == VacuumState()
 end
 
-@testset "Arg" begin
-    arg = Arg(2, π/4)
-    @test SqState.z(arg) == arg.r * exp(-im*arg.θ)
-    @test repr(arg) == "2.0 exp[-$(π/4)im]"
+@testset "Displacement" begin
+    dim = 35
+
+    @test repr(Arg(2., π/4)) == "Arg{Float64}(2.0exp($(π/4)im))"
+    @test SqState.α(Arg(2., π/4)) == 2 * exp(im*π/4)
+
+    @test Displacement(Arg(2., π/4)) == exp(
+        2 * exp(im*π/4) * Creation(dim=dim) - 2 * exp(-im*π/4) * Annihilation(dim=dim)
+    )
 end
 
-@testset "displacement" begin
-    r = 2
-    θ = π/4
-    α = Arg(r, θ)
-
-    α₀ = exp(-(abs(r)^2)/2)
-    @test displacement(Arg(r, θ))(VacuumState()) == α₀ * sum([
-        ComplexF64((α.r * exp(-im*α.θ))^n / factorial(big(n))) *
-        vec(createⁿ(VacuumState(), n))
-        for n in 0:35-1
-    ])
-
+@testset "CoherentState" begin
+    @test CoherentState(Arg(2., π/4)) == displace!(VacuumState(), Arg(2., π/4))
 end
 
-@testset "Coherent State" begin
-    r = 2
-    θ = π/4
-    coherent_state = CoherentState(Arg(r, θ))
-    @test vec(coherent_state) == displacement(Arg(r, θ), dim=35)(VacuumState())
-    @test ρ(coherent_state) == vec(coherent_state) * vec(coherent_state)'
-    @test repr(coherent_state) == "D($(Arg(r, θ)))|0⟩"
+@testset "getter 4 StateVector" begin
+    @test purity(FockState(3)) ≈ 1
+    @test purity(VacuumState()) ≈ 1
+    @test purity(SinglePhotonState()) ≈ 1
+    @test purity(CoherentState(Arg(2., π/4))) ≈ 1
+
+    s = zeros(ComplexF64, 35)
+    s[3+1] = 1
+    @test vec(NumberState(3)) == s
+    @test 𝛒(NumberState(3)) == s * s'
+end
+
+@testset "getter 4 StateMatrix" begin
+    @test purity(StateMatrix(FockState(3))) ≈ 1
+    @test purity(StateMatrix(VacuumState())) ≈ 1
+    @test purity(StateMatrix(SinglePhotonState())) ≈ 1
+    @test purity(StateMatrix(CoherentState(Arg(2., π/4)))) ≈ 1
+
+    s = zeros(ComplexF64, 35)
+    s[3+1] = 1
+    @test 𝛒(StateMatrix(FockState(3))) == s * s'
 end

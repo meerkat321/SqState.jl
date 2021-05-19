@@ -1,136 +1,157 @@
 using LinearAlgebra
+using Crayons
 
 export
-    AbstractState,
-    purity,
-    ρ,
-
-    Zero,
-
+    StateVector,
     FockState,
+    NumberState,
     VacuumState,
     SinglePhotonState,
-    NumberState,
-    annihilate,
-    create,
-    createⁿ,
-    annihilateⁿ,
+
+    Creation,
+    create!,
+    Annihilation,
+    annihilate!,
 
     Arg,
-    displacement,
-    CoherentState
+    Displacement,
+    displace!,
+    CoherentState,
+
+    StateMatrix,
+
+    𝛒,
+    purity
 
 abstract type AbstractState end
 
-function purity(state::AbstractState)
-    _ρ = ρ(state)
-    _ρ /= tr(_ρ)
-
-    return real(tr(_ρ^2))
+mutable struct StateVector{T <: Number} <: AbstractState
+    v::Vector{T}
+    dim::Int64
 end
 
-struct Zero <: AbstractState end
-
-annihilate(state::Zero) = state
-
-annihilateⁿ(state::Zero, ::Integer) = state
-
-create(state::Zero) = state
-
-createⁿ(state::Zero, ::Integer) = state
-
-Base.show(io::IO, ::Zero) = print(io, "0")
-
-Base.vec(::Zero; dim=35) = 0
-
-ρ(::Zero; dim=35) = 0
-
-struct FockState <: AbstractState
-    n::Int64
-    w::ComplexF64
-end
-
-Base.show(io::IO, state::FockState) = print(io, "($(state.w))|$(state.n)⟩")
-
-FockState(n::Integer) = FockState(n, 1)
-
-VacuumState() = FockState(0)
-
-SinglePhotonState() = FockState(1)
-
-NumberState(n::Integer) = FockState(n)
-
-function annihilate(state::FockState)
-    (state.n == 0) && (return Zero())
-    return FockState(state.n-1, state.w*sqrt(state.n))
-end
-
-function annihilateⁿ(state::FockState, n::Integer)
-    for i in 1:n
-        state = annihilate(state)
+function Base.show(io::IO, state::StateVector{T}) where {T}
+    print(io, "StateVector{$T}( ")
+    v = abs2.(state.v)
+    v /= maximum(v)
+    for p in v
+        c = convert(RGB, HSL(0, p, 0.7))
+        print(io, "$(Crayon(foreground=(
+            round(Int, c.r * 255), round(Int, c.g * 255), round(Int, c.b * 255)
+        )))\u2B24")
     end
+    print(io, "$(Crayon(reset=true)) )")
+end
+
+Base.vec(state::StateVector{<:Number}) = state.v
+
+𝛒(state::StateVector{<:Number}) = state.v * state.v'
+
+function purity(state::StateVector{<:Number})
+    𝛒 = state.v * state.v'
+    𝛒 /= tr(𝛒)
+
+    return real(tr(𝛒^2))
+end
+
+function FockState(T::Type{<:Number}, n::Integer; dim::Integer)
+    v = zeros(T, dim)
+    v[n+1] = 1
+
+    return StateVector{T}(v, dim)
+end
+
+FockState(n; dim=DIM) = FockState(ComplexF64, n, dim=dim)
+
+NumberState(n; dim=DIM) = FockState(ComplexF64, n, dim=dim)
+
+VacuumState(; dim=DIM) = FockState(ComplexF64, 0, dim=dim)
+
+SinglePhotonState(; dim=DIM) = FockState(ComplexF64, 1, dim=dim)
+
+Creation(; dim=DIM) = diagm(-1 => sqrt.(1:dim-1))
+
+function create!(state::StateVector{<:Number})
+    dim = state.dim
+    state.v = Creation(dim=dim) * state.v
 
     return state
 end
 
-function create(state::FockState)
-    return FockState(state.n+1, state.w*sqrt(state.n+1))
-end
+Annihilation(; dim=DIM) = diagm(1 => sqrt.(1:dim-1))
 
-function createⁿ(state::FockState, n::Integer)
-    for i in 1:n
-        state = create(state)
-    end
+function annihilate!(state::StateVector{<:Number})
+    dim = state.dim
+    state.v = Annihilation(dim=dim) * state.v
 
     return state
 end
 
-function Base.vec(state::FockState; dim=35)
-    # rebase 0-based index system to 1-based
-    n = state.n + 1
-
-    v_fock = zeros(Complex, dim)
-    v_fock[n] = state.w
-
-    return v_fock
+struct Arg{T <: Real}
+    r::T
+    θ::T
 end
 
-function ρ(state::FockState; dim=35)
-    # rebase 0-based index system to 1-based
-    n = state.n + 1
+Base.show(io::IO, arg::Arg{T}) where {T} = print(io, "Arg{$T}($(arg.r)exp($(arg.θ)im))")
 
-    ρ_fock = zeros(Complex, dim, dim)
-    ρ_fock[n, n] = state.w
+α(arg::Arg{<:Real}) = arg.r * exp(im * arg.θ)
 
-    return ρ_fock
+function Displacement(arg::Arg{<:Real}; dim=DIM)
+    return exp(α(arg) * Creation(dim=dim) - α(arg)' * Annihilation(dim=dim))
 end
 
-struct Arg
-    r::Float64
-    θ::Float64
+function displace!(state::StateVector{<:Number}, arg::Arg{<:Real})
+    dim = state.dim
+    state.v = Displacement(arg, dim=dim) * state.v
+
+    return state
 end
 
-Base.show(io::IO, arg::Arg) = print(io, "$(arg.r) exp[-$(arg.θ)im]")
-
-z(arg::Arg) = arg.r * exp(-im*arg.θ)
-
-struct CoherentState <: AbstractState
-    α::Arg
+function CoherentState(arg::Arg{<:Real}; dim=DIM)
+    return displace!(VacuumState(dim=dim), arg)
 end
 
-Base.show(io::IO, state::CoherentState) = print(io, "D($(state.α))|0⟩")
-
-c(n::Integer, α::Arg) = ComplexF64(z(α)^n / factorial(big(n)))
-
-function displacement(α::Arg; dim::Integer=35)
-    α₀ = exp(-(abs(α.r)^2)/2)
-
-    return (s::FockState) -> α₀ * sum([c(n, α) * vec(createⁿ(s, n), dim=dim) for n in 0:dim-1])
+mutable struct StateMatrix{T <: Number} <: AbstractState
+    𝛒::Matrix{T}
+    dim::Int64
 end
 
-Base.vec(state::CoherentState; dim=35) = displacement(state.α, dim=dim)(VacuumState())
+function Base.show(io::IO, state::StateMatrix{T}) where {T}
+    function show_𝛒(𝛒::Matrix{<:Real})
+        for (i, p) in enumerate(𝛒)
+            c = (p>0) ? convert(RGB, HSL(0, p, 0.7)) : convert(RGB, HSL(240, abs(p), 0.7))
+            print(io, "$(Crayon(foreground=(
+                round(Int, c.r * 255), round(Int, c.g * 255), round(Int, c.b * 255)
+            )))\u2B24")
+            (i%state.dim == 0) && println(io)
+        end
+    end
 
-function ρ(state::CoherentState; dim=35)
-    coherent_state_vec = vec(state, dim=dim)
-    return coherent_state_vec * coherent_state_vec'
+    println(io, "StateMatrix{$T}(")
+
+    𝛒_r = real(state.𝛒)
+    𝛒_r /= maximum(abs.(𝛒_r))
+    println("Re:")
+    show_𝛒(𝛒_r)
+
+    𝛒_i = imag(state.𝛒)
+    𝛒_i /= maximum(abs.(𝛒_i))
+    println("Im:")
+    show_𝛒(𝛒_i)
+
+    print(io, "$(Crayon(reset=true)))")
+end
+
+function StateMatrix(state::StateVector{T}) where {T <: Number}
+    𝛒 = state.v * state.v'
+    return StateMatrix{T}(𝛒, state.dim)
+end
+
+𝛒(state::StateMatrix{<:Number}) = state.𝛒
+
+function purity(state::StateMatrix{<:Number})
+    𝛒 = state.𝛒
+    𝛒 /= tr(𝛒)
+
+    return real(tr(𝛒^2))
 end
