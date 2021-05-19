@@ -14,9 +14,14 @@ export
     annihilate!,
 
     Arg,
+
     Displacement,
     displace!,
     CoherentState,
+
+    Squeezing,
+    squeeze!,
+    SqueezedState,
 
     StateMatrix,
 
@@ -38,7 +43,7 @@ function Base.show(io::IO, state::StateVector{T}) where {T}
         c = convert(RGB, HSL(0, p, 0.7))
         print(io, "$(Crayon(foreground=(
             round(Int, c.r * 255), round(Int, c.g * 255), round(Int, c.b * 255)
-        )))\u2B24")
+        )))\u2587")
     end
     print(io, "$(Crayon(reset=true)) )")
 end
@@ -137,9 +142,9 @@ function Base.show(io::IO, state::StateMatrix{T}) where {T}
     function show_𝛒(𝛒::Matrix{<:Real})
         for (i, p) in enumerate(𝛒)
             c = (p>0) ? convert(RGB, HSL(0, p, 0.7)) : convert(RGB, HSL(240, abs(p), 0.7))
-            print(io, "    $(Crayon(foreground=(
+            print(io, "$(Crayon(foreground=(
                 round(Int, c.r * 255), round(Int, c.g * 255), round(Int, c.b * 255)
-            )))\u2B24")
+            )))\u2587")
             (i%state.dim == 0) && println(io)
         end
     end
