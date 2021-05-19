@@ -10,8 +10,6 @@ include("utils.jl")
     Wigner function by Laguerre Polynominal
 =#
 
-const DIM = 35
-
 abstract type CreateWignerMethod end
 struct Load𝐖 <: CreateWignerMethod end
 struct Calc𝐖 <: CreateWignerMethod end

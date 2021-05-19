@@ -1,6 +1,8 @@
 module SqState
     using DataDeps
 
+    const DIM = 35
+
     function __init__()
         register(DataDep(
             "SqState",
