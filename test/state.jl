@@ -48,9 +48,25 @@ end
     @test CoherentState(Arg(2., π/4)) == displace!(VacuumState(), Arg(2., π/4))
 end
 
-@testset "purity" begin
+@testset "getter 4 StateVector" begin
     @test purity(FockState(3)) == 1
     @test purity(VacuumState()) == 1
     @test purity(SinglePhotonState()) == 1
     @test purity(CoherentState(Arg(2., π/4))) == 1
+
+    s = zeros(ComplexF64, 35)
+    s[3+1] = 1
+    @test vec(NumberState(3)) == s
+    @test 𝛒(NumberState(3)) == s * s'
+end
+
+@testset "getter 4 StateMatrix" begin
+    @test purity(StateMatrix(FockState(3))) == 1
+    @test purity(StateMatrix(VacuumState())) == 1
+    @test purity(StateMatrix(SinglePhotonState())) == 1
+    @test purity(StateMatrix(CoherentState(Arg(2., π/4)))) == 1
+
+    s = zeros(ComplexF64, 35)
+    s[3+1] = 1
+    @test 𝛒(StateMatrix(FockState(3))) == s * s'
 end
