@@ -14,9 +14,14 @@ export
     annihilate!,
 
     Arg,
+
     Displacement,
     displace!,
     CoherentState,
+
+    Squeezing,
+    squeeze!,
+    SqueezedState,
 
     StateMatrix,
 
@@ -38,7 +43,7 @@ function Base.show(io::IO, state::StateVector{T}) where {T}
         c = convert(RGB, HSL(0, p, 0.7))
         print(io, "$(Crayon(foreground=(
             round(Int, c.r * 255), round(Int, c.g * 255), round(Int, c.b * 255)
-        )))\u2B24")
+        )))\u2587")
     end
     print(io, "$(Crayon(reset=true)) )")
 end
@@ -111,6 +116,23 @@ function CoherentState(arg::Arg{<:Real}; dim=DIM)
     return displace!(VacuumState(dim=dim), arg)
 end
 
+const ξ = α
+
+function Squeezing(arg::Arg{<:Real}; dim=DIM)
+    return exp(0.5 * ξ(arg)' * Annihilation(dim=dim)^2 - 0.5 * ξ(arg) * Creation(dim=dim)^2)
+end
+
+function squeeze!(state::StateVector{<:Number}, arg::Arg{<:Real})
+    dim = state.dim
+    state.v = Squeezing(arg, dim=dim) * state.v
+
+    return state
+end
+
+function SqueezedState(arg::Arg{<:Real}; dim=DIM)
+    return squeeze!(VacuumState(dim=dim), arg)
+end
+
 mutable struct StateMatrix{T <: Number} <: AbstractState
     𝛒::Matrix{T}
     dim::Int64
@@ -122,23 +144,15 @@ function Base.show(io::IO, state::StateMatrix{T}) where {T}
             c = (p>0) ? convert(RGB, HSL(0, p, 0.7)) : convert(RGB, HSL(240, abs(p), 0.7))
             print(io, "$(Crayon(foreground=(
                 round(Int, c.r * 255), round(Int, c.g * 255), round(Int, c.b * 255)
-            )))\u2B24")
+            )))\u2587")
             (i%state.dim == 0) && println(io)
         end
     end
 
     println(io, "StateMatrix{$T}(")
-
     𝛒_r = real(state.𝛒)
     𝛒_r /= maximum(abs.(𝛒_r))
-    println("Re:")
     show_𝛒(𝛒_r)
-
-    𝛒_i = imag(state.𝛒)
-    𝛒_i /= maximum(abs.(𝛒_i))
-    println("Im:")
-    show_𝛒(𝛒_i)
-
     print(io, "$(Crayon(reset=true)))")
 end
 
