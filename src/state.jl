@@ -169,3 +169,17 @@ function purity(state::StateMatrix{<:Number})
 
     return real(tr(𝛒^2))
 end
+
+bose_einstein(n::Integer, n̄::Real) = n̄^n / (1 + n̄)^(n+1)
+
+bose_einstein(n̄::Real) = n -> bose_einstein(n, n̄)
+
+ThermalState(n̄::Real; dim=DIM) = StateMatrix(diagm(bose_einstein(n̄).(0:dim-1)), dim)
+
+function SqueezedThermalState(arg::Arg{<:Real}, n̄::Real; dim=DIM)
+    𝐬 = Squeezing(arg, dim=dim)
+    state = ThermalState(n̄, dim=dim)
+    state.𝛒 = 𝐬 * state.𝛒 * 𝐬'
+
+    return state
+end
