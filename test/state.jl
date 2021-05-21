@@ -37,7 +37,7 @@ end
     dim = 35
 
     @test repr(Arg(2., π/4)) == "Arg{Float64}(2.0exp($(π/4)im))"
-    @test SqState.α(Arg(2., π/4)) == 2 * exp(im*π/4)
+    @test SqState.z(Arg(2., π/4)) == 2 * exp(im*π/4)
 
     @test Displacement(Arg(2., π/4)) == exp(
         2 * exp(im*π/4) * Creation(dim=dim) - 2 * exp(-im*π/4) * Annihilation(dim=dim)
@@ -48,7 +48,7 @@ end
 @testset "Squeezing" begin
     dim = 35
 
-    @test SqState.ξ(Arg(2., π/4)) == 2 * exp(im*π/4)
+    @test SqState.z(Arg(2., π/4)) == 2 * exp(im*π/4)
 
     @test Squeezing(Arg(2., π/4)) == exp(
         0.5 * 2 * exp(-im*π/4) * Annihilation(dim=dim)^2 -
