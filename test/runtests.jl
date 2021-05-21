@@ -3,7 +3,7 @@ using Test
 
 @testset "SqState.jl" begin
 
-    include("state.jl")
+    include("state/state.jl")
 
     include("read.jl")
     include("polynomial.jl")
