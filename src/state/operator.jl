@@ -27,11 +27,27 @@ function create!(state::StateVector{<:Number})
     return state
 end
 
+function create!(state::StateMatrix{<:Number})
+    dim = state.dim
+    𝐜 = Creation(dim=dim)
+    state.𝛒 = 𝐜 * state.𝛒 * 𝐜'
+
+    return state
+end
+
 Annihilation(; dim=DIM) = diagm(1 => sqrt.(1:dim-1))
 
 function annihilate!(state::StateVector{<:Number})
     dim = state.dim
     state.v = Annihilation(dim=dim) * state.v
+
+    return state
+end
+
+function annihilate!(state::StateMatrix{<:Number})
+    dim = state.dim
+    𝐚 = Annihilation(dim=dim)
+    state.𝛒 = 𝐚 * state.𝛒 * 𝐚'
 
     return state
 end
@@ -93,7 +109,7 @@ end
 function squeeze!(state::StateMatrix{<:Number}, ξ::Arg{<:Real})
     dim = state.dim
     𝐬 = Squeezing(ξ, dim=dim)
-    state.𝛒 = 𝐬 * state.𝛒 * 𝐬
+    state.𝛒 = 𝐬 * state.𝛒 * 𝐬'
 
     return state
 end

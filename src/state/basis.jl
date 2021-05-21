@@ -4,19 +4,24 @@ export
     VacuumState,
     SinglePhotonState
 
-function FockState(T::Type{<:Number}, n::Integer, dim::Integer)
+function FockState(T::Type{<:Number}, n::Integer, dim::Integer, ::Type{StateVector})
     v = zeros(T, dim)
     v[n+1] = 1
 
     return StateVector{T}(v, dim)
 end
 
-FockState(T::Type{<:Number}, n; dim=DIM) = FockState(T, n, dim)
+function FockState(T::Type{<:Number}, n::Integer, dim::Integer, ::Type{StateMatrix})
+    𝛒 = zeros(T, dim, dim)
+    𝛒[n+1, n+1] = 1
 
-FockState(n; dim=DIM) = FockState(ComplexF64, n, dim)
+    return StateMatrix{T}(𝛒, dim)
+end
 
-NumberState(n; dim=DIM) = FockState(ComplexF64, n, dim)
+FockState(n; T=ComplexF64, dim=DIM, rep=StateVector) = FockState(T, n, dim, rep)
 
-VacuumState(; dim=DIM) = FockState(ComplexF64, 0, dim)
+NumberState(n; T=ComplexF64, dim=DIM, rep=StateVector) = FockState(T, n, dim, rep)
 
-SinglePhotonState(; dim=DIM) = FockState(ComplexF64, 1, dim)
+VacuumState(; T=ComplexF64, dim=DIM, rep=StateVector) = FockState(T, 0, dim, rep)
+
+SinglePhotonState(; T=ComplexF64, dim=DIM, rep=StateVector) = FockState(T, 1, dim, rep)
