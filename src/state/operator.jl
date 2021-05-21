@@ -5,6 +5,8 @@ export
     annihilate!,
 
     Arg,
+    α,
+    ξ,
 
     Displacement,
     displace!,
@@ -65,6 +67,14 @@ function displace!(state::StateVector{<:Number}, α::Arg{<:Real})
     return state
 end
 
+function displace!(state::StateMatrix{<:Number}, α::Arg{<:Real})
+    dim = state.dim
+    𝐝 = Displacement(α, dim=dim)
+    state.𝛒 = 𝐝 * state.𝛒 * 𝐝'
+
+    return state
+end
+
 #############
 # squeezing #
 #############
@@ -76,6 +86,14 @@ end
 function squeeze!(state::StateVector{<:Number}, ξ::Arg{<:Real})
     dim = state.dim
     state.v = Squeezing(ξ, dim=dim) * state.v
+
+    return state
+end
+
+function squeeze!(state::StateMatrix{<:Number}, ξ::Arg{<:Real})
+    dim = state.dim
+    𝐬 = Squeezing(ξ, dim=dim)
+    state.𝛒 = 𝐬 * state.𝛒 * 𝐬
 
     return state
 end
