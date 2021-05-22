@@ -1,20 +1,6 @@
 export
-    laguerre_horner,
-    laguerre
-
-function laguerre_horner(n::Integer, α::Integer, x::Real)
-    # by Horner's method
-    laguerre_l = 1
-    bin = 1
-    for i in n:-1:1
-        bin *= (α + i) / (n + 1 - i)
-        laguerre_l = bin - x * laguerre_l / i
-    end
-
-    return laguerre_l
-end
-
-laguerre_horner(n::Integer, α::Integer) = x->laguerre_horner(n, α, x)
+    laguerre,
+    hermite
 
 function laguerre(n::Integer, α::Integer, x::T) where {T<:Real}
     if n == 0
@@ -33,3 +19,18 @@ function laguerre(n::Integer, α::Integer, x::T) where {T<:Real}
 end
 
 laguerre(n::Integer, α::Integer) = x -> laguerre(n, α, x)
+
+function hermite(n::T, x::Real) where {T <: Integer}
+    coeffs = T.([
+        (-1) ^ k *
+        2 ^ (n-2k) *
+        factorial(n) / (factorial(k)*factorial(n-2k))
+
+        for k in 0:floor(T, n/2)
+    ])
+    x_powers = [x^(n-2k) for k in 0:floor(T, n/2)]
+
+    return coeffs' * x_powers
+end
+
+hermite(n) = x -> hermite(n, x)
