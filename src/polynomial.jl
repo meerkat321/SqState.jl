@@ -21,6 +21,7 @@ end
 laguerre(n::Integer, α::Integer) = x -> laguerre(n, α, x)
 
 function hermite(n::T, x::Real) where {T <: Integer}
+    # the coeffs must always be an integer
     coeffs = T.([
         (-1) ^ k *
         2 ^ (n-2k) *
