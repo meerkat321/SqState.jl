@@ -139,3 +139,30 @@ end
 
 ###########
 
+function ψₙ_θ(n::Integer, θ::Real)
+    return exp(im * n * θ) * (2/π) ^ (1/4)
+end
+
+function ψₙ_x(n::Integer, x::Real)
+    return exp(-x^2) * hermite(n)(sqrt(2)x) / sqrt(2^n * factorial(n))
+end
+
+function 𝛑_θ(; dim=big(DIM))
+    return θ -> ψₙ_θ.(0:dim-1, θ) * ψₙ_θ.(0:dim-1, θ)'
+end
+
+function 𝛑_x(; dim=big(DIM))
+    return x -> ψₙ_x.(0:dim-1, x) * ψₙ_x.(0:dim-1, x)'
+end
+
+function prob_θ(state::StateMatrix)
+    dim = (state.dim>20) ? big(state.dim) : state.dim
+
+    return θ -> real(tr(𝛑_θ(dim=dim)(θ) * state.𝛒))
+end
+
+function prob_x(state::StateMatrix)
+    dim = (state.dim>20) ? big(state.dim) : state.dim
+
+    return x -> real(tr(𝛑_x(dim=dim)(x) * state.𝛒))
+end
