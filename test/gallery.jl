@@ -17,19 +17,9 @@ function main()
     ########
     PROJECT_PATH = @__DIR__
 
-    @time w = wf(ρ(VacuumState()))
+    @time ws = wf(VacuumState())
     file_path = joinpath(PROJECT_PATH, "../gallery", "wigner_surface_banner.png")
-    p = plot_wigner(wf, w, Surface, size=(1280, 640), file_path=file_path)
-
-    @time w = wf(ρ(VacuumState()))
-    file_path = joinpath(PROJECT_PATH, "../gallery", "wigner_surface_0.png")
-    p = plot_wigner(wf, w, Surface, file_path=file_path)
-
-    @time w = wf(ρ(SinglePhotonState()))
-    file_path = joinpath(PROJECT_PATH, "../gallery", "wigner_surface_1.png")
-    p = plot_wigner(wf, w, Surface, file_path=file_path)
-    file_path = joinpath(PROJECT_PATH, "../gallery", "wigner_contour_1.png")
-    p = plot_wigner(wf, w, Contour, file_path=file_path)
+    p = plot_wigner(ws, Surface, size=(1280, 640), file_path=file_path)
 
     return p
 end
