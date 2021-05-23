@@ -2,7 +2,8 @@ using Mmap
 
 export
     wigner,
-    WignerFunction
+    WignerFunction,
+    WignerSurface
 
 include("utils.jl")
 
@@ -93,13 +94,31 @@ function WignerFunction(x_range::AbstractRange, p_range::AbstractRange; dim=DIM)
     return WignerFunction(dim, dim, x_range, p_range)
 end
 
-function (wf::WignerFunction)(ρ::AbstractMatrix)
+struct WignerSurface{T<:AbstractRange}
+    x_range::T
+    p_range::T
+    𝐰_surface::Matrix{Float64}
+
+    function WignerSurface(
+        x_range::T,
+        p_range::T,
+        𝐰_surface::Matrix{Float64}
+    ) where {T<:AbstractRange}
+        return new{T}(x_range, p_range, 𝐰_surface)
+    end
+end
+
+function (wf::WignerFunction)(state::StateMatrix)
+    𝛒 = state.𝛒
+
     𝐰_surface = Matrix{Float64}(undef, length(wf.x_range), length(wf.p_range))
     @sync for i in 1:length(wf.x_range)
         Threads.@spawn for j in 1:length(wf.p_range)
-            𝐰_surface[i, j] = real(sum(ρ .* wf.𝐰[:, :, i, j]))
+            𝐰_surface[i, j] = real(sum(𝛒 .* wf.𝐰[:, :, i, j]))
         end
     end
 
-    return 𝐰_surface
+    return WignerSurface(wf.x_range, wf.p_range, 𝐰_surface)
 end
+
+(wf::WignerFunction)(state::StateVector) = wf(StateMatrix(state))

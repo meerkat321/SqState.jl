@@ -17,15 +17,15 @@ struct Contour <: PlotMethod end
 struct Surface <: PlotMethod end
 
 function plot_wigner(
-    wf::WignerFunction, w::AbstractMatrix, ::Type{Heatmap};
+    ws::WignerSurface, ::Type{Heatmap};
     size=(700, 630),
     file_path=nothing
 )
     !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
 
-    lim = maximum(abs.(w))
+    lim = maximum(abs.(ws.𝐰_surface))
     p = Plots.heatmap(
-        wf.x_range, wf.p_range, w,
+        ws.x_range, ws.p_range, ws.𝐰_surface,
         title="Wigner Function",
         xlabel="X",
         ylabel="P",
@@ -39,16 +39,16 @@ function plot_wigner(
 end
 
 function plot_wigner(
-    wf::WignerFunction, w::AbstractMatrix, ::Type{Contour};
+    ws::WignerSurface, ::Type{Contour};
     levels=20,
     size=(700, 630),
     file_path=nothing
 )
     !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
 
-    lim = maximum(abs.(w))
+    lim = maximum(abs.(ws.𝐰_surface))
     p = Plots.contour(
-        wf.x_range, wf.p_range, w,
+        ws.x_range, ws.p_range, ws.𝐰_surface,
         title="Wigner Function",
         xlabel="X",
         ylabel="P",
@@ -64,15 +64,15 @@ function plot_wigner(
 end
 
 function plot_wigner(
-    wf::WignerFunction, w::AbstractMatrix, ::Type{Surface};
+    ws::WignerSurface, ::Type{Surface};
     size=(700, 630),
     file_path=nothing
 )
     !isnothing(size) && (gr(size=size) isa Plots.GRBackend) || gr()
 
-    lim = maximum(abs.(w))
+    lim = maximum(abs.(ws.𝐰_surface))
     p = Plots.surface(
-        wf.x_range, wf.p_range, w,
+        ws.x_range, ws.p_range, ws.𝐰_surface,
         title="Wigner Function",
         xlabel="X",
         ylabel="P",
@@ -89,12 +89,12 @@ function plot_wigner(
 end
 
 function plot_ρ(
-    ρ::AbstractMatrix;
+    state::AbstractState;
     state_n=0,
     size=(700, 630),
     file_path=nothing
 )
-    ρᵣ = real(ρ)
+    ρᵣ = real(𝛒(state))
     if state_n != 0
         ρᵣ = ρᵣ[1:state_n+1, 1:state_n+1]
     else
@@ -119,7 +119,7 @@ function plot_ρ(
 end
 
 function plot_all(
-    wf::WignerFunction, w::AbstractMatrix, ρ::AbstractMatrix;
+    ws::WignerSurface, state::AbstractState;
     levels=20,
     state_n=0,
     size=(700, 630),
@@ -132,9 +132,9 @@ function plot_all(
 		grid(1, 2)
 	]
     p = plot(
-        plot_wigner(wf, w, Surface, size=nothing),
-        plot_wigner(wf, w, Contour, levels=levels, size=nothing),
-        plot_ρ(ρ, state_n=state_n, size=nothing),
+        plot_wigner(ws, Surface, size=nothing),
+        plot_wigner(ws, Contour, levels=levels, size=nothing),
+        plot_ρ(state, state_n=state_n, size=nothing),
         layout=l
     )
 
