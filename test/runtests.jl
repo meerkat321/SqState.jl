@@ -8,6 +8,6 @@ using Test
     # include("read.jl")
     # include("polynomial.jl")
     include("wigner.jl")
-    # include("plot.jl")
+    include("plot.jl")
 
 end
