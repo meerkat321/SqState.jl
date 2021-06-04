@@ -140,11 +140,11 @@ end
 ###########
 
 function ψₙ_θ(n::Integer, θ::Real)
-    return exp(im * n * θ) * (2/π) ^ (1/4)
+    return exp(im * n * θ)
 end
 
 function ψₙ_x(n::Integer, x::Real)
-    return exp(-x^2) * hermite(n)(sqrt(2)x) / sqrt(2^n * factorial(n))
+    return (2/π) ^ (1/4) * exp(-x^2) * hermite(n)(sqrt(2)x) / sqrt(2^n * factorial(n))
 end
 
 function 𝛑_θ(; dim=big(DIM))
