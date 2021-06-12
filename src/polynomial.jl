@@ -21,14 +21,13 @@ end
 laguerre(n::Integer, α::Integer) = x -> laguerre(n, α, x)
 
 function hermite(n::T, x::Real) where {T <: Integer}
-    # the coeffs must always be an integer
-    coeffs = T.([
+    coeffs = [
         (-1) ^ k *
         2 ^ (n-2k) *
         factorial(n) / (factorial(k)*factorial(n-2k))
 
         for k in 0:floor(T, n/2)
-    ])
+    ]
     x_powers = [x^(n-2k) for k in 0:floor(T, n/2)]
 
     return coeffs' * x_powers
