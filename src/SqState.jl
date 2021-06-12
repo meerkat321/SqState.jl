@@ -16,6 +16,7 @@ module SqState
     end
 
     include("state/state.jl")
+    include("data_generator.jl")
 
     include("read.jl")
     include("polynomial.jl")
