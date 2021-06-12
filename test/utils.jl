@@ -46,7 +46,7 @@ end
 @testset "coefficient_of_wave_function" begin
     tol = 1e-14
 
-    m_range = n_range = 1:35
+    m_range = n_range = 1:70
 
     for m in m_range, n in n_range
         m1 = (n ≥ m) ? (-1)^(m-1) : (-1)^(n-1)
@@ -61,7 +61,7 @@ end
 @testset "z_to_power" begin
     tol = 1e-14
 
-    m_range = n_range = 1:35
+    m_range = n_range = 1:70
     x_range = -1:0.1:1
     p_range = -0.6:0.1:0.6
 
@@ -79,17 +79,17 @@ end
 end
 
 @testset "laguerre" begin
-    m_range = n_range = 1:35
+    m_range = n_range = 1:70
     x_range = -1:0.1:1
     p_range = -0.6:0.1:0.6
 
     # n >= m
     for m in m_range, n in m:n_range.stop, x in x_range, p in p_range
-        @test abs(laguerre(m, n, x, p) - laguerre(m-1, n-m, 2(x^2 + p^2))) < 1e-5
+        @test abs(laguerre(m, n, x, p) - laguerre(m-1, n-m, abs2(sqrt(2.)*(x+p*im)))) < 1e-7
     end
     # n < m
     for n in n_range, m in n:m_range.stop, x in x_range, p in p_range
-        @test abs(laguerre(m, n, x, p) - laguerre(n-1, m-n, 2(x^2 + p^2))) < 1e-5
+        @test abs(laguerre(m, n, x, p) - laguerre(n-1, m-n, abs2(sqrt(2.)*(x+p*im)))) < 1e-7
     end
 
     xs = collect(x_range)

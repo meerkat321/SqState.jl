@@ -3,7 +3,7 @@ using HDF5
 @testset "read" begin
     file_name = "test_hdf5.h5"
     data_name = "test_dm"
-    n = 35
+    n = 70
 
     arr_real = rand(n, n)
     arr_imag = rand(n, n)

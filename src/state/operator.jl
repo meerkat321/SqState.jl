@@ -12,9 +12,7 @@ export
     displace!,
 
     Squeezing,
-    squeeze!,
-
-    prob_θ_x
+    squeeze!
 
 ############
 # a† and a #
@@ -131,10 +129,4 @@ end
 
 function 𝛑_θ_x(; dim=big(DIM))
     return (θ, x) -> ψₙ_θ_x.(0:dim-1, θ, x) * ψₙ_θ_x.(0:dim-1, θ, x)'
-end
-
-function prob_θ_x(state::StateMatrix)
-    dim = (state.dim>20) ? big(state.dim) : state.dim
-
-    return (θ, x) -> real(tr(𝛑_θ_x(dim=dim)(θ, x) * state.𝛒))
 end

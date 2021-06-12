@@ -10,7 +10,7 @@ include("basis.jl")
 include("operator.jl")
 
 @testset "pure state" begin
-    dim = 35
+    dim = 70
 
     @test CoherentState(α(2., π/4), dim=dim) == displace!(VacuumState(dim=dim), α(2., π/4))
     @test CoherentState(α(2., π/4), dim=dim, rep=StateMatrix) ==
@@ -21,7 +21,7 @@ include("operator.jl")
 end
 
 @testset "mixed state" begin
-    dim = 35
+    dim = 70
 
     n̄ = 0.5
     n = 5
