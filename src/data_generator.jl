@@ -10,11 +10,8 @@ export
     pdf_θ_x,
     gen_data
 
-
-function pdf_θ_x(state::StateMatrix)
-    dim = (state.dim>20) ? big(state.dim) : state.dim
-
-    return (θ, x) -> real(tr(𝛑_θ_x(dim=dim)(θ, x) * state.𝛒))
+function pdf_θ_x(state::StateMatrix, θ::Real, x::Real)
+    return real(tr(𝛑_θ_x(θ, x, dim=state.dim) * state.𝛒))
 end
 
 struct QuantumStateProblem
@@ -24,7 +21,7 @@ end
 function (problem::QuantumStateProblem)(𝐱)
     @unpack θ, x = 𝐱
     @unpack state = problem
-    p = pdf_θ_x(state)(θ, x)
+    p = pdf_θ_x(state, θ, x)
     p = (p <= 0) ? floatmin() : p
 
     return log(p)

@@ -124,9 +124,10 @@ function ψₙ_θ_x(n::Integer, θ::Real, x::Real)
     return exp(im * n * θ) *
         (2/π) ^ (1/4) *
         exp(-x^2) *
-        hermite(n)(sqrt(2)x) / sqrt(2^n * factorial(n))
+        hermite(big(n))(sqrt(2)x) / sqrt(2^n * factorial(big(n)))
 end
 
-function 𝛑_θ_x(; dim=big(DIM))
-    return (θ, x) -> ψₙ_θ_x.(0:dim-1, θ, x) * ψₙ_θ_x.(0:dim-1, θ, x)'
+function 𝛑_θ_x(θ::Real, x::Real; dim=DIM)
+    ψ_vec = ψₙ_θ_x.(0:dim-1, θ, x)
+    return ψ_vec * ψ_vec'
 end
