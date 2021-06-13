@@ -10,8 +10,10 @@ export
     pdf_θ_x,
     gen_data
 
+tr_mul(𝐚, 𝐛) = sum(𝐚[i, :]' * 𝐛[:, i] for i in 1:size(𝐚, 1))
+
 function pdf_θ_x(state::StateMatrix, θ::Real, x::Real)
-    return real(tr(𝛑_θ_x(θ, x, dim=state.dim) * state.𝛒))
+    return real(tr_mul(𝛑_θ_x(θ, x, dim=state.dim), state.𝛒))
 end
 
 struct QuantumStateProblem
