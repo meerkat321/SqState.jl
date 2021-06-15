@@ -10,10 +10,9 @@ function pdf_θ_x(state::StateMatrix, θ::Real, x::Real)
     return real(tr_mul(𝛑_θ_x(θ, x, dim=state.dim), state.𝛒))
 end
 
-function gen_y(state::StateMatrix, θs, xs)
+function gen_y!(state::StateMatrix, θs, xs, 𝐩::Matrix)
     pdf = (θ, x) -> pdf_θ_x(state, θ, x)
 
-    𝐩 = Matrix{Float64}(undef, length(θs), length(xs))
     @sync for (i, θ) in enumerate(θs)
         Threads.@spawn for (j, x) in enumerate(xs)
             𝐩[i, j] = pdf(θ, x)
@@ -23,24 +22,38 @@ function gen_y(state::StateMatrix, θs, xs)
     return 𝐩
 end
 
-function gen_training_data(;
-    rs=0:2e-1:16, θs=0:2e-1:2π, n̄s=0:2.5e-2:0.5,
+function rand_arg(
+    r_range::Tuple{Float64, Float64},
+    θ_range::Tuple{Float64, Float64},
+    n̄_range::Tuple{Float64, Float64}
+)
+    r = r_range[1] + (r_range[2]-r_range[1])*rand()
+    θ = θ_range[1] + (θ_range[2]-θ_range[1])*rand()
+    n̄ = n̄_range[1] + (n̄_range[2]-n̄_range[1])*rand()
+
+    return r, θ, n̄
+end
+
+function gen_training_data(
+    n;
+    r_range=(0., 16.), θ_range=(0., 2π), n̄_range=(0., 0.5),
     bin_θs=0:2e-1:2π, bin_xs=-10:5e-1:10, dim=DIM
 )
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
     data_name = joinpath(data_path, "$dim $(range2str(bin_θs)) $(range2str(bin_θs)).jld2")
 
-    @info "Start to gen training data" rs θs n̄s
+    @info "Start to gen training data" r_range θ_range n̄_range
 
-    𝐩_dict = Dict{Tuple{Float64, Float64, Float64}, Matrix{Float64}}()
-    i = 0
-    n_data = length(rs) * length(θs) * length(n̄s)
-    for r in rs, θ in θs, n̄ in n̄s
-        i += 1
-        @info "Args [$i/$n_data]" r θ n̄
+    𝐩_dict = Dict([
+        rand_arg(r_range, θ_range, n̄_range)=>Matrix{Float64}(undef, length(bin_θs), length(bin_xs))
+        for _ in 1:n
+    ])
+    for (i, data) in enumerate(𝐩_dict)
+        r, θ, n̄ = data.first
+        @info "Args [$i/$n]" r θ n̄
 
         state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
-        @time 𝐩_dict[(r, θ, n̄)] = gen_y(state, bin_θs, bin_xs)
+        @time gen_y!(state, bin_θs, bin_xs, data.second)
     end
 
     jldsave(data_name; 𝐩_dict)
