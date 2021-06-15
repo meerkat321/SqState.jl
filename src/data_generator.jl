@@ -43,7 +43,7 @@ end
 function gen_training_data(
     n;
     r_range=(0., 16.), θ_range=(0., 2π), n̄_range=(0., 0.5),
-    bin_θs=0:2e-1:2π, bin_xs=-10:5e-1:10, dim=DIM
+    bin_θs=0:2e-1:2π, bin_xs=-10:5e-1:10, dim=DIM, nth_data_log=10
 )
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
     data_name = joinpath(data_path, "$dim $(range2str(bin_θs)) $(range2str(bin_θs)).jld2")
@@ -55,14 +55,17 @@ function gen_training_data(
         for _ in 1:n
     ])
 
-    @sync for (i, p) in enumerate(𝐩_dict)
+    t_start = time()
+    @sync for (i, ((r, θ, n̄), 𝐩)) in enumerate(𝐩_dict)
         Threads.@spawn begin
-            args, 𝐩 = p
-            r, θ, n̄ = args
+            t_i_start = time()
 
             state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
             pdf!(𝐩, state, bin_θs, bin_xs)
-            (i%100==0) && (@info(r, θ, n̄))
+
+            single_time = time() - t_i_start
+            total_time = time() - t_start
+            (i%nth_data_log == 0) && (@info("Args:", r, θ, n̄, single_time, total_time))
         end
     end
 
