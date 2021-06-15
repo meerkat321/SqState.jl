@@ -23,28 +23,25 @@ function gen_y(state::StateMatrix, θs, xs)
     return 𝐩
 end
 
-to_f5(x) = round(x, digits=5)
-
-function gen_training_data(r, θ, n̄; bin_θs, bin_xs, dim)
-    state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
-    data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
-    data_name = joinpath(data_path, "$(dim)_$(to_f5(r))_$(to_f5(θ))_$(to_f5(n̄)).jld2")
-
-    p = gen_y(state, bin_θs, bin_xs)
-    @time jldsave(data_name; dim, bin_θs, bin_xs, r, θ, n̄, p)
-end
-
 function gen_training_data(;
-    rs=0:1e-1:16, θs=0:1e-1:2π, n̄s=0:1e-2:0.5,
+    rs=0:2e-1:16, θs=0:2e-1:2π, n̄s=0:2.5e-2:0.5,
     bin_θs=0:2e-1:2π, bin_xs=-10:5e-1:10, dim=DIM
 )
-    @info "Start to gen training data" rs θs n̄s
-    n_data = length(rs) * length(θs) * length(n̄s)
+    data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
+    data_name = joinpath(data_path, "$dim $(range2str(bin_θs)) $(range2str(bin_θs)).jld2")
 
+    @info "Start to gen training data" rs θs n̄s
+
+    𝐩_dict = Dict{Tuple{Float64, Float64, Float64}, Matrix{Float64}}()
     i = 0
+    n_data = length(rs) * length(θs) * length(n̄s)
     for r in rs, θ in θs, n̄ in n̄s
         i += 1
         @info "Args [$i/$n_data]" r θ n̄
-        gen_training_data(r, θ, n̄, bin_θs=bin_θs, bin_xs=bin_xs, dim=dim)
+
+        state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
+        @time 𝐩_dict[(r, θ, n̄)] = gen_y(state, bin_θs, bin_xs)
     end
+
+    jldsave(data_name; 𝐩_dict)
 end
