@@ -127,7 +127,7 @@ function ψₙ(n::Integer, θ::Real, x::Real)
         hermite(big(n))(sqrt(2)x) / sqrt(2^big(n) * factorial(big(n)))
 end
 
-function 𝛑!(result::Matrix{<:Complex}, θ::Real, x::Real, dim::Integer)
+function 𝛑!(result::Matrix{<:Complex}, θ::Real, x::Real; dim=DIM)
     view(result, :, 1) .= ψₙ.(0:dim-1, θ, x)
     result .= view(result, :, 1) * view(result, :, 1)'
 
@@ -137,5 +137,5 @@ end
 function 𝛑(θ::Real, x::Real; dim=DIM, T=ComplexF64)
     result = Matrix{T}(undef, dim, dim)
 
-    return 𝛑!(result, θ, x, dim)
+    return 𝛑!(result, θ, x, dim=dim)
 end

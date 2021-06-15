@@ -16,10 +16,12 @@ function pdf(state::StateMatrix, θs, xs; T=Float64)
     return pdf!(𝐩, state, θs, xs)
 end
 
-function pdf!(𝐩::Matrix, state::StateMatrix, θs, xs)
+function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
+    𝛑_res = Matrix{complex(T)}(undef, state.dim, state.dim)
+
     for (j, x) in enumerate(xs)
         for (i, θ) in enumerate(θs)
-            𝐩[i, j] = pdf(state, θ, x)
+            𝐩[i, j] = real_tr_mul(𝛑!(𝛑_res, θ, x, dim=state.dim), state.𝛒)
         end
     end
 
@@ -52,12 +54,13 @@ function gen_training_data(
         rand_arg(r_range, θ_range, n̄_range)=>Matrix{Float64}(undef, length(bin_θs), length(bin_xs))
         for _ in 1:n
     ])
-    for (i, data) in enumerate(𝐩_dict)
-        r, θ, n̄ = data.first
-        @info "Args [$i/$n]" r θ n̄
 
-        state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
-        @time pdf!(data.second, state, bin_θs, bin_xs)
+    @sync for (args, 𝐩) in 𝐩_dict
+        Threads.@spawn begin
+            r, θ, n̄ = args
+            state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
+            pdf!(𝐩, state, bin_θs, bin_xs)
+        end
     end
 
     jldsave(data_name; 𝐩_dict)
