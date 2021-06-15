@@ -10,7 +10,7 @@ function pdf_θ_x(state::StateMatrix, θ::Real, x::Real)
     return real(tr_mul(𝛑_θ_x(θ, x, dim=state.dim), state.𝛒))
 end
 
-function gen_y(state::StateMatrix; θs = 0:2e-1:2π, xs = -10:5e-1:10)
+function gen_y(state::StateMatrix, θs, xs)
     pdf = (θ, x) -> pdf_θ_x(state, θ, x)
 
     𝐩 = Matrix{Float64}(undef, length(θs), length(xs))
@@ -25,16 +25,19 @@ end
 
 to_f5(x) = round(x, digits=5)
 
-function gen_training_data(r, θ, n̄; dim=DIM)
+function gen_training_data(r, θ, n̄; bin_θs, bin_xs, dim)
     state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
     data_name = joinpath(data_path, "$(to_f5(r))_$(to_f5(θ))_$(to_f5(n̄)).jld2")
 
-    p = gen_y(state)
-    @time jldsave(data_name; r, θ, n̄, p)
+    p = gen_y(state, bin_θs, bin_xs)
+    @time jldsave(data_name; dim, r, θ, n̄, p)
 end
 
-function gen_training_data(; rs=0:1e-1:16, θs=0:1e-1:2π, n̄s=0:1e-2:0.5, dim=DIM)
+function gen_training_data(;
+    rs=0:1e-1:16, θs=0:1e-1:2π, n̄s=0:1e-2:0.5,
+    bin_θs=0:2e-1:2π, bin_xs=-10:5e-1:10, dim=DIM
+)
     @info "Start to gen training data" rs θs n̄s
     n_data = length(rs) * length(θs) * length(n̄s)
 
@@ -42,6 +45,6 @@ function gen_training_data(; rs=0:1e-1:16, θs=0:1e-1:2π, n̄s=0:1e-2:0.5, dim=
     for r in rs, θ in θs, n̄ in n̄s
         i += 1
         @info "Args [$i/$n_data]" r θ n̄
-        gen_training_data(r, θ, n̄, dim=dim)
+        gen_training_data(r, θ, n̄, bin_θs=bin_θs, bin_xs=bin_xs, dim=dim)
     end
 end
