@@ -63,9 +63,11 @@ function gen_training_data(
             state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
             pdf!(𝐩, state, bin_θs, bin_xs)
 
-            single_time = time() - t_i_start
-            total_time = time() - t_start
-            (i%nth_data_log == 0) && (@info("Args:", r, θ, n̄, single_time, total_time))
+            if i % nth_data_log == 0
+                single_time = time() - t_i_start
+                total_time = time() - t_start
+                @info "Args:" r θ n̄ single_time total_time
+            end
         end
     end
 
