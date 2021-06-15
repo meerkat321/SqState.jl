@@ -4,22 +4,22 @@ export
     pdf_θ_x,
     gen_training_data
 
-tr_mul(𝐚, 𝐛) = sum(𝐚[i, :]' * 𝐛[:, i] for i in 1:size(𝐚, 1))
+real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
 
 function pdf_θ_x(state::StateMatrix, θ::Real, x::Real)
-    return real(tr_mul(𝛑_θ_x(θ, x, dim=state.dim), state.𝛒))
+    return real_tr_mul(𝛑_θ_x(θ, x, dim=state.dim), state.𝛒)
 end
 
-function gen_y!(state::StateMatrix, θs, xs, 𝐩::Matrix)
-    pdf = (θ, x) -> pdf_θ_x(state, θ, x)
-
+function calc_p!(state::StateMatrix, θs, xs, 𝐩::Matrix)
+    sp_lock = Threads.SpinLock()
     @sync for (i, θ) in enumerate(θs)
         Threads.@spawn for (j, x) in enumerate(xs)
-            𝐩[i, j] = pdf(θ, x)
+            p = pdf_θ_x(state, θ, x)
+            lock(sp_lock) do
+                𝐩[i, j] = p
+            end
         end
     end
-
-    return 𝐩
 end
 
 function rand_arg(
@@ -53,7 +53,7 @@ function gen_training_data(
         @info "Args [$i/$n]" r θ n̄
 
         state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
-        @time gen_y!(state, bin_θs, bin_xs, data.second)
+        @time calc_p!(state, bin_θs, bin_xs, data.second)
     end
 
     jldsave(data_name; 𝐩_dict)
