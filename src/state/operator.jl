@@ -113,3 +113,21 @@ function squeeze!(state::StateMatrix{<:Number}, ξ::Arg{<:Real})
 
     return state
 end
+
+###############
+# measurement #
+###############
+
+# |θ, x⟩ = ∑ₙ |n⟩ ⟨n|θ, x⟩ = ∑ₙ ψₙ(θ, x) |n⟩
+# ⟨n|θ, x⟩ = ψₙ(θ, x) = exp(im n θ) (2/π)^(1/4) exp(-x^2) Hₙ(√2 x)/√(2^n n!)
+function ψₙ_θ_x(n::Integer, θ::Real, x::Real)
+    return exp(im * n * θ) *
+        (2/π) ^ (1/4) *
+        exp(-x^2) *
+        hermite(big(n))(sqrt(2)x) / sqrt(2^big(n) * factorial(big(n)))
+end
+
+function 𝛑_θ_x(θ::Real, x::Real; dim=DIM)
+    ψ_vec = ψₙ_θ_x.(0:dim-1, θ, x)
+    return ψ_vec * ψ_vec'
+end

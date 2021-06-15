@@ -1,5 +1,5 @@
 @testset "StateVector" begin
-    dim = 35
+    dim = 70
     T = ComplexF64
 
     vacuum_state_v = zeros(T, dim)
@@ -17,7 +17,7 @@
 end
 
 @testset "StateMatrix" begin
-    dim = 35
+    dim = 70
     T = ComplexF64
 
     vacuum_state_𝛒 = zeros(T, dim, dim)
@@ -25,8 +25,8 @@ end
 
     state = StateMatrix{T}(vacuum_state_𝛒, dim)
     @test repr(state) == "StateMatrix{ComplexF64}(\n" *
-        "\e[38;2;255;102;102m\u2587" * "\e[38;2;178;178;178m\u2587"^34 * "\n" *
-        ("\e[38;2;178;178;178m\u2587"^35 * "\n")^34 *
+        "\e[38;2;255;102;102m\u2587" * "\e[38;2;178;178;178m\u2587"^(dim-1) * "\n" *
+        ("\e[38;2;178;178;178m\u2587"^dim * "\n")^(dim-1) *
         "\e[0m)"
     @test state.dim == dim
     @test 𝛒(state) == vacuum_state_𝛒

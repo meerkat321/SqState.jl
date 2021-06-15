@@ -1,5 +1,5 @@
 @testset "a† and a" begin
-    dim = 35
+    dim = 70
 
     @test create!(VacuumState(dim=dim)) ≈ SinglePhotonState(dim=dim)
     @test annihilate!(SinglePhotonState(dim=dim)) ≈ VacuumState(dim=dim)
@@ -14,7 +14,7 @@ end
 end
 
 @testset "Displacement" begin
-    dim = 35
+    dim = 70
     r = 2.
     θ = π/4
 
@@ -32,7 +32,7 @@ end
 end
 
 @testset "squeezing" begin
-    dim = 35
+    dim = 70
     r = 2.
     θ = π/4
 
