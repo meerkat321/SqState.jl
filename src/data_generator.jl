@@ -21,7 +21,7 @@ function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
 
     for (j, x) in enumerate(xs)
         for (i, θ) in enumerate(θs)
-            𝐩[i, j] = real_tr_mul(𝛑!(𝛑_res, θ, x, dim=state.dim), state.𝛒)
+            𝐩[i, j] = real_tr_mul(𝛑!(𝛑_res, θ, x; dim=state.dim), state.𝛒)
         end
     end
 
@@ -55,11 +55,14 @@ function gen_training_data(
         for _ in 1:n
     ])
 
-    @sync for (args, 𝐩) in 𝐩_dict
+    @sync for (i, p) in enumerate(𝐩_dict)
         Threads.@spawn begin
+            args, 𝐩 = p
             r, θ, n̄ = args
+
             state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
             pdf!(𝐩, state, bin_θs, bin_xs)
+            (i%100==0) && (@info(r, θ, n̄))
         end
     end
 
