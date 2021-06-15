@@ -28,10 +28,10 @@ to_f5(x) = round(x, digits=5)
 function gen_training_data(r, θ, n̄; bin_θs, bin_xs, dim)
     state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
-    data_name = joinpath(data_path, "$(to_f5(r))_$(to_f5(θ))_$(to_f5(n̄)).jld2")
+    data_name = joinpath(data_path, "$(dim)_$(to_f5(r))_$(to_f5(θ))_$(to_f5(n̄)).jld2")
 
     p = gen_y(state, bin_θs, bin_xs)
-    @time jldsave(data_name; dim, r, θ, n̄, p)
+    @time jldsave(data_name; dim, bin_θs, bin_xs, r, θ, n̄, p)
 end
 
 function gen_training_data(;
