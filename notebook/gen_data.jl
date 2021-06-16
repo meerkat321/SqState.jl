@@ -22,10 +22,13 @@ end;
 
 # ╔═╡ 282ee8c1-5362-4170-a8e8-2178a115e140
 begin
+	tof5(f) = round(f, digits=3)
+	
 	plots = Vector{Plots.Plot}(undef, length(𝐩_dict))
 	for (i, ((r, θ, n̄), 𝐩)) in enumerate(𝐩_dict)
 		lim = maximum(abs.(𝐩))
-		plots[i] = heatmap(𝐩', clim=(-lim, lim), color=:coolwarm)
+		title = "r=$(tof5(r)) θ=$(tof5(θ)) n̄=$(tof5(n̄))"
+		plots[i] = heatmap(𝐩', clim=(-lim, lim), title=title, color=:coolwarm)
 	end
 end
 
