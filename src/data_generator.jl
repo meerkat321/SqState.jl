@@ -1,7 +1,8 @@
 using JLD2
 
 export
-    pdf_θ_x,
+    pdf,
+    pdf!,
     gen_training_data
 
 real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
@@ -43,10 +44,11 @@ end
 function gen_training_data(
     n;
     r_range=(0., 16.), θ_range=(0., 2π), n̄_range=(0., 0.5),
-    bin_θs=0:2e-1:2π, bin_xs=-10:5e-1:10, dim=DIM, nth_data_log=10
+    bin_θs=LinRange(0, 2π, 40), bin_xs=LinRange(-10, 10, 40), dim=DIM, nth_data_log=10,
+    file_name="data4generator.jld2"
 )
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
-    data_name = joinpath(data_path, "$dim $(range2str(bin_θs)) $(range2str(bin_θs)).jld2")
+    data_name = joinpath(data_path, file_name)
 
     @info "Start to gen training data" r_range θ_range n̄_range
 
@@ -71,5 +73,5 @@ function gen_training_data(
         end
     end
 
-    jldsave(data_name; 𝐩_dict)
+    jldsave(data_name; bin_θs, bin_xs, 𝐩_dict)
 end

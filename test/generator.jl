@@ -29,7 +29,7 @@ end
 function sq_loss(model, args, 𝐩)
     generated_data = model(args)
     generated_data = reshape(generated_data, Int(length(generated_data)/2), 2)
-    h = fit(Histogram, (generated_data[:, 1], generated_data[:, 2])).weights
+    h = fit(Histogram, (generated_data[:, 1], generated_data[:, 2]), nbins=40).weights
     𝐩̂ = h / sum(h)
 
     return crossentropy(𝐩̂, 𝐩, agg=mean)
@@ -50,13 +50,17 @@ function main()
     loss(x, y) = sq_loss(model, x, y)
     ps = Flux.params(model)
 
-    for epoch in 1:100
-        for batch_data in train_loader
-            # @assert size(batch_data[1]) == (3, 20)
-            # @assert size(batch_data[2]) == (20,)
-            Flux.train!(loss, ps, batch_data, ADAM())
-        end
-    end
+    loss(first(train_loader)[1][:, 1], first(train_loader)[2][1])
 
-    # Flux.train!(loss, ps, ncycle(train_loader, 10), opt)
+    # for epoch in 1:100
+    #     for batch_data in train_loader
+    #         # @assert size(batch_data[1]) == (3, 20)
+    #         # @assert size(batch_data[2]) == (20,)
+    #         # Flux.train!(loss, ps, batch_data, ADAM())
+    #     end
+    # end
+
+    # Flux.train!(loss, ps, ncycle(train_loader, 10), ADAM())
 end
+
+# TODO: get nbins from data
