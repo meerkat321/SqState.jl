@@ -44,7 +44,7 @@ end
 function gen_training_data(
     n;
     r_range=(0., 16.), θ_range=(0., 2π), n̄_range=(0., 0.5),
-    bin_θs=LinRange(0, 2π, 40), bin_xs=LinRange(-10, 10, 40), dim=DIM, nth_data_log=10,
+    bin_θs=LinRange(0, 2π, 40), bin_xs=LinRange(-10, 10, 40), dim=DIM, nth_log=10,
     file_name="data4generator.jld2"
 )
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
@@ -65,7 +65,7 @@ function gen_training_data(
             state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
             pdf!(𝐩, state, bin_θs, bin_xs)
 
-            if i % nth_data_log == 0
+            if i % nth_log == 0
                 single_time = time() - t_i_start
                 total_time = time() - t_start
                 @info "Args:" r θ n̄ single_time total_time
@@ -73,5 +73,5 @@ function gen_training_data(
         end
     end
 
-    jldsave(data_name; bin_θs, bin_xs, 𝐩_dict)
+    jldsave(data_name; bin_θs, bin_xs, dim, 𝐩_dict)
 end
