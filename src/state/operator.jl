@@ -120,14 +120,22 @@ end
 
 # |θ, x⟩ = ∑ₙ |n⟩ ⟨n|θ, x⟩ = ∑ₙ ψₙ(θ, x) |n⟩
 # ⟨n|θ, x⟩ = ψₙ(θ, x) = exp(im n θ) (2/π)^(1/4) exp(-x^2) Hₙ(√2 x)/√(2^n n!)
-function ψₙ_θ_x(n::Integer, θ::Real, x::Real)
+function ψₙ(n::Integer, θ::Real, x::Real)
     return exp(im * n * θ) *
         (2/π) ^ (1/4) *
         exp(-x^2) *
         hermite(big(n))(sqrt(2)x) / sqrt(2^big(n) * factorial(big(n)))
 end
 
-function 𝛑_θ_x(θ::Real, x::Real; dim=DIM)
-    ψ_vec = ψₙ_θ_x.(0:dim-1, θ, x)
-    return ψ_vec * ψ_vec'
+function 𝛑!(result::Matrix{<:Complex}, θ::Real, x::Real; dim=DIM)
+    view(result, :, 1) .= ψₙ.(0:dim-1, θ, x)
+    result .= view(result, :, 1) * view(result, :, 1)'
+
+    return result
+end
+
+function 𝛑(θ::Real, x::Real; dim=DIM, T=ComplexF64)
+    result = Matrix{T}(undef, dim, dim)
+
+    return 𝛑!(result, θ, x, dim=dim)
 end
