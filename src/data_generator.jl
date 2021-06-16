@@ -50,7 +50,7 @@ function gen_training_data(
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
     data_name = joinpath(data_path, file_name)
 
-    @info "Start to gen training data" r_range θ_range n̄_range
+    @info "Start to gen training data" r_range θ_range n̄_range bin_θs bin_xs dim nth_log file_name
 
     𝐩_dict = Dict([
         rand_arg(r_range, θ_range, n̄_range)=>Matrix{Float64}(undef, length(bin_θs), length(bin_xs))
