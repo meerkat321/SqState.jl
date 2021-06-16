@@ -45,10 +45,10 @@ function gen_training_data(
     n;
     r_range=(0., 16.), θ_range=(0., 2π), n̄_range=(0., 0.5),
     bin_θs=LinRange(0, 2π, 40), bin_xs=LinRange(-10, 10, 40), dim=DIM, nth_log=10,
-    file_name="data4generator.jld2"
+    file_name="data4generator"
 )
     data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
-    data_name = joinpath(data_path, file_name)
+    data_name = joinpath(data_path, "$file_name.jld2")
 
     @info "Start to gen training data" r_range θ_range n̄_range bin_θs bin_xs dim nth_log file_name
 
