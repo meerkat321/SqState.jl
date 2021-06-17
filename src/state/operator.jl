@@ -1,8 +1,10 @@
 export
     Creation,
     create!,
+    create,
     Annihilation,
     annihilate!,
+    annihilate,
 
     Arg,
     α,
@@ -35,6 +37,8 @@ function create!(state::StateMatrix{<:Number})
     return state
 end
 
+create(state::AbstractState) = create!(copy(state))
+
 Annihilation(; dim=DIM) = diagm(1 => sqrt.(1:dim-1))
 
 function annihilate!(state::StateVector{<:Number})
@@ -51,6 +55,8 @@ function annihilate!(state::StateMatrix{<:Number})
 
     return state
 end
+
+annihilate(state::AbstractState) = annihilate!(copy(state))
 
 ###########
 # α and ξ #

@@ -43,6 +43,10 @@ function purity(state::StateVector{<:Number})
     return real(tr(𝛒^2))
 end
 
+function Base.copy(state::StateVector{T}) where {T<:Number}
+    return StateVector{T}(copy(state.v), state.dim)
+end
+
 ################
 # state matrix #
 ################
@@ -82,4 +86,8 @@ function purity(state::StateMatrix{<:Number})
     𝛒 /= tr(𝛒)
 
     return real(tr(𝛒^2))
+end
+
+function Base.copy(state::StateMatrix{T}) where {T<:Number}
+    return StateMatrix{T}(copy(state.𝛒), state.dim)
 end
