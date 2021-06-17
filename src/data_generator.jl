@@ -68,20 +68,21 @@ function gen_nongaussian_training_data(state::StateMatrix; n::Integer=40960, θ_
     return hcat(first.(sampled_data), second.(sampled_data)), results
 end
 
-function gen_gaussian_training_data(state::StateMatrix)
+function gen_gaussian_training_data(state::StateMatrix, n::Integer)
     a = tr(annihilate(state).𝛒)
     a² = tr(annihilate!(annihilate(state)).𝛒)
     ad = tr(create(state).𝛒)
     ad² = tr(create!(create(state)).𝛒)
     ada = tr(create!(annihilate(state)).𝛒)
 
-    θ = 2π * rand()
+    θs = 2π * rand(n)
 
-    q² = 0.5 * (a² * exp(-2im * θ) + ad² * exp(2im * θ) + 1 + 2ada)
-    μ = 1 / sqrt(2) * (a * exp(-im * θ) + ad * exp(im * θ))
-    σ² = real((q² - μ^2) / 2)
+    q² = @. 0.5(a²*exp(-2im*θs) + ad²*exp(2im*θs) + 1 + 2ada)
+    μ = 1/sqrt(2) * (a*exp.(-im*θs) + ad*exp.(im*θs))
+    σ² = real((q² - μ.^2) / 2)
+    σ² = map(x->(x≤0 ? floatmin() : x), σ²)
 
-    x = μ + sqrt(σ²) * randn()
+    xs = μ + sqrt.(σ²) .* randn(n)
 
-    return θ, x
+    return hcat(θs, xs)
 end
