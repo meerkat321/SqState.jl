@@ -1,4 +1,11 @@
 using JLD2
+using TransformVariables
+using LogDensityProblems
+using DynamicHMC
+using Parameters
+using Statistics
+using Random
+using ForwardDiff
 
 export
     pdf,
@@ -29,49 +36,33 @@ function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
     return 𝐩
 end
 
-function rand_arg(
-    r_range::Tuple{Float64, Float64},
-    θ_range::Tuple{Float64, Float64},
-    n̄_range::Tuple{Float64, Float64}
-)
-    r = r_range[1] + (r_range[2]-r_range[1])*rand()
-    θ = θ_range[1] + (θ_range[2]-θ_range[1])*rand()
-    n̄ = n̄_range[1] + (n̄_range[2]-n̄_range[1])*rand()
-
-    return r, θ, n̄
+struct QuantumStateProblem
+    state::StateMatrix
 end
 
-function gen_training_data(
-    n;
-    r_range=(0., 16.), θ_range=(0., 2π), n̄_range=(0., 0.5),
-    bin_θs=LinRange(0, 2π, 40), bin_xs=LinRange(-10, 10, 40), dim=DIM, nth_log=10,
-    file_name="data4generator"
-)
-    data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
-    data_name = joinpath(data_path, "$file_name.jld2")
+function (problem::QuantumStateProblem)(𝐱)
+    @unpack θ, x = 𝐱
+    @unpack state = problem
+    # p = exp(-θ^2)*exp(-x^2)
+    # p = pdf(state, θ, x)
+    ψₙs = ψₙ.(0:state.dim-1, θ, x)
+    p = real_tr_mul(ψₙs*ψₙs', state.𝛒)
+    p = (p <= 0) ? floatmin() : p
 
-    @info "Start to gen training data" r_range θ_range n̄_range bin_θs bin_xs dim nth_log file_name
+    return log(p)
+end
 
-    𝐩_dict = Dict([
-        rand_arg(r_range, θ_range, n̄_range)=>Matrix{Float64}(undef, length(bin_θs), length(bin_xs))
-        for _ in 1:n
-    ])
+function gen_training_data(state::StateMatrix; n::Integer=40960, θ_range::Tuple=(0., 2π), x_range=(-20., 20.))
+    second = arr -> arr[2]
+    t = as((θ=as(Real,θ_range[1], θ_range[2]), x=as(Real, x_range[1], x_range[2])))
 
-    t_start = time()
-    @sync for (i, ((r, θ, n̄), 𝐩)) in enumerate(𝐩_dict)
-        Threads.@spawn begin
-            t_i_start = time()
+    problem = QuantumStateProblem(state)
 
-            state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
-            pdf!(𝐩, state, bin_θs, bin_xs)
+    log_likelyhood = TransformedLogDensity(t, problem)
+    ∇log_likelyhood = ADgradient(:ForwardDiff, log_likelyhood)
 
-            if i % nth_log == 0
-                single_time = time() - t_i_start
-                total_time = time() - t_start
-                @info "Args:" r θ n̄ single_time total_time
-            end
-        end
-    end
+    results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇log_likelyhood, n)
+    sampled_data = transform.(t, results.chain)
 
-    jldsave(data_name; bin_θs, bin_xs, dim, 𝐩_dict)
+    return hcat(first.(sampled_data), second.(sampled_data)), results
 end
