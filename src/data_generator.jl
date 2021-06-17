@@ -11,7 +11,8 @@ using Distributions
 export
     pdf,
     pdf!,
-    gen_training_data
+    gen_nongaussian_training_data,
+    gen_gaussian_training_data
 
 real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
 
