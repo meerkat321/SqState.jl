@@ -6,12 +6,20 @@ using Flux
 using IterTools
 using StatsBase
 
+push_one_more!(v::Vector) = push!(v, v[end] + (v[end]-v[end-1]))
+
 function fetch_data()
     data_path = joinpath(datadep"SqState", "training_data", "gen_data")
     file_names = readdir(data_path)
-    𝐩_dict = jldopen(joinpath(data_path, file_names[1]), "r")["𝐩_dict"]
+    f = jldopen(joinpath(data_path, file_names[1]), "r")
 
-    return 𝐩_dict
+    𝐩_dict = f["𝐩_dict"]
+    bin_θs = [f["bin_θs"]...]
+    push_one_more!(bin_θs)
+    bin_xs = [f["bin_xs"]...]
+    push_one_more!(bin_xs)
+
+    return 𝐩_dict, bin_θs, bin_xs
 end
 
 function construct_model()
@@ -26,13 +34,14 @@ function construct_model()
     )
 end
 
-function sq_loss(model, args, 𝐩)
+function sq_loss(model, args, 𝐩, bin_θs, bin_xs)
     generated_data = model(args)
     generated_data = reshape(generated_data, Int(length(generated_data)/2), 2)
-    h = fit(Histogram, (generated_data[:, 1], generated_data[:, 2]), nbins=40).weights
+
+    h = fit(Histogram, (generated_data[:, 1], generated_data[:, 2]), (bin_θs, bin_xs)).weights
     𝐩̂ = h / sum(h)
 
-    return crossentropy(𝐩̂, 𝐩, agg=mean)
+    return crossentropy(𝐩̂, 𝐩)
 end
 
 function preprocess(data::Dict)
@@ -43,24 +52,13 @@ function preprocess(data::Dict)
 end
 
 function main()
-    data = fetch_data()
+    data, bin_θs, bin_xs = fetch_data()
     train_loader = Flux.Data.DataLoader(preprocess(data), batchsize=20, shuffle=true)
 
     model = construct_model()
-    loss(x, y) = sq_loss(model, x, y)
-    ps = Flux.params(model)
+    loss(x, y) = sq_loss(model, x, y, bin_θs, bin_xs)
 
-    loss(first(train_loader)[1][:, 1], first(train_loader)[2][1])
-
-    # for epoch in 1:100
-    #     for batch_data in train_loader
-    #         # @assert size(batch_data[1]) == (3, 20)
-    #         # @assert size(batch_data[2]) == (20,)
-    #         # Flux.train!(loss, ps, batch_data, ADAM())
-    #     end
-    # end
-
-    # Flux.train!(loss, ps, ncycle(train_loader, 10), ADAM())
+    
 end
 
 # TODO: get nbins from data
