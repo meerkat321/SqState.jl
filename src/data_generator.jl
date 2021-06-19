@@ -1,13 +1,23 @@
 using JLD2
+using TransformVariables
+using LogDensityProblems
+using DynamicHMC
+using Parameters
+using Statistics
+using Random
+using ForwardDiff
+using Distributions
 
 export
-    pdf_θ_x,
-    gen_training_data
+    pdf,
+    pdf!,
+    gen_nongaussian_training_data,
+    gen_gaussian_training_data
 
 real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
 
 function pdf(state::StateMatrix, θ::Real, x::Real)
-    return real_tr_mul(𝛑(θ, x, dim=state.dim), state.𝛒)
+    return real_tr_mul(𝛑̂(θ, x, dim=state.dim), state.𝛒)
 end
 
 function pdf(state::StateMatrix, θs, xs; T=Float64)
@@ -17,59 +27,52 @@ function pdf(state::StateMatrix, θs, xs; T=Float64)
 end
 
 function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
-    𝛑_res = Matrix{complex(T)}(undef, state.dim, state.dim)
+    𝛑̂_res = Matrix{complex(T)}(undef, state.dim, state.dim)
 
     for (j, x) in enumerate(xs)
         for (i, θ) in enumerate(θs)
-            𝐩[i, j] = real_tr_mul(𝛑!(𝛑_res, θ, x; dim=state.dim), state.𝛒)
+            𝐩[i, j] = real_tr_mul(𝛑̂!(𝛑̂_res, θ, x; dim=state.dim), state.𝛒)
         end
     end
 
     return 𝐩
 end
 
-function rand_arg(
-    r_range::Tuple{Float64, Float64},
-    θ_range::Tuple{Float64, Float64},
-    n̄_range::Tuple{Float64, Float64}
-)
-    r = r_range[1] + (r_range[2]-r_range[1])*rand()
-    θ = θ_range[1] + (θ_range[2]-θ_range[1])*rand()
-    n̄ = n̄_range[1] + (n̄_range[2]-n̄_range[1])*rand()
-
-    return r, θ, n̄
+struct QuantumStateProblem
+    state::StateMatrix
 end
 
-function gen_training_data(
-    n;
-    r_range=(0., 16.), θ_range=(0., 2π), n̄_range=(0., 0.5),
-    bin_θs=0:2e-1:2π, bin_xs=-10:5e-1:10, dim=DIM, nth_data_log=10
-)
-    data_path = mkpath(joinpath(datadep"SqState", "training_data", "gen_data"))
-    data_name = joinpath(data_path, "$dim $(range2str(bin_θs)) $(range2str(bin_θs)).jld2")
+function (problem::QuantumStateProblem)(𝐱)
+    @unpack θ, x = 𝐱
+    @unpack state = problem
 
-    @info "Start to gen training data" r_range θ_range n̄_range
+    ψₙs = ψₙ.(0:state.dim-1, θ, x)
+    p = real_tr_mul(ψₙs*ψₙs', state.𝛒)
+    p = (p <= 0) ? floatmin() : p
 
-    𝐩_dict = Dict([
-        rand_arg(r_range, θ_range, n̄_range)=>Matrix{Float64}(undef, length(bin_θs), length(bin_xs))
-        for _ in 1:n
-    ])
+    return log(p)
+end
 
-    t_start = time()
-    @sync for (i, ((r, θ, n̄), 𝐩)) in enumerate(𝐩_dict)
-        Threads.@spawn begin
-            t_i_start = time()
+function gen_nongaussian_training_data(state::StateMatrix; n::Integer=40960, θ_range::Tuple=(0., 2π), x_range=(-20., 20.))
+    second = arr -> arr[2]
+    t = as((θ=as(Real,θ_range[1], θ_range[2]), x=as(Real, x_range[1], x_range[2])))
 
-            state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
-            pdf!(𝐩, state, bin_θs, bin_xs)
+    problem = QuantumStateProblem(state)
 
-            if i % nth_data_log == 0
-                single_time = time() - t_i_start
-                total_time = time() - t_start
-                @info "Args:" r θ n̄ single_time total_time
-            end
-        end
-    end
+    log_likelyhood = TransformedLogDensity(t, problem)
+    ∇log_likelyhood = ADgradient(:ForwardDiff, log_likelyhood)
 
-    jldsave(data_name; 𝐩_dict)
+    results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇log_likelyhood, n)
+    sampled_data = transform.(t, results.chain)
+
+    return hcat(first.(sampled_data), second.(sampled_data)), results
+end
+
+function gen_gaussian_training_data(state::StateMatrix, n::Integer)
+    θs = 2π * rand(n)
+    μ = Δπ̂ₓ(θs, state)
+    σ = real(Δπ̂ₓ²(θs, state) - μ.^2)
+    xs = μ + σ .* randn(n)
+
+    return hcat(θs, xs)
 end
