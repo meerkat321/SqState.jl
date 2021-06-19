@@ -20,4 +20,4 @@ end
 start(;nr=2, nθ=2, nn̄=2, file_name="jit")
 
 # generate training data
-@time start(;nr=35, nθ=60, nn̄=50, file_name="jit")
+@time start(;nr=35, nθ=60, nn̄=50)
