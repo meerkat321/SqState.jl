@@ -12,7 +12,8 @@ export
     pdf,
     pdf!,
     gen_nongaussian_training_data,
-    gen_gaussian_training_data
+    gen_gaussian_training_data,
+    gen_gaussian_training_data!
 
 real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
 
@@ -69,10 +70,18 @@ function gen_nongaussian_training_data(state::StateMatrix; n::Integer=40960, θ_
 end
 
 function gen_gaussian_training_data(state::StateMatrix, n::Integer)
-    θs = 2π * rand(n)
-    μ = Δπ̂ₓ(θs, state)
-    σ = real(sqrt.(Δπ̂ₓ²(θs, state) - μ.^2))
-    xs = real(μ) + σ .* randn(n)
+    points = Matrix{Float64}(undef, n, 2)
 
-    return hcat(θs, xs)
+    return gen_gaussian_training_data!(points, state)
+end
+
+function gen_gaussian_training_data!(points::Matrix{Float64}, state::StateMatrix)
+    n = size(points, 1)
+
+    view(points, :, 1) .= 2π * rand(n)
+    μ = Δπ̂ₓ(view(points, :, 1), state)
+    σ = real(sqrt.(Δπ̂ₓ²(view(points, :, 1), state) - μ.^2))
+    view(points, :, 2) .= real(μ) + σ .* randn(n)
+
+    return points
 end

@@ -173,7 +173,7 @@ function Δπ̂ₓ²(θ::Number, state::StateMatrix)
     ) / 4
 end
 
-function Δπ̂ₓ²(θs::Vector{<:Number}, state::StateMatrix)
+function Δπ̂ₓ²(θs::AbstractVector{<:Number}, state::StateMatrix)
     return (
         exp.(-2im*θs) .* Δannihilate²(state) .+
         exp.(2im*θs) .* Δcreate²(state) .+
@@ -190,7 +190,7 @@ function Δπ̂ₓ(θ::Number, state::StateMatrix)
     ) / 2
 end
 
-function Δπ̂ₓ(θs::Vector{<:Number}, state::StateMatrix)
+function Δπ̂ₓ(θs::AbstractVector{<:Number}, state::StateMatrix)
     return (
         exp.(-im*θs) .* Δannihilate(state) .+
         exp.(im*θs) .* Δcreate(state)
