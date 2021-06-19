@@ -71,8 +71,8 @@ end
 function gen_gaussian_training_data(state::StateMatrix, n::Integer)
     θs = 2π * rand(n)
     μ = Δπ̂ₓ(θs, state)
-    σ = real(Δπ̂ₓ²(θs, state) - μ.^2)
-    xs = μ + σ .* randn(n)
+    σ = real(sqrt.(Δπ̂ₓ²(θs, state) - μ.^2))
+    xs = real(μ) + σ .* randn(n)
 
     return hcat(θs, xs)
 end
