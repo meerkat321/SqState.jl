@@ -124,6 +124,8 @@ end
 # measurement #
 ###############
 
+# ##### for arb. statein θ-x quadrature coordinate #####
+
 # |θ, x⟩ = ∑ₙ |n⟩ ⟨n|θ, x⟩ = ∑ₙ ψₙ(θ, x) |n⟩
 # ⟨n|θ, x⟩ = ψₙ(θ, x) = exp(im n θ) (2/π)^(1/4) exp(-x^2) Hₙ(√2 x)/√(2^n n!)
 function ψₙ(n::Integer, θ::Real, x::Real)
@@ -133,15 +135,64 @@ function ψₙ(n::Integer, θ::Real, x::Real)
         hermite(big(n))(sqrt(2)x) / sqrt(2^big(n) * factorial(big(n)))
 end
 
-function 𝛑!(result::Matrix{<:Complex}, θ::Real, x::Real; dim=DIM)
+function 𝛑̂!(result::Matrix{<:Complex}, θ::Real, x::Real; dim=DIM)
     view(result, :, 1) .= ψₙ.(0:dim-1, θ, x)
     result .= view(result, :, 1) * view(result, :, 1)'
 
     return result
 end
 
-function 𝛑(θ::Real, x::Real; dim=DIM, T=ComplexF64)
+function 𝛑̂(θ::Real, x::Real; dim=DIM, T=ComplexF64)
     result = Matrix{T}(undef, dim, dim)
 
-    return 𝛑!(result, θ, x, dim=dim)
+    return 𝛑̂!(result, θ, x, dim=dim)
+end
+
+# ##### for Gaussian state in θ-x quadrature coordinate #####
+
+# π̂ₓ = (â exp(-im θ) + â† exp(im θ)) / 2
+
+tr_mul(𝐚, 𝐛) = sum(𝐚[i, :]' * 𝐛[:, i] for i in 1:size(𝐚, 1))
+Δcreate(state::StateMatrix) = tr_mul(Creation(dim=state.dim), state.𝛒)
+Δcreate²(state::StateMatrix) = tr_mul(Creation(dim=state.dim)^2, state.𝛒)
+Δannihilate(state::StateMatrix) = tr_mul(Annihilation(dim=state.dim), state.𝛒)
+Δannihilate²(state::StateMatrix) = tr_mul(Annihilation(dim=state.dim)^2, state.𝛒)
+Δcreate_annihilate(state::StateMatrix) = tr_mul(
+    Creation(dim=state.dim) * Annihilation(dim=state.dim),
+    state.𝛒
+)
+
+# ⟨π̂ₓ²⟩ = ⟨ââ exp(-2im θ) + â†â† exp(2im θ) + ââ† + â†â⟩ / 4
+# ⟨π̂ₓ²⟩ = (exp(-2im θ)⟨â²⟩ + exp(2im θ)⟨â†²⟩ + 1 + 2⟨ââ†⟩) / 4
+# here, ⟨ââ† + â†â⟩ = 1 + 2⟨ââ†⟩ due to the commutation relation
+function Δπ̂ₓ²(θ::Number, state::StateMatrix)
+    return (
+        exp(-2im*θ) * Δannihilate²(state) +
+        exp(2im*θ) * Δcreate²(state) +
+        1 + 2Δcreate_annihilate(state)
+    ) / 4
+end
+
+function Δπ̂ₓ²(θs::Vector{<:Number}, state::StateMatrix)
+    return (
+        exp.(-2im*θs) .* Δannihilate²(state) .+
+        exp.(2im*θs) .* Δcreate²(state) .+
+        1 .+ 2Δcreate_annihilate(state)
+    ) ./ 4
+end
+
+# ⟨π̂ₓ⟩ = ⟨â exp(-im θ) + â† exp(im θ)⟩ / 2
+# ⟨π̂ₓ⟩ = (exp(-im θ)⟨â⟩ + exp(im θ)⟨â†⟩) / 2
+function Δπ̂ₓ(θ::Number, state::StateMatrix)
+    return (
+        exp(-im*θ) * Δannihilate(state) +
+        exp(im*θ) * Δcreate(state)
+    ) / 2
+end
+
+function Δπ̂ₓ(θs::Vector{<:Number}, state::StateMatrix)
+    return (
+        exp.(-im*θs) .* Δannihilate(state) .+
+        exp.(im*θs) .* Δcreate(state)
+    ) ./ 2
 end

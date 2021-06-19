@@ -17,7 +17,7 @@ export
 real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
 
 function pdf(state::StateMatrix, θ::Real, x::Real)
-    return real_tr_mul(𝛑(θ, x, dim=state.dim), state.𝛒)
+    return real_tr_mul(𝛑̂(θ, x, dim=state.dim), state.𝛒)
 end
 
 function pdf(state::StateMatrix, θs, xs; T=Float64)
@@ -27,11 +27,11 @@ function pdf(state::StateMatrix, θs, xs; T=Float64)
 end
 
 function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
-    𝛑_res = Matrix{complex(T)}(undef, state.dim, state.dim)
+    𝛑̂_res = Matrix{complex(T)}(undef, state.dim, state.dim)
 
     for (j, x) in enumerate(xs)
         for (i, θ) in enumerate(θs)
-            𝐩[i, j] = real_tr_mul(𝛑!(𝛑_res, θ, x; dim=state.dim), state.𝛒)
+            𝐩[i, j] = real_tr_mul(𝛑̂!(𝛑̂_res, θ, x; dim=state.dim), state.𝛒)
         end
     end
 
@@ -69,20 +69,10 @@ function gen_nongaussian_training_data(state::StateMatrix; n::Integer=40960, θ_
 end
 
 function gen_gaussian_training_data(state::StateMatrix, n::Integer)
-    a = tr(annihilate(state).𝛒)
-    a² = tr(annihilate!(annihilate(state)).𝛒)
-    ad = tr(create(state).𝛒)
-    ad² = tr(create!(create(state)).𝛒)
-    ada = tr(create!(annihilate(state)).𝛒)
-
     θs = 2π * rand(n)
-
-    q² = @. 0.5(a²*exp(-2im*θs) + ad²*exp(2im*θs) + 1 + 2ada)
-    μ = 1/sqrt(2) * (a*exp.(-im*θs) + ad*exp.(im*θs))
-    σ² = real((q² - μ.^2) / 2)
-    σ² = map(x->(x≤0 ? floatmin() : x), σ²)
-
-    xs = μ + sqrt.(σ²) .* randn(n)
+    μ = Δπ̂ₓ(θs, state)
+    σ = real(Δπ̂ₓ²(θs, state) - μ.^2)
+    xs = μ + σ .* randn(n)
 
     return hcat(θs, xs)
 end
