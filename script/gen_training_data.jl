@@ -19,11 +19,13 @@ function start(;
     point_dim=500, label_dim=70,
     file_name="$(time_ns())"
 )
+    args = Matrix{Float64}(undef, 4, n_data)
     points = Matrix{Float64}(undef, n_points, n_data)
     𝛒s = Vector{Matrix{ComplexF64}}(undef, n_data)
 
     for i in 1:n_data
-        r, θ, n̄, bias_phase = rand_arg(r_range, θ_range, n̄_range, bias_phase_range)
+        view(args, :, i) .= rand_arg(r_range, θ_range, n̄_range, bias_phase_range)
+        r, θ, n̄, bias_phase = view(args, :, i)
 
         # points
         state = SqueezedThermalState(ξ(r, θ), n̄, dim=point_dim)
@@ -36,7 +38,7 @@ function start(;
     isnothing(file_name) && return
     data_path = mkpath(joinpath(datadep"SqState", "training_data"))
     jldsave(joinpath(data_path, "$file_name.jld2");
-        points, 𝛒s,
+        points, 𝛒s, args,
         n_data, n_points,
         r_range, θ_range, n̄_range, bias_phase_range,
         point_dim, label_dim
