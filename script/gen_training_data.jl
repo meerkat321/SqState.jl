@@ -46,7 +46,10 @@ function start(;
 end
 
 # jit
-@time start(n_data=5, file_name=nothing)
+@time start(n_data=10, file_name=nothing)
 
 # generate training data
-@time start(n_data=500)
+for i in 1:10
+    @show i
+    @time start(n_data=5000)
+end
