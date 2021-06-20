@@ -14,7 +14,7 @@ function rand_arg(r_range, θ_range, n̄_range, bias_phase_range)
 end
 
 function start(;
-    n_data, n_points=40960,
+    n_data, n_points=4096,
     r_range=(0, 2), θ_range=(0, π/2), n̄_range=(0, 0.5), bias_phase_range=(0, 2π),
     point_dim=500, label_dim=70,
     file_name="$(time_ns())"
@@ -49,7 +49,9 @@ end
 @time start(n_data=10, file_name=nothing)
 
 # generate training data
-for i in 1:10
+# about 780 sec for 10000 data
+# about 11 hr for 50 batch files
+for i in 1:50
     @show i
-    @time start(n_data=5000)
+    @time start(n_data=10000)
 end
