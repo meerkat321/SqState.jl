@@ -15,7 +15,7 @@ end
 
 function start(;
     n_data, n_points=4096,
-    r_range=(0, 2), θ_range=(0, π/2), n̄_range=(0, 0.5), bias_phase_range=(0, 2π),
+    r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 0.5), bias_phase_range=(0, 2π),
     point_dim=500, label_dim=70,
     file_name="$(time_ns())"
 )
