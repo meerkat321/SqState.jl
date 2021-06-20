@@ -2,22 +2,49 @@ using SqState
 using DataDeps
 using JLD2
 
-function start(;nr, nθ, nn̄, n=40960, dim=500, file_name="training_data")
-    data = Dict([
-        [r, θ, n̄]=>Matrix{Float64}(undef, n, 2)
-        for r in LinRange(0, 16, nr), θ in LinRange(0, π/2, nθ), n̄ in LinRange(0, 0.5, nn̄)
-    ])
+rand2range(x_range) = x_range[1] + (x_range[2]-x_range[1])*rand()
 
-    for ((r, θ, n̄), points) in data
-        gen_gaussian_training_data!(points, SqueezedThermalState(ξ(r, θ), n̄, dim=dim))
+function rand_arg(r_range, θ_range, n̄_range, bias_phase_range)
+    r = rand2range(r_range)
+    θ = rand2range(θ_range)
+    n̄ = rand2range(n̄_range)
+    bias_phase = rand2range(bias_phase_range)
+
+    return r, θ, n̄, bias_phase
+end
+
+function start(;
+    n_data, n_points=40960,
+    r_range=(0, 16), θ_range=(0, π/2), n̄_range=(0, 0.5), bias_phase_range=(0, 2π),
+    point_dim=500, label_dim=70,
+    file_name="$(time_ns())"
+)
+    points = Matrix{Float64}(undef, n_points, n_data)
+    𝛒s = Vector{Matrix{ComplexF64}}(undef, n_data)
+
+    for i in 1:n_data
+        r, θ, n̄, bias_phase = rand_arg(r_range, θ_range, n̄_range, bias_phase_range)
+
+        # points
+        state = SqueezedThermalState(ξ(r, θ), n̄, dim=point_dim)
+        gen_gaussian_training_data!(view(points, :, i), state, bias_phase)
+
+        # 𝛒s
+        𝛒s[i] = SqueezedThermalState(ξ(r, θ), n̄, dim=label_dim).𝛒
     end
 
+    isnothing(file_name) && return
     data_path = mkpath(joinpath(datadep"SqState", "training_data"))
-    jldsave(joinpath(data_path, "$file_name.jld2"); data)
+    jldsave(joinpath(data_path, "$file_name.jld2");
+        points, 𝛒s,
+        n_data, n_points,
+        r_range, θ_range, n̄_range, bias_phase_range,
+        point_dim, label_dim
+    )
 end
 
 # jit
-start(;nr=2, nθ=2, nn̄=2, file_name="jit")
+@time start(n_data=5, file_name=nothing)
 
 # generate training data
-@time start(;nr=35, nθ=60, nn̄=50)
+@time start(n_data=500)

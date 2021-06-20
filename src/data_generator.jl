@@ -69,19 +69,27 @@ function gen_nongaussian_training_data(state::StateMatrix; n::Integer=40960, θ_
     return hcat(first.(sampled_data), second.(sampled_data)), results
 end
 
-function gen_gaussian_training_data(state::StateMatrix, n::Integer)
-    points = Matrix{Float64}(undef, n, 2)
+function gen_gaussian_training_data(state::StateMatrix, n::Integer; bias_phase=0)
+    points = Vector{Float64}(undef, n)
 
-    return gen_gaussian_training_data!(points, state)
+    return gen_gaussian_training_data!(points, state, bias_phase)
 end
 
-function gen_gaussian_training_data!(points::Matrix{Float64}, state::StateMatrix)
-    n = size(points, 1)
+function gen_gaussian_training_data!(
+    points::AbstractVector{Float64},
+    state::StateMatrix, bias_phase::Float64
+)
+    n = length(points)
 
-    view(points, :, 1) .= 2π * rand(n)
-    μ = Δπ̂ₓ(view(points, :, 1), state)
-    σ = real(sqrt.(Δπ̂ₓ²(view(points, :, 1), state) - μ.^2))
-    view(points, :, 2) .= real(μ) + σ .* randn(n)
+    # θs
+    view(points, :) .= sort!(2π*rand(n) .+ bias_phase)
+
+    # μ and σ given θ
+    μ = Δπ̂ₓ(view(points, :), state)
+    σ = real(sqrt.(Δπ̂ₓ²(view(points, :), state) - μ.^2))
+
+    # xs
+    view(points, :) .= real(μ) + σ .* randn(n)
 
     return points
 end
