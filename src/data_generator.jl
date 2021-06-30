@@ -106,28 +106,28 @@ function gen_nongaussian_training_data(
     end
 
     p = (θ, x) -> pdf(state, θ, x)
-	g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-	data = Matrix{Float64}(undef, n, 2)
-	for i in 1:times
+    g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+    data = Matrix{Float64}(undef, n, 2)
+    for i in 1:times
         @info "iter: $(i)"
 
-		splock = Threads.SpinLock()
-		@time Threads.@threads for j in 1:n
-			new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
-			while p(new_data...) / g(new_data...) < c
-				new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
-			end
+        splock = Threads.SpinLock()
+        @time Threads.@threads for j in 1:n
+            new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
+            while p(new_data...) / g(new_data...) < c
+                new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
+            end
 
-			lock(splock) do
-				data[j, :] = new_data
-			end
-		end
+            lock(splock) do
+                data[j, :] = new_data
+            end
+        end
 
         kde_result = kde((data[:, 1], data[:, 2]))
-		g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-	end
+        g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+    end
 
-	return data, kde_result
+    return data, kde_result
 end
 
 ###########################
