@@ -6,14 +6,20 @@ using Parameters
 using Statistics
 using Random
 using ForwardDiff
-using Distributions
+using KernelDensity
 
 export
     pdf,
     pdf!,
+    DHMC,
+    Rejection,
     gen_nongaussian_training_data,
     gen_gaussian_training_data,
     gen_gaussian_training_data!
+
+#######
+# pdf #
+#######
 
 real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
 
@@ -39,6 +45,16 @@ function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
     return 𝐩
 end
 
+##############################
+# nongaussian data generator #
+##############################
+
+abstract type AbstractSamplingMethod end
+
+struct DHMC <: AbstractSamplingMethod end
+
+struct Rejection <: AbstractSamplingMethod end
+
 struct QuantumStateProblem
     state::StateMatrix
 end
@@ -54,9 +70,12 @@ function (problem::QuantumStateProblem)(𝐱)
     return log(p)
 end
 
-function gen_nongaussian_training_data(state::StateMatrix; n::Integer=40960, θ_range::Tuple=(0., 2π), x_range=(-20., 20.))
+function gen_nongaussian_training_data(
+    state::StateMatrix, ::DHMC;
+    n::Integer=40960, θ_range::Tuple=(0., 2π), x_range=(-10., 10.)
+)
     second = arr -> arr[2]
-    t = as((θ=as(Real,θ_range[1], θ_range[2]), x=as(Real, x_range[1], x_range[2])))
+    t = as((θ=as(Real, θ_range...), x=as(Real, x_range...)))
 
     problem = QuantumStateProblem(state)
 
@@ -68,6 +87,52 @@ function gen_nongaussian_training_data(state::StateMatrix; n::Integer=40960, θ_
 
     return hcat(first.(sampled_data), second.(sampled_data)), results
 end
+
+function rand2range(rand::T, range::Tuple{T, T}) where {T <: Number}
+    return range[1] + (range[2]-range[1]) * rand
+end
+
+function rand2range(rand::Vector{T}, range::Tuple{T, T}) where {T <: Number}
+    return range[1] .+ (range[2]-range[1]) * rand
+end
+
+function gen_nongaussian_training_data(
+    state::StateMatrix, ::Rejection;
+    n::Integer=40960, c=0.9, times=10, kde_result=nothing,
+    θ_range::Tuple=(0., 2π), x_range=(-10., 10.)
+)
+    if isnothing(kde_result)
+        kde_result = kde((rand2range(rand(n),θ_range), rand2range(rand(n), x_range)))
+    end
+
+    p = (θ, x) -> pdf(state, θ, x)
+	g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+	data = Matrix{Float64}(undef, n, 2)
+	for i in 1:times
+        @info "iter: $(i)"
+
+		splock = Threads.SpinLock()
+		@time Threads.@threads for j in 1:n
+			new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
+			while p(new_data...) / g(new_data...) < c
+				new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
+			end
+
+			lock(splock) do
+				data[j, :] = new_data
+			end
+		end
+
+        kde_result = kde((data[:, 1], data[:, 2]))
+		g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+	end
+
+	return data, kde_result
+end
+
+###########################
+# gaussian data generator #
+###########################
 
 function gen_gaussian_training_data(state::StateMatrix, n::Integer; bias_phase=0)
     points = Vector{Float64}(undef, n)
