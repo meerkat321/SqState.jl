@@ -71,7 +71,7 @@ function (problem::QuantumStateProblem)(𝐱)
 end
 
 function gen_nongaussian_training_data(
-    state::StateMatrix, ::DHMC;
+    state::StateMatrix, ::Type{DHMC};
     n::Integer=40960, θ_range::Tuple=(0., 2π), x_range=(-10., 10.)
 )
     second = arr -> arr[2]
@@ -96,35 +96,64 @@ function rand2range(rand::Vector{T}, range::Tuple{T, T}) where {T <: Number}
     return range[1] .+ (range[2]-range[1]) * rand
 end
 
-function gen_nongaussian_training_data(
-    state::StateMatrix, ::Rejection;
-    n::Integer=40960, c=0.9, times=10, kde_result=nothing,
-    θ_range::Tuple=(0., 2π), x_range=(-10., 10.)
-)
-    if isnothing(kde_result)
-        kde_result = kde((rand2range(rand(n),θ_range), rand2range(rand(n), x_range)))
+function accept_reject(p, g, c, θ_range, x_range)
+    new_data = Vector{Float64}(undef, 2)
+
+    return accept_reject!(new_data, p, g, c, θ_range, x_range)
+end
+
+function accept_reject!(new_data::Vector, p, g, c, θ_range, x_range)
+    view(new_data, :) .= [
+        rand2range(rand(),θ_range),
+        rand2range(rand(), x_range)
+    ]
+    while p(new_data...) / g(new_data...) < c
+        view(new_data, :) .= [
+            rand2range(rand(),θ_range),
+            rand2range(rand(), x_range)
+        ]
     end
 
-    p = (θ, x) -> pdf(state, θ, x)
-    g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-    data = Matrix{Float64}(undef, n, 2)
-    for i in 1:times
-        @info "iter: $(i)"
+    return new_data
+end
 
-        splock = Threads.SpinLock()
-        @time Threads.@threads for j in 1:n
-            new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
-            while p(new_data...) / g(new_data...) < c
-                new_data = [rand2range(rand(),θ_range), rand2range(rand(), x_range)]
-            end
+function gen_batch_nongaussian_training_data!(data::SubArray, p, g, c, θ_range, x_range)
+    n = size(data, 1)
 
-            lock(splock) do
-                data[j, :] = new_data
-            end
+    sp_lock = Threads.SpinLock()
+    Threads.@threads for i in 1:n
+        new_data = Vector{Float64}(undef, 2)
+        accept_reject!(new_data, p, g, c, θ_range, x_range)
+
+        lock(sp_lock) do
+            data[i, :] .= new_data
         end
+    end
 
-        kde_result = kde((data[:, 1], data[:, 2]))
+    return data
+end
+
+function gen_nongaussian_training_data(
+    state::StateMatrix, ::Type{Rejection};
+    n::Integer=4096, batch_size=32, c=0.9, θ_range=(0., 2π), x_range=(-10., 10.)
+)
+    data = Matrix{Float64}(undef, n, 2)
+    p = (θ, x) -> SqState.pdf(state, θ, x)
+
+    @info "Initial g"
+    kde_result = kde((rand2range(rand(n),θ_range), rand2range(rand(n), x_range)))
+    g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+    gen_batch_nongaussian_training_data!(view(data, 1:batch_size, :), p, g, c, θ_range, x_range)
+    kde_result = kde((data[1:batch_size, 1], data[1:batch_size, 2]))
+    g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+
+    @info "Start to generate data"
+    batch = div(n, batch_size)
+    for i in 1:batch
+        gen_batch_nongaussian_training_data!(view(data, (i-1)*batch_size+1:i*batch_size, :), p, g, c, θ_range, x_range)
+        kde_result = kde((data[1:i*batch_size, 1], data[1:i*batch_size, 2]))
         g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+        @info "progress: $i/$batch"
     end
 
     return data, kde_result
