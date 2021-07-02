@@ -54,18 +54,20 @@ function rand2range(rand::Vector{T}, range::Tuple{T, T}) where {T <: Number}
     return range[1] .+ (range[2]-range[1]) * rand
 end
 
-function accept_reject(p, g, c, θ_range, x_range)
+is_rejected(point, p, g, c) = p(point...) / g(point...) < c
+
+function gen_warm_up_point(p, g, c, θ_range, x_range)
     new_data = Vector{Float64}(undef, 2)
 
-    return accept_reject!(new_data, p, g, c, θ_range, x_range)
+    return gen_warm_up_point!(new_data, p, g, c, θ_range, x_range)
 end
 
-function accept_reject!(new_data::Vector, p, g, c, θ_range, x_range)
+function gen_warm_up_point!(new_data::Vector, p, g, c, θ_range, x_range)
     view(new_data, :) .= [
         rand2range(rand(),θ_range),
         rand2range(rand(), x_range)
     ]
-    while p(new_data...) / g(new_data...) < c
+    while is_rejected(new_data, p, g, c)
         view(new_data, :) .= [
             rand2range(rand(),θ_range),
             rand2range(rand(), x_range)
@@ -94,7 +96,7 @@ function gen_batch_nongaussian_training_data!(
     sp_lock = Threads.SpinLock()
     Threads.@threads for i in fill_range
         new_data = gen_point(view(data, ref_range, :), θ_range, x_range)
-        while p(new_data...) / g(new_data...) < c
+        while is_rejected(new_data, p, g, c)
             new_data .= gen_point(view(data, ref_range, :), θ_range, x_range)
         end
 
@@ -121,7 +123,7 @@ function gen_nongaussian_training_data(
 	sp_lock = Threads.SpinLock()
     Threads.@threads for i in 1:batch_size
         new_data = Vector{Float64}(undef, 2)
-        accept_reject!(new_data, p, g, c, θ_range, x_range)
+        gen_warm_up_point!(new_data, p, g, c, θ_range, x_range)
 
         lock(sp_lock) do
             view(data, i, :) .= new_data
