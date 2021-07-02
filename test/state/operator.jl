@@ -5,6 +5,11 @@
     @test annihilate!(SinglePhotonState(dim=dim)) ≈ VacuumState(dim=dim)
     @test create!(VacuumState(dim=dim, rep=StateMatrix)) ≈ SinglePhotonState(dim=dim, rep=StateMatrix)
     @test annihilate!(SinglePhotonState(dim=dim, rep=StateMatrix)) ≈ VacuumState(dim=dim, rep=StateMatrix)
+
+    @test create(VacuumState(dim=dim)) ≈ SinglePhotonState(dim=dim)
+    @test annihilate(SinglePhotonState(dim=dim)) ≈ VacuumState(dim=dim)
+    @test create(VacuumState(dim=dim, rep=StateMatrix)) ≈ SinglePhotonState(dim=dim, rep=StateMatrix)
+    @test annihilate(SinglePhotonState(dim=dim, rep=StateMatrix)) ≈ VacuumState(dim=dim, rep=StateMatrix)
 end
 
 @testset "α and ξ" begin
