@@ -1,4 +1,5 @@
 using KernelDensity
+using Plots
 
 @testset "pdf and Gaussian state data generator" begin
     state = SqueezedThermalState(ξ(1., π/4), 0.5)
@@ -21,7 +22,13 @@ using KernelDensity
 end
 
 @testset "pdf and non-Gaussian state data generator" begin
-    state = SinglePhotonState(rep=StateMatrix)
+    state = displace!(
+        squeeze!(
+            SinglePhotonState(rep=StateMatrix, dim=100),
+            ξ(0.5, π/2)
+        ),
+        α(3., π/2)
+    )
     θs = LinRange(0, 2π, 10)
     xs = LinRange(-10, 10, 10)
 
@@ -34,7 +41,7 @@ end
     @info "gen gen_nongaussian data"
     @time data = gen_nongaussian_training_data(
         state;
-        n=n, batch_size=64, show_log=false
+        n=n, batch_size=64, show_log=true
     )
     sampled_pdf = KernelDensity.pdf(
         kde((data[:, 1], data[:, 2])),
@@ -42,4 +49,8 @@ end
     )
 
     @show sum(abs.(sampled_pdf .- ground_truth_pdf)) / n # < 1e-2
+
+
+    pic = scatter(data[:, 1], data[:, 2], xlim=(0, 2π), ylim=(-10, 10), legend=false, size=(800, 400))
+    savefig(pic, "a.png")
 end

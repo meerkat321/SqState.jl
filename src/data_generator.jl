@@ -77,6 +77,18 @@ function gen_warm_up_point!(new_data::Vector, p, g, c, θ_range, x_range)
     return new_data
 end
 
+function warm_up!(data, n, p, g, c, θ_range, x_range)
+	sp_lock = Threads.SpinLock()
+    Threads.@threads for i in 1:n
+        new_data = Vector{Float64}(undef, 2)
+        gen_warm_up_point!(new_data, p, g, c, θ_range, x_range)
+
+        lock(sp_lock) do
+            view(data, i, :) .= new_data
+        end
+    end
+end
+
 function gen_point(current_points, θ_range, x_range)
 	h = KernelDensity.default_bandwidth((current_points[:, 1], current_points[:, 2]))
 	i = rand(1:size(current_points, 1))
@@ -119,16 +131,7 @@ function gen_nongaussian_training_data(
     show_log && @info "Initial g"
     kde_result = kde((rand2range(rand(n),θ_range), rand2range(rand(n), x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-
-	sp_lock = Threads.SpinLock()
-    Threads.@threads for i in 1:batch_size
-        new_data = Vector{Float64}(undef, 2)
-        gen_warm_up_point!(new_data, p, g, c, θ_range, x_range)
-
-        lock(sp_lock) do
-            view(data, i, :) .= new_data
-        end
-    end
+    warm_up!(data, batch_size, p, g, c, θ_range, x_range)
 
 	kde_result = kde((data[1:batch_size, 1], data[1:batch_size, 2]))
 	g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
