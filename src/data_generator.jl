@@ -48,46 +48,6 @@ end
 ##############################
 # nongaussian data generator #
 ##############################
-
-abstract type AbstractSamplingMethod end
-
-struct DHMC <: AbstractSamplingMethod end
-
-struct Rejection <: AbstractSamplingMethod end
-
-struct QuantumStateProblem
-    state::StateMatrix
-end
-
-function (problem::QuantumStateProblem)(𝐱)
-    @unpack θ, x = 𝐱
-    @unpack state = problem
-
-    ψₙs = ψₙ.(0:state.dim-1, θ, x)
-    p = real_tr_mul(ψₙs*ψₙs', state.𝛒)
-    p = (p <= 0) ? floatmin() : p
-
-    return log(p)
-end
-
-function gen_nongaussian_training_data(
-    state::StateMatrix, ::Type{DHMC};
-    n::Integer=40960, θ_range::Tuple=(0., 2π), x_range=(-10., 10.)
-)
-    second = arr -> arr[2]
-    t = as((θ=as(Real, θ_range...), x=as(Real, x_range...)))
-
-    problem = QuantumStateProblem(state)
-
-    log_likelyhood = TransformedLogDensity(t, problem)
-    ∇log_likelyhood = ADgradient(:ForwardDiff, log_likelyhood)
-
-    results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇log_likelyhood, n)
-    sampled_data = transform.(t, results.chain)
-
-    return hcat(first.(sampled_data), second.(sampled_data)), results
-end
-
 function rand2range(rand::T, range::Tuple{T, T}) where {T <: Number}
     return range[1] + (range[2]-range[1]) * rand
 end
