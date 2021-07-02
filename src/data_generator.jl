@@ -89,8 +89,8 @@ function warm_up!(data, n, p, g, c, θ_range, x_range)
     end
 end
 
-function gen_point(current_points, θ_range, x_range)
-	h = KernelDensity.default_bandwidth((current_points[:, 1], current_points[:, 2]))
+function gen_point(current_points, h, θ_range, x_range)
+	# h = KernelDensity.default_bandwidth((current_points[:, 1], current_points[:, 2]))
 	i = rand(1:size(current_points, 1))
 
 	new_data = current_points[i, :] + 2rand(2).-1
@@ -103,13 +103,13 @@ end
 
 function gen_batch_nongaussian_training_data!(
     data, ref_range, fill_range,
-    p, g, c, θ_range, x_range
+    p, g, c, h, θ_range, x_range
 )
     sp_lock = Threads.SpinLock()
     Threads.@threads for i in fill_range
-        new_data = gen_point(view(data, ref_range, :), θ_range, x_range)
+        new_data = gen_point(view(data, ref_range, :), h, θ_range, x_range)
         while is_rejected(new_data, p, g, c)
-            new_data .= gen_point(view(data, ref_range, :), θ_range, x_range)
+            new_data .= gen_point(view(data, ref_range, :), h, θ_range, x_range)
         end
 
         lock(sp_lock) do
@@ -133,19 +133,16 @@ function gen_nongaussian_training_data(
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
     warm_up!(data, batch_size, p, g, c, θ_range, x_range)
 
-	kde_result = kde((data[1:batch_size, 1], data[1:batch_size, 2]))
-	g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-
-
     show_log && @info "Start to generate data"
     batch = div(n, batch_size)
     for i in 2:batch
+        h = KernelDensity.default_bandwidth((data[1:(i-1)*batch_size, 1], data[1:(i-1)*batch_size, 2]))
+        kde_result = kde((data[1:(i-1)*batch_size, 1], data[1:(i-1)*batch_size, 2]), bandwidth=h)
+        g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
         gen_batch_nongaussian_training_data!(
 			data, 1:(i-1)*batch_size, (i-1)*batch_size.+(1:batch_size),
-			p, g, c, θ_range, x_range
+			p, g, c, h, θ_range, x_range
 		)
-        kde_result = kde((data[1:i*batch_size, 1], data[1:i*batch_size, 2]))
-        g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
         show_log && @info "progress: $i/$batch"
     end
 
