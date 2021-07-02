@@ -163,7 +163,7 @@ end
 # gaussian data generator #
 ###########################
 
-function gen_gaussian_training_data(state::StateMatrix, n::Integer; bias_phase=0)
+function gen_gaussian_training_data(state::StateMatrix, n::Integer; bias_phase=0.)
     points = Vector{Float64}(undef, n)
 
     return gen_gaussian_training_data!(points, state, bias_phase)
@@ -179,8 +179,8 @@ function gen_gaussian_training_data!(
     view(points, :) .= sort!(2π*rand(n) .+ bias_phase)
 
     # μ and σ given θ
-    μ = Δπ̂ₓ(view(points, :), state)
-    σ = real(sqrt.(Δπ̂ₓ²(view(points, :), state) - μ.^2))
+    μ = π̂ₓ_μ(view(points, :), state)
+    σ = real(sqrt.(π̂ₓ²_μ(view(points, :), state) - μ.^2))
 
     # xs
     view(points, :) .= real(μ) + σ .* randn(n)

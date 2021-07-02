@@ -64,11 +64,14 @@ end
 
     @test SqState.tr_mul(𝐚, 𝐛) ≈ tr(𝐚 * 𝐛)
 
-    state = SinglePhotonState(rep=StateMatrix)
+    state = SqueezedThermalState(ξ(1., π/4), 0.5)
 
-    @test SqState.Δcreate(state) ≈ tr(Creation(dim=state.dim) * state.𝛒)
-    @test SqState.Δcreate²(state) ≈ tr(Creation(dim=state.dim)^2 * state.𝛒)
-    @test SqState.Δannihilate(state) ≈ tr(Annihilation(dim=state.dim) * state.𝛒)
-    @test SqState.Δannihilate²(state) ≈ tr(Annihilation(dim=state.dim)^2 * state.𝛒)
-    @test SqState.Δcreate_annihilate(state) ≈ tr(Creation(dim=state.dim) * Annihilation(dim=state.dim) * state.𝛒)
+    @test SqState.create_μ(state) ≈ tr(Creation(dim=state.dim) * state.𝛒)
+    @test SqState.create²_μ(state) ≈ tr(Creation(dim=state.dim)^2 * state.𝛒)
+    @test SqState.annihilate_μ(state) ≈ tr(Annihilation(dim=state.dim) * state.𝛒)
+    @test SqState.annihilate²_μ(state) ≈ tr(Annihilation(dim=state.dim)^2 * state.𝛒)
+    @test SqState.create_annihilate_μ(state) ≈ tr(Creation(dim=state.dim) * Annihilation(dim=state.dim) * state.𝛒)
+
+    # θ = 2π * rand()
+    # @test pdf(state, θ, 0) ≈ SqState.π̂ₓ_μ(θ, state)
 end
