@@ -41,5 +41,5 @@ end
         θs, xs
     )
 
-    @show sum(abs.(sampled_pdf .- ground_truth_pdf)) / n < 1e-2
+    @test sum(abs.(sampled_pdf .- ground_truth_pdf)) / n < 1e-2
 end

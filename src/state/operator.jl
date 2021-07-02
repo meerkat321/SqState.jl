@@ -165,14 +165,6 @@ create_annihilate_μ(state::StateMatrix) = tr_mul(
 # ⟨π̂ₓ²⟩ = ⟨ââ exp(-2im θ) + â†â† exp(2im θ) + ââ† + â†â⟩ / 4
 # ⟨π̂ₓ²⟩ = (exp(-2im θ)⟨â²⟩ + exp(2im θ)⟨â†²⟩ + 1 + 2⟨ââ†⟩) / 4
 # here, ⟨ââ† + â†â⟩ = 1 + 2⟨ââ†⟩ due to the commutation relation
-function π̂ₓ²_μ(θ::Number, state::StateMatrix)
-    return (
-        exp(-2im*θ) * annihilate²_μ(state) +
-        exp(2im*θ) * create²_μ(state) +
-        1 + 2create_annihilate_μ(state)
-    ) / 4
-end
-
 function π̂ₓ²_μ(θs::AbstractVector{<:Number}, state::StateMatrix)
     return (
         exp.(-2im*θs) .* annihilate²_μ(state) .+
@@ -183,13 +175,6 @@ end
 
 # ⟨π̂ₓ⟩ = ⟨â exp(-im θ) + â† exp(im θ)⟩ / 2
 # ⟨π̂ₓ⟩ = (exp(-im θ)⟨â⟩ + exp(im θ)⟨â†⟩) / 2
-function π̂ₓ_μ(θ::Number, state::StateMatrix)
-    return (
-        exp(-im*θ) * annihilate_μ(state) +
-        exp(im*θ) * create_μ(state)
-    ) / 2
-end
-
 function π̂ₓ_μ(θs::AbstractVector{<:Number}, state::StateMatrix)
     return (
         exp.(-im*θs) .* annihilate_μ(state) .+
