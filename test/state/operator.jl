@@ -71,7 +71,4 @@ end
     @test SqState.annihilate_μ(state) ≈ tr(Annihilation(dim=state.dim) * state.𝛒)
     @test SqState.annihilate²_μ(state) ≈ tr(Annihilation(dim=state.dim)^2 * state.𝛒)
     @test SqState.create_annihilate_μ(state) ≈ tr(Creation(dim=state.dim) * Annihilation(dim=state.dim) * state.𝛒)
-
-    # θ = 2π * rand()
-    # @test pdf(state, θ, 0) ≈ SqState.π̂ₓ_μ(θ, state)
 end
