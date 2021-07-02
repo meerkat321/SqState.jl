@@ -32,11 +32,11 @@ end
 
     n = 4096
     @info "gen gen_nongaussian data"
-    @time data, _ = gen_nongaussian_training_data(
-        state, Rejection;
+    @time data = gen_nongaussian_training_data(
+        state;
         n=n, batch_size=64, show_log=false
     )
-    sampled_pdf =  KernelDensity.pdf(
+    sampled_pdf = KernelDensity.pdf(
         kde((data[:, 1], data[:, 2])),
         θs, xs
     )
