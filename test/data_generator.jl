@@ -12,12 +12,12 @@ using KernelDensity
 
     n = 100000
     data = gen_gaussian_training_data(state, n)
-    sampled_pdf =  KernelDensity.pdf(
+    sampled_pdf = KernelDensity.pdf(
         kde((LinRange(0, 2π, n), data)),
         θs, xs
     )
 
-    @test sum(sampled_pdf - ground_truth_pdf) / n < 1e-4
+    @test sum(abs.(sampled_pdf .- ground_truth_pdf)) / n < 1e-4
 end
 
 @testset "pdf and non-Gaussian state data generator" begin
@@ -30,15 +30,16 @@ end
     single_point_pdf = (θ, x) -> SqState.pdf(state, θ, x)
     @test single_point_pdf.(θs, xs') ≈ ground_truth_pdf
 
-    n = 8192
-    @time data = gen_nongaussian_training_data(
+    n = 4096
+    @info "gen gen_nongaussian data"
+    @time data, _ = gen_nongaussian_training_data(
         state, Rejection;
-        n=n, batch_size=64, show_log=true
+        n=n, batch_size=64, show_log=false
     )
-    # sampled_pdf =  KernelDensity.pdf(
-    #     kde((LinRange(0, 2π, n), data)),
-    #     θs, xs
-    # )
+    sampled_pdf =  KernelDensity.pdf(
+        kde((data[:, 1], data[:, 2])),
+        θs, xs
+    )
 
-    # @test sum(sampled_pdf - ground_truth_pdf) / n < 1e-4
+    @show sum(abs.(sampled_pdf .- ground_truth_pdf)) / n < 1e-2
 end
