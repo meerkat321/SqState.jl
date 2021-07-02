@@ -5,6 +5,11 @@
     @test annihilate!(SinglePhotonState(dim=dim)) ≈ VacuumState(dim=dim)
     @test create!(VacuumState(dim=dim, rep=StateMatrix)) ≈ SinglePhotonState(dim=dim, rep=StateMatrix)
     @test annihilate!(SinglePhotonState(dim=dim, rep=StateMatrix)) ≈ VacuumState(dim=dim, rep=StateMatrix)
+
+    @test create(VacuumState(dim=dim)) ≈ SinglePhotonState(dim=dim)
+    @test annihilate(SinglePhotonState(dim=dim)) ≈ VacuumState(dim=dim)
+    @test create(VacuumState(dim=dim, rep=StateMatrix)) ≈ SinglePhotonState(dim=dim, rep=StateMatrix)
+    @test annihilate(SinglePhotonState(dim=dim, rep=StateMatrix)) ≈ VacuumState(dim=dim, rep=StateMatrix)
 end
 
 @testset "α and ξ" begin
@@ -47,4 +52,23 @@ end
         0.5 * SqState.z(ξ(r, θ))' * Annihilation(dim=dim)^2 -
         0.5 * SqState.z(ξ(r, θ)) * Creation(dim=dim)^2
     )'
+end
+
+@testset "measurement" begin
+
+end
+
+@testset "Gaussian state" begin
+    𝐚 = rand(10, 10)
+    𝐛 = rand(10, 10)
+
+    @test SqState.tr_mul(𝐚, 𝐛) ≈ tr(𝐚 * 𝐛)
+
+    state = SqueezedThermalState(ξ(1., π/4), 0.5)
+
+    @test SqState.create_μ(state) ≈ tr(Creation(dim=state.dim) * state.𝛒)
+    @test SqState.create²_μ(state) ≈ tr(Creation(dim=state.dim)^2 * state.𝛒)
+    @test SqState.annihilate_μ(state) ≈ tr(Annihilation(dim=state.dim) * state.𝛒)
+    @test SqState.annihilate²_μ(state) ≈ tr(Annihilation(dim=state.dim)^2 * state.𝛒)
+    @test SqState.create_annihilate_μ(state) ≈ tr(Creation(dim=state.dim) * Annihilation(dim=state.dim) * state.𝛒)
 end

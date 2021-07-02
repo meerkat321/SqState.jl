@@ -153,11 +153,11 @@ end
 # π̂ₓ = (â exp(-im θ) + â† exp(im θ)) / 2
 
 tr_mul(𝐚, 𝐛) = sum(𝐚[i, :]' * 𝐛[:, i] for i in 1:size(𝐚, 1))
-Δcreate(state::StateMatrix) = tr_mul(Creation(dim=state.dim), state.𝛒)
-Δcreate²(state::StateMatrix) = tr_mul(Creation(dim=state.dim)^2, state.𝛒)
-Δannihilate(state::StateMatrix) = tr_mul(Annihilation(dim=state.dim), state.𝛒)
-Δannihilate²(state::StateMatrix) = tr_mul(Annihilation(dim=state.dim)^2, state.𝛒)
-Δcreate_annihilate(state::StateMatrix) = tr_mul(
+create_μ(state::StateMatrix) = tr_mul(Creation(dim=state.dim), state.𝛒)
+create²_μ(state::StateMatrix) = tr_mul(Creation(dim=state.dim)^2, state.𝛒)
+annihilate_μ(state::StateMatrix) = tr_mul(Annihilation(dim=state.dim), state.𝛒)
+annihilate²_μ(state::StateMatrix) = tr_mul(Annihilation(dim=state.dim)^2, state.𝛒)
+create_annihilate_μ(state::StateMatrix) = tr_mul(
     Creation(dim=state.dim) * Annihilation(dim=state.dim),
     state.𝛒
 )
@@ -165,34 +165,19 @@ tr_mul(𝐚, 𝐛) = sum(𝐚[i, :]' * 𝐛[:, i] for i in 1:size(𝐚, 1))
 # ⟨π̂ₓ²⟩ = ⟨ââ exp(-2im θ) + â†â† exp(2im θ) + ââ† + â†â⟩ / 4
 # ⟨π̂ₓ²⟩ = (exp(-2im θ)⟨â²⟩ + exp(2im θ)⟨â†²⟩ + 1 + 2⟨ââ†⟩) / 4
 # here, ⟨ââ† + â†â⟩ = 1 + 2⟨ââ†⟩ due to the commutation relation
-function Δπ̂ₓ²(θ::Number, state::StateMatrix)
+function π̂ₓ²_μ(θs::AbstractVector{<:Number}, state::StateMatrix)
     return (
-        exp(-2im*θ) * Δannihilate²(state) +
-        exp(2im*θ) * Δcreate²(state) +
-        1 + 2Δcreate_annihilate(state)
-    ) / 4
-end
-
-function Δπ̂ₓ²(θs::AbstractVector{<:Number}, state::StateMatrix)
-    return (
-        exp.(-2im*θs) .* Δannihilate²(state) .+
-        exp.(2im*θs) .* Δcreate²(state) .+
-        1 .+ 2Δcreate_annihilate(state)
+        exp.(-2im*θs) .* annihilate²_μ(state) .+
+        exp.(2im*θs) .* create²_μ(state) .+
+        1 .+ 2create_annihilate_μ(state)
     ) ./ 4
 end
 
 # ⟨π̂ₓ⟩ = ⟨â exp(-im θ) + â† exp(im θ)⟩ / 2
 # ⟨π̂ₓ⟩ = (exp(-im θ)⟨â⟩ + exp(im θ)⟨â†⟩) / 2
-function Δπ̂ₓ(θ::Number, state::StateMatrix)
+function π̂ₓ_μ(θs::AbstractVector{<:Number}, state::StateMatrix)
     return (
-        exp(-im*θ) * Δannihilate(state) +
-        exp(im*θ) * Δcreate(state)
-    ) / 2
-end
-
-function Δπ̂ₓ(θs::AbstractVector{<:Number}, state::StateMatrix)
-    return (
-        exp.(-im*θs) .* Δannihilate(state) .+
-        exp.(im*θs) .* Δcreate(state)
+        exp.(-im*θs) .* annihilate_μ(state) .+
+        exp.(im*θs) .* create_μ(state)
     ) ./ 2
 end

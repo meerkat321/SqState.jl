@@ -14,6 +14,10 @@
     @test state.dim == dim
     @test 𝛒(state) == vacuum_state_v * vacuum_state_v'
     @test purity(state) ≈ 1
+
+    new_state = create!(copy(state))
+    @test new_state == SinglePhotonState(dim=dim)
+    @test state == VacuumState(dim=dim)
 end
 
 @testset "StateMatrix" begin
@@ -31,6 +35,10 @@ end
     @test state.dim == dim
     @test 𝛒(state) == vacuum_state_𝛒
     @test purity(state) ≈ 1
+
+    new_state = create!(copy(state))
+    @test new_state == SinglePhotonState(rep=StateMatrix, dim=dim)
+    @test state == VacuumState(rep=StateMatrix, dim=dim)
 
     # constructor for state vector
     vacuum_state_v = zeros(T, dim)
