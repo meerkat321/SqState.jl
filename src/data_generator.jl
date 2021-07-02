@@ -135,25 +135,26 @@ end
 
 function gen_nongaussian_training_data(
     state::StateMatrix, ::Type{Rejection};
-    n::Integer=4096, batch_size=32, c=0.9, θ_range=(0., 2π), x_range=(-10., 10.)
+    n::Integer=4096, batch_size=32, c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
+    show_log=true
 )
     data = Matrix{Float64}(undef, n, 2)
     p = (θ, x) -> SqState.pdf(state, θ, x)
 
-    @info "Initial g"
+    show_log && @info "Initial g"
     kde_result = kde((rand2range(rand(n),θ_range), rand2range(rand(n), x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
     gen_batch_nongaussian_training_data!(view(data, 1:batch_size, :), p, g, c, θ_range, x_range)
     kde_result = kde((data[1:batch_size, 1], data[1:batch_size, 2]))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
 
-    @info "Start to generate data"
+    show_log && @info "Start to generate data"
     batch = div(n, batch_size)
     for i in 1:batch
         gen_batch_nongaussian_training_data!(view(data, (i-1)*batch_size+1:i*batch_size, :), p, g, c, θ_range, x_range)
         kde_result = kde((data[1:i*batch_size, 1], data[1:i*batch_size, 2]))
         g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-        @info "progress: $i/$batch"
+        show_log && @info "progress: $i/$batch"
     end
 
     return data, kde_result
