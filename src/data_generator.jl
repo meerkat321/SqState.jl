@@ -46,13 +46,11 @@ end
 ##############################
 # nongaussian data generator #
 ##############################
-function rand2range(rand::T, range::Tuple{T, T}) where {T <: Number}
-    return range[1] + (range[2]-range[1]) * rand
+function ranged_rand(n, range::Tuple{T, T}) where {T <: Number}
+    return range[1] .+ (range[2]-range[1]) * rand(T, n)
 end
 
-function rand2range(rand::Vector{T}, range::Tuple{T, T}) where {T <: Number}
-    return range[1] .+ (range[2]-range[1]) * rand
-end
+ranged_rand(range) = ranged_rand(1, range)
 
 is_rejected(point, p, g, c) = p(point...) / g(point...) < c
 
