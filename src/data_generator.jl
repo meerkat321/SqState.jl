@@ -55,9 +55,15 @@ ranged_rand(range) = ranged_rand(1, range)[1]
 is_rejected(point, p, g, c) = p(point...) / g(point...) < c
 
 function gen_warm_up_point(p, g, c, θ_range, x_range)
-    new_point = [ranged_rand(θ_range), ranged_rand(x_range)]
+    new_point = Vector{Float64}(undef, 2)
+
+    return gen_warm_up_point!(new_point, p, g, c, θ_range, x_range)
+end
+
+function gen_warm_up_point!(new_point, p, g, c, θ_range, x_range)
+    new_point .= [ranged_rand(θ_range), ranged_rand(x_range)]
     while is_rejected(new_point, p, g, c)
-        new_point = [ranged_rand(θ_range), ranged_rand(x_range)]
+        new_point .= [ranged_rand(θ_range), ranged_rand(x_range)]
     end
 
     return new_point
@@ -67,7 +73,8 @@ function warm_up(n, p, g, c, θ_range, x_range)
     points = Matrix{Float64}(undef, 2, n)
     sp_lock = Threads.SpinLock()
     Threads.@threads for i in 1:n
-        new_point = gen_warm_up_point(p, g, c, θ_range, x_range)
+        new_point = Vector{Float64}(undef, 2)
+        gen_warm_up_point!(new_point, p, g, c, θ_range, x_range)
 
         lock(sp_lock) do
             view(points, :, i) .= new_point
@@ -113,7 +120,7 @@ function gen_nongaussian_training_data(
     show_log && @info "Warm up"
     kde_result = kde((ranged_rand(n, θ_range), ranged_rand(n, x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-    sampled_points = warm_up(warm_up_n, p, g, c, θ_range, x_range)
+    @time sampled_points = warm_up(warm_up_n, p, g, c, θ_range, x_range)
 
     show_log && @info "Start to generate data"
     batch = div(n-warm_up_n, batch_size)
