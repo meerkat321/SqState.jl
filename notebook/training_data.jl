@@ -44,8 +44,8 @@ gaussian_state = SqueezedThermalState(ξ(0.3, π/8), 0.5, dim=100);
 begin
 	gaussian_points = Vector{Float64}(undef, 4096)
 	@benchmark SqState.gen_gaussian_training_data!(
-		gaussian_points, 
-		gaussian_state, 
+		gaussian_points,
+		gaussian_state,
 		0.
 	)
 end
@@ -73,23 +73,23 @@ f = jldopen(joinpath(data_path, "10450874168442.jld2"), "r")
 begin
 	wf = WignerFunction(-10:0.1:10, -10:0.1:10, dim=100)
 	to_f5(x) = round(x, digits=5)
-	
+
 	function snap(; i=rand(1:f["n_data"]))
 		r, θ, n̄, bias_phase = f["args"][:, i]
 		title="r=$(to_f5(r)), θ=$(to_f5(θ)), n̄=$(to_f5(n̄)), dϕ=$(to_f5(bias_phase)))"
 
 		points_plot = scatter(
-			f["points"][:, i], 
+			f["points"][:, i],
 			ticks=[],
 			title=title,
 			legend=false,
 			size=(800, 400)
 		)
 		w_plot = plot_wigner(
-			wf(SqueezedThermalState(ξ(r, θ), n̄, dim=100)), 
+			wf(SqueezedThermalState(ξ(r, θ), n̄, dim=100)),
 			SqState.Contour
 		)
-		
+
 		return points_plot, w_plot
 	end
 end
@@ -117,7 +117,7 @@ Coherent squeezed single photon state: $\hat{D}(\alpha)\hat{S}(\xi)|1\rangle$
 # ╔═╡ be6c7a83-1928-4467-b702-e2be1aaa0a75
 non_gaussian_state = displace!(
 	squeeze!(
-		SinglePhotonState(rep=StateMatrix, dim=100), 
+		SinglePhotonState(rep=StateMatrix, dim=100),
 		ξ(0.5, π/2)
 	),
 	α(3., π/2)
@@ -127,12 +127,12 @@ non_gaussian_state = displace!(
 plot_wigner(wf(non_gaussian_state), SqState.Contour)
 
 # ╔═╡ e73c6bb3-d590-47d0-9b40-d489664846f1
-non_gaussuan_data, _ = gen_nongaussian_training_data(non_gaussian_state, Rejection);
+non_gaussuan_data = gen_nongaussian_training_data(non_gaussian_state);
 
 # ╔═╡ 3c778dd6-8480-47ad-8672-450d29f4a274
 scatter(
-	non_gaussuan_data[:, 1], 
-	non_gaussuan_data[:, 2],
+	LinRange(0, 2π, 4096),
+	non_gaussuan_data,
 	ticks=[],
 	legend=false,
 	size=(800, 400),
@@ -144,16 +144,16 @@ p = pdf(non_gaussian_state, 0:0.1:2π, -10:0.1:10);
 
 # ╔═╡ 28a5a074-cf16-4c77-966b-032b7f7ca90e
 heatmap(
-	p', 
+	p',
 	ticks=[],
-	color=:coolwarm, 
-	clim=(-1, 1), 
-	size=(800, 400), 
+	color=:coolwarm,
+	clim=(-1, 1),
+	size=(800, 400),
 	title="Probability density function"
 )
 
 # ╔═╡ b7610707-aaeb-4ab2-92a6-d5e44cb6d90b
-@benchmark SqState.gen_nongaussian_training_data(non_gaussian_state, Rejection)
+@benchmark SqState.gen_nongaussian_training_data(non_gaussian_state)
 
 # ╔═╡ Cell order:
 # ╟─a9f16021-8559-47e8-a807-4a72e7940093

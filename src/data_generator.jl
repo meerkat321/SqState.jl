@@ -1,11 +1,4 @@
 using JLD2
-using TransformVariables
-using LogDensityProblems
-using DynamicHMC
-using Parameters
-using Statistics
-using Random
-using ForwardDiff
 using KernelDensity
 
 export
