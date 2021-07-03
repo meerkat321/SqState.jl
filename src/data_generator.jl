@@ -108,6 +108,11 @@ end
 
 function gen_fragment_nongaussian_data(sampled_points, n, p, g, c, h, θ_range, x_range)
     points = Matrix{Float64}(undef, 2, n)
+
+    return gen_fragment_nongaussian_data!(points, sampled_points, n, p, g, c, h, θ_range, x_range)
+end
+
+function gen_fragment_nongaussian_data!(points, sampled_points, n, p, g, c, h, θ_range, x_range)
     sp_lock = Threads.SpinLock()
     Threads.@threads for i in 1:n
         new_point = Vector{Float64}(undef, 2)
@@ -123,10 +128,12 @@ end
 
 function gen_nongaussian_training_data(
     state::StateMatrix;
-    n::Integer=4096, warm_up_n::Integer=1024, batch_size=64,
+    n::Integer=4096, warm_up_n::Integer=64, batch_size=64,
     c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
     show_log=true
 )
+    sampled_points = Matrix{Float64}(undef, 2, n)
+
     p = (θ, x) -> SqState.pdf(state, θ, x)
 
     show_log && @info "Warm up"
