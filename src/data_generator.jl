@@ -89,16 +89,15 @@ function warm_up!(data, n, p, g, c, θ_range, x_range)
     end
 end
 
-function gen_point(current_points, h, θ_range, x_range)
-	# h = KernelDensity.default_bandwidth((current_points[:, 1], current_points[:, 2]))
-	i = rand(1:size(current_points, 1))
+function gen_point!(new_data::Vector, current_points, p, g, c, h, θ_range, x_range)
+    i = rand(1:size(current_points, 1))
 
-	new_data = current_points[i, :] + 2rand(2).-1
-	while !(θ_range[1]<new_data[1]<θ_range[2])
-		new_data .= current_points[i, :] + (1 ./ h) .* randn(2)
+	view(new_data, :) .= current_points[i, :] + 2rand(2).-1
+	while !(θ_range[1]<new_data[1]<θ_range[2]) || is_rejected(new_data, p, g, c)
+	    view(new_data, :) .= current_points[i, :] + (1 ./ h) .* randn(2)
 	end
 
-	return new_data
+    return new_data
 end
 
 function gen_batch_nongaussian_training_data!(
@@ -107,10 +106,8 @@ function gen_batch_nongaussian_training_data!(
 )
     sp_lock = Threads.SpinLock()
     Threads.@threads for i in fill_range
-        new_data = gen_point(view(data, ref_range, :), h, θ_range, x_range)
-        while is_rejected(new_data, p, g, c)
-            new_data .= gen_point(view(data, ref_range, :), h, θ_range, x_range)
-        end
+        new_data = Vector{Float64}(undef, 2)
+        gen_point!(new_data, view(data, ref_range, :), p, g, c, h, θ_range, x_range)
 
         lock(sp_lock) do
             view(data, i, :) .= new_data
@@ -145,6 +142,8 @@ function gen_nongaussian_training_data(
 		)
         show_log && @info "progress: $i/$batch"
     end
+
+    data .= data[sortperm(data[:, 1]), :]
 
     return data
 end
