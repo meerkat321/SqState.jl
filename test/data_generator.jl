@@ -51,15 +51,9 @@ end
     @test single_point_pdf.(θs, xs') ≈ ground_truth_pdf
 
     n = 4096
-    @info "gen gen_nongaussian data"
-    @time data = gen_nongaussian_training_data(
-        state;
-        n=n, batch_size=64, show_log=true
-    )
-    sampled_pdf = KernelDensity.pdf(
-        kde((LinRange(0, 2π, n), data)),
-        θs, xs
-    )
+    @info "gen non-gaussian data"
+    @time data = gen_nongaussian_training_data(state; n=n, batch_size=64, show_log=false)
+    sampled_pdf = KernelDensity.pdf(kde((LinRange(0, 2π, n), data)), θs, xs)
 
     # @show sum(abs.(sampled_pdf .- ground_truth_pdf)) / n # < 1e-2
 

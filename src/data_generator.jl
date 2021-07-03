@@ -158,7 +158,7 @@ function gen_nongaussian_training_data(
         g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
 
         gen_fragment_nongaussian_data!(
-            view(sampled_points, :, (warm_up_n+(i-1)*batch_size):(warm_up_n+(i)*batch_size)),
+            view(sampled_points, :, (warm_up_n+(i-1)*batch_size+1):(warm_up_n+(i)*batch_size)),
             view(sampled_points, :, 1:(warm_up_n+(i-1)*batch_size)),
             batch_size, p, g, c, h, θ_range, x_range
         )
@@ -166,9 +166,7 @@ function gen_nongaussian_training_data(
         show_log && @info "progress: $i/$batch"
     end
 
-    sampled_points = sampled_points[2, sortperm(sampled_points[1, :])]
-
-    return sampled_points
+    return sampled_points[2, sortperm(sampled_points[1, :])]
 end
 
 ###########################
