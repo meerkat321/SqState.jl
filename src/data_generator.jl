@@ -50,100 +50,89 @@ function ranged_rand(n, range::Tuple{T, T}) where {T <: Number}
     return range[1] .+ (range[2]-range[1]) * rand(T, n)
 end
 
-ranged_rand(range) = ranged_rand(1, range)
+ranged_rand(range) = ranged_rand(1, range)[1]
 
 is_rejected(point, p, g, c) = p(point...) / g(point...) < c
 
 function gen_warm_up_point(p, g, c, θ_range, x_range)
-    new_data = Vector{Float64}(undef, 2)
-
-    return gen_warm_up_point!(new_data, p, g, c, θ_range, x_range)
-end
-
-function gen_warm_up_point!(new_data::Vector, p, g, c, θ_range, x_range)
-    view(new_data, :) .= [
-        rand2range(rand(),θ_range),
-        rand2range(rand(), x_range)
-    ]
-    while is_rejected(new_data, p, g, c)
-        view(new_data, :) .= [
-            rand2range(rand(),θ_range),
-            rand2range(rand(), x_range)
-        ]
+    new_point = [ranged_rand(θ_range), ranged_rand(x_range)]
+    while is_rejected(new_point, p, g, c)
+        new_point = [ranged_rand(θ_range), ranged_rand(x_range)]
     end
 
-    return new_data
+    return new_point
 end
 
-function warm_up!(data, n, p, g, c, θ_range, x_range)
-	sp_lock = Threads.SpinLock()
+function warm_up(n, p, g, c, θ_range, x_range)
+    points = Matrix{Float64}(undef, 2, n)
+    sp_lock = Threads.SpinLock()
     Threads.@threads for i in 1:n
-        new_data = Vector{Float64}(undef, 2)
-        gen_warm_up_point!(new_data, p, g, c, θ_range, x_range)
+        new_point = gen_warm_up_point(p, g, c, θ_range, x_range)
 
         lock(sp_lock) do
-            view(data, i, :) .= new_data
+            view(points, :, i) .= new_point
         end
     end
+
+    return points
 end
 
-function gen_point!(new_data::Vector, current_points, p, g, c, h, θ_range, x_range)
-    i = rand(1:size(current_points, 1))
+function gen_point(sampled_points, p, g, c, h, θ_range, x_range)
+    ref_range = 1:size(sampled_points, 2)
 
-	view(new_data, :) .= current_points[i, :] + 2rand(2).-1
-	while !(θ_range[1]<new_data[1]<θ_range[2]) || is_rejected(new_data, p, g, c)
-	    view(new_data, :) .= current_points[i, :] + (1 ./ h) .* randn(2)
+    new_point = sampled_points[:, rand(ref_range)] + randn(2)./h
+	while is_rejected(new_point, p, g, c) || !(θ_range[1]≤new_point[1]≤θ_range[2])
+        new_point = sampled_points[:, rand(ref_range)] + randn(2)./h
 	end
 
-    return new_data
+    return new_point
 end
 
-function gen_batch_nongaussian_training_data!(
-    data, ref_range, fill_range,
-    p, g, c, h, θ_range, x_range
-)
+function gen_fragment_nongaussian_data(sampled_points, n, p, g, c, h, θ_range, x_range)
+    points = Matrix{Float64}(undef, 2, n)
     sp_lock = Threads.SpinLock()
-    Threads.@threads for i in fill_range
-        new_data = Vector{Float64}(undef, 2)
-        gen_point!(new_data, view(data, ref_range, :), p, g, c, h, θ_range, x_range)
+    Threads.@threads for i in 1:n
+        new_point = gen_point(sampled_points, p, g, c, h, θ_range, x_range)
 
         lock(sp_lock) do
-            view(data, i, :) .= new_data
+            view(points, :, i) .= new_point
         end
     end
 
-    return data
+    return points
 end
 
 function gen_nongaussian_training_data(
     state::StateMatrix;
-    n::Integer=4096, batch_size=64, c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
+    n::Integer=4096, warm_up_n::Integer=1024, batch_size=64,
+    c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
     show_log=true
 )
-    data = Matrix{Float64}(undef, n, 2)
     p = (θ, x) -> SqState.pdf(state, θ, x)
 
-    show_log && @info "Initial g"
-    kde_result = kde((rand2range(rand(n),θ_range), rand2range(rand(n), x_range)))
+    show_log && @info "Warm up"
+    kde_result = kde((ranged_rand(n, θ_range), ranged_rand(n, x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-    warm_up!(data, batch_size, p, g, c, θ_range, x_range)
+    sampled_points = warm_up(warm_up_n, p, g, c, θ_range, x_range)
 
     show_log && @info "Start to generate data"
-    batch = div(n, batch_size)
-    for i in 2:batch
-        h = KernelDensity.default_bandwidth((data[1:(i-1)*batch_size, 1], data[1:(i-1)*batch_size, 2]))
-        kde_result = kde((data[1:(i-1)*batch_size, 1], data[1:(i-1)*batch_size, 2]), bandwidth=h)
+    batch = div(n-warm_up_n, batch_size)
+    for i in 1:batch
+        h = KernelDensity.default_bandwidth((sampled_points[1, :], sampled_points[2, :]))
+        kde_result = kde((sampled_points[1, :], sampled_points[2, :]), bandwidth=h)
         g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-        gen_batch_nongaussian_training_data!(
-			data, 1:(i-1)*batch_size, (i-1)*batch_size.+(1:batch_size),
-			p, g, c, h, θ_range, x_range
-		)
+
+        sampled_points = hcat(
+            sampled_points,
+            gen_fragment_nongaussian_data(sampled_points, batch_size, p, g, c, h, θ_range, x_range)
+        )
+
         show_log && @info "progress: $i/$batch"
     end
 
-    data .= data[sortperm(data[:, 1]), :]
+    sampled_points = sampled_points[2, sortperm(sampled_points[1, :])]
 
-    return data
+    return sampled_points
 end
 
 ###########################
