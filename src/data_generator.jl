@@ -132,14 +132,14 @@ function gen_nongaussian_training_data(
     c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
     show_log=true
 )
-    sampled_points = Matrix{Float64}(undef, 2, n)
+    sampled_points = Matrix{Float64}(undef, 2, warm_up_n)
 
     p = (θ, x) -> SqState.pdf(state, θ, x)
 
     show_log && @info "Warm up"
     kde_result = kde((ranged_rand(n, θ_range), ranged_rand(n, x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-    @time sampled_points = warm_up(warm_up_n, p, g, c, θ_range, x_range)
+    @time warm_up!(sampled_points, warm_up_n, p, g, c, θ_range, x_range)
 
     show_log && @info "Start to generate data"
     batch = div(n-warm_up_n, batch_size)
