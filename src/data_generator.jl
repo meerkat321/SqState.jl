@@ -71,6 +71,11 @@ end
 
 function warm_up(n, p, g, c, θ_range, x_range)
     points = Matrix{Float64}(undef, 2, n)
+
+    return warm_up!(points, n, p, g, c, θ_range, x_range)
+end
+
+function warm_up!(points, n, p, g, c, θ_range, x_range)
     sp_lock = Threads.SpinLock()
     Threads.@threads for i in 1:n
         new_point = Vector{Float64}(undef, 2)
@@ -85,11 +90,17 @@ function warm_up(n, p, g, c, θ_range, x_range)
 end
 
 function gen_point(sampled_points, p, g, c, h, θ_range, x_range)
+    new_point = Vector{Float64}(undef, 2)
+
+    return gen_point!(new_point, sampled_points, p, g, c, h, θ_range, x_range)
+end
+
+function gen_point!(new_point, sampled_points, p, g, c, h, θ_range, x_range)
     ref_range = 1:size(sampled_points, 2)
 
-    new_point = sampled_points[:, rand(ref_range)] + randn(2)./h
+    new_point .= view(sampled_points, :, rand(ref_range)) + randn(2)./h
 	while is_rejected(new_point, p, g, c) || !(θ_range[1]≤new_point[1]≤θ_range[2])
-        new_point = sampled_points[:, rand(ref_range)] + randn(2)./h
+        new_point .= view(sampled_points, :, rand(ref_range)) + randn(2)./h
 	end
 
     return new_point
@@ -99,7 +110,8 @@ function gen_fragment_nongaussian_data(sampled_points, n, p, g, c, h, θ_range, 
     points = Matrix{Float64}(undef, 2, n)
     sp_lock = Threads.SpinLock()
     Threads.@threads for i in 1:n
-        new_point = gen_point(sampled_points, p, g, c, h, θ_range, x_range)
+        new_point = Vector{Float64}(undef, 2)
+        new_point .= gen_point!(new_point, sampled_points, p, g, c, h, θ_range, x_range)
 
         lock(sp_lock) do
             view(points, :, i) .= new_point
