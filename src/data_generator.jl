@@ -46,105 +46,119 @@ end
 ##############################
 # nongaussian data generator #
 ##############################
-function rand2range(rand::T, range::Tuple{T, T}) where {T <: Number}
-    return range[1] + (range[2]-range[1]) * rand
+function ranged_rand(n, range::Tuple{T, T}) where {T <: Number}
+    return range[1] .+ (range[2]-range[1]) * rand(T, n)
 end
 
-function rand2range(rand::Vector{T}, range::Tuple{T, T}) where {T <: Number}
-    return range[1] .+ (range[2]-range[1]) * rand
+ranged_rand(range) = ranged_rand(1, range)[1]
+
+is_rejected(point, p, g, c) = p(point...) / g(point...) < c
+
+function gen_warm_up_point(p, g, c, θ_range, x_range)
+    new_point = Vector{Float64}(undef, 2)
+
+    return gen_warm_up_point!(new_point, p, g, c, θ_range, x_range)
 end
 
-function accept_reject(p, g, c, θ_range, x_range)
-    new_data = Vector{Float64}(undef, 2)
-
-    return accept_reject!(new_data, p, g, c, θ_range, x_range)
-end
-
-function accept_reject!(new_data::Vector, p, g, c, θ_range, x_range)
-    view(new_data, :) .= [
-        rand2range(rand(),θ_range),
-        rand2range(rand(), x_range)
-    ]
-    while p(new_data...) / g(new_data...) < c
-        view(new_data, :) .= [
-            rand2range(rand(),θ_range),
-            rand2range(rand(), x_range)
-        ]
+function gen_warm_up_point!(new_point, p, g, c, θ_range, x_range)
+    new_point .= [ranged_rand(θ_range), ranged_rand(x_range)]
+    while is_rejected(new_point, p, g, c)
+        new_point .= [ranged_rand(θ_range), ranged_rand(x_range)]
     end
 
-    return new_data
+    return new_point
 end
 
-function gen_point(current_points, θ_range, x_range)
-	h = KernelDensity.default_bandwidth((current_points[:, 1], current_points[:, 2]))
-	i = rand(1:size(current_points, 1))
+function warm_up(n, p, g, c, θ_range, x_range)
+    points = Matrix{Float64}(undef, 2, n)
 
-	new_data = current_points[i, :] + 2rand(2).-1
-	while !(θ_range[1]<new_data[1]<θ_range[2])
-		new_data .= current_points[i, :] + (1 ./ h) .* randn(2)
-	end
-
-	return new_data
+    return warm_up!(points, n, p, g, c, θ_range, x_range)
 end
 
-function gen_batch_nongaussian_training_data!(
-    data, ref_range, fill_range,
-    p, g, c, θ_range, x_range
-)
+function warm_up!(points, n, p, g, c, θ_range, x_range)
     sp_lock = Threads.SpinLock()
-    Threads.@threads for i in fill_range
-        new_data = gen_point(view(data, ref_range, :), θ_range, x_range)
-        while p(new_data...) / g(new_data...) < c
-            new_data .= gen_point(view(data, ref_range, :), θ_range, x_range)
-        end
+    Threads.@threads for i in 1:n
+        new_point = Vector{Float64}(undef, 2)
+        gen_warm_up_point!(new_point, p, g, c, θ_range, x_range)
 
         lock(sp_lock) do
-            view(data, i, :) .= new_data
+            view(points, :, i) .= new_point
         end
     end
 
-    return data
+    return points
+end
+
+function gen_point(sampled_points, p, g, c, h, θ_range, x_range)
+    new_point = Vector{Float64}(undef, 2)
+
+    return gen_point!(new_point, sampled_points, p, g, c, h, θ_range, x_range)
+end
+
+function gen_point!(new_point, sampled_points, p, g, c, h, θ_range, x_range)
+    ref_range = 1:size(sampled_points, 2)
+
+    new_point .= view(sampled_points, :, rand(ref_range)) + randn(2)./h
+	while is_rejected(new_point, p, g, c) || !(θ_range[1]≤new_point[1]≤θ_range[2])
+        new_point .= view(sampled_points, :, rand(ref_range)) + randn(2)./h
+	end
+
+    return new_point
+end
+
+function gen_fragment_nongaussian_data(sampled_points, n, p, g, c, h, θ_range, x_range)
+    points = Matrix{Float64}(undef, 2, n)
+
+    return gen_fragment_nongaussian_data!(points, sampled_points, n, p, g, c, h, θ_range, x_range)
+end
+
+function gen_fragment_nongaussian_data!(points, sampled_points, n, p, g, c, h, θ_range, x_range)
+    sp_lock = Threads.SpinLock()
+    Threads.@threads for i in 1:n
+        new_point = Vector{Float64}(undef, 2)
+        gen_point!(new_point, sampled_points, p, g, c, h, θ_range, x_range)
+
+        lock(sp_lock) do
+            view(points, :, i) .= new_point
+        end
+    end
+
+    return points
 end
 
 function gen_nongaussian_training_data(
     state::StateMatrix;
-    n::Integer=4096, batch_size=64, c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
+    n::Integer=4096, warm_up_n::Integer=64, batch_size=64,
+    c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
     show_log=true
 )
-    data = Matrix{Float64}(undef, n, 2)
+    sampled_points = Matrix{Float64}(undef, 2, warm_up_n)
+
     p = (θ, x) -> SqState.pdf(state, θ, x)
 
-    show_log && @info "Initial g"
-    kde_result = kde((rand2range(rand(n),θ_range), rand2range(rand(n), x_range)))
+    show_log && @info "Warm up"
+    kde_result = kde((ranged_rand(n, θ_range), ranged_rand(n, x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-
-	sp_lock = Threads.SpinLock()
-    Threads.@threads for i in 1:batch_size
-        new_data = Vector{Float64}(undef, 2)
-        accept_reject!(new_data, p, g, c, θ_range, x_range)
-
-        lock(sp_lock) do
-            view(data, i, :) .= new_data
-        end
-    end
-
-	kde_result = kde((data[1:batch_size, 1], data[1:batch_size, 2]))
-	g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-
+    warm_up!(sampled_points, warm_up_n, p, g, c, θ_range, x_range)
 
     show_log && @info "Start to generate data"
-    batch = div(n, batch_size)
-    for i in 2:batch
-        gen_batch_nongaussian_training_data!(
-			data, 1:(i-1)*batch_size, (i-1)*batch_size.+(1:batch_size),
-			p, g, c, θ_range, x_range
-		)
-        kde_result = kde((data[1:i*batch_size, 1], data[1:i*batch_size, 2]))
+    batch = div(n-warm_up_n, batch_size)
+    for i in 1:batch
+        h = KernelDensity.default_bandwidth((sampled_points[1, :], sampled_points[2, :]))
+        kde_result = kde((sampled_points[1, :], sampled_points[2, :]), bandwidth=h)
         g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+
+        sampled_points = hcat(
+            sampled_points,
+            gen_fragment_nongaussian_data(sampled_points, batch_size, p, g, c, h, θ_range, x_range)
+        )
+
         show_log && @info "progress: $i/$batch"
     end
 
-    return data
+    sampled_points = sampled_points[2, sortperm(sampled_points[1, :])]
+
+    return sampled_points
 end
 
 ###########################
