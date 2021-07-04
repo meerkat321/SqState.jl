@@ -25,11 +25,16 @@ function pdf(state::StateMatrix, θs, xs; T=Float64)
 end
 
 function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
+    if state.dim ≥ 455 && T != BigFloat
+        @error "use `pdf(..., T=BigFloat)` if dimension of state is gratter then 454"
+        return 𝐩
+    end
+
     𝛑̂_res = Matrix{complex(T)}(undef, state.dim, state.dim)
 
     for (j, x) in enumerate(xs)
         for (i, θ) in enumerate(θs)
-            𝐩[i, j] = real_tr_mul(𝛑̂!(𝛑̂_res, θ, x; dim=state.dim), state.𝛒)
+            𝐩[i, j] = real_tr_mul(𝛑̂!(𝛑̂_res, T(θ), T(x); dim=state.dim), state.𝛒)
         end
     end
 

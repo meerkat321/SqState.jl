@@ -144,8 +144,9 @@ end
 
 function 𝛑̂(θ::Real, x::Real; dim=DIM, T=ComplexF64)
     result = Matrix{T}(undef, dim, dim)
+    U = T.parameters[1]
 
-    return 𝛑̂!(result, θ, x, dim=dim)
+    return 𝛑̂!(result, U(θ), U(x), dim=dim)
 end
 
 # ##### for Gaussian state in θ-x quadrature coordinate #####
