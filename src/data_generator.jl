@@ -66,36 +66,37 @@ function gen_nongaussian_training_data(
     sampled_points = Matrix{Float64}(undef, 2, n)
     𝛑̂_res_vec = [Matrix{complex(Float64)}(undef, state.dim, state.dim) for _ in 1:Threads.nthreads()]
 
-    show_log && @info "Warm up"
     kde_result = kde((ranged_rand(n, θ_range), ranged_rand(n, x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-    Threads.@threads for i in 1:n # TODO: DEBUG
+
+    show_log && @info "Warm up"
+    @time Threads.@threads for i in 1:warm_up_n
         sampled_points[:, i] .= [ranged_rand(θ_range), ranged_rand(x_range)]
         while SqState.pdf!(𝛑̂_res_vec[Threads.threadid()], state, sampled_points[:, i]...)/g(sampled_points[:, i]...)<c
             sampled_points[:, i] .= [ranged_rand(θ_range), ranged_rand(x_range)]
         end
     end
 
-    # show_log && @info "Start to generate data"
-    # batch = div(n-warm_up_n, batch_size)
-    # for b in 1:batch
-    #     ref_range = 1:(warm_up_n+(b-1)*batch_size)
-    #     ref_points = view(sampled_points, :, ref_range)
-    #     new_range = (warm_up_n+(b-1)*batch_size+1):(warm_up_n+b*batch_size)
-    #     new_points = view(sampled_points, :, new_range)
+    show_log && @info "Start to generate data"
+    batch = div(n-warm_up_n, batch_size)
+    for b in 1:batch
+        ref_range = 1:(warm_up_n+(b-1)*batch_size)
+        ref_points = view(sampled_points, :, ref_range)
+        new_range = (warm_up_n+(b-1)*batch_size+1):(warm_up_n+b*batch_size)
+        new_points = view(sampled_points, :, new_range)
 
-    #     h = KernelDensity.default_bandwidth((ref_points[1, :], ref_points[2, :]))
-    #     kde_result = kde((ref_points[1, :], ref_points[2, :]), bandwidth=h)
-    #     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
-    #     Threads.@threads for i in 1:batch_size
-    #         new_points[:, i] .= ref_points[:, rand(ref_range)] + randn(2)./h
-    #         while SqState.pdf!(𝛑̂_res_vec[Threads.threadid()], state, new_points[:, i]...)/g(new_points[:, i]...)<c || !(θ_range[1]≤new_points[1, i]≤θ_range[2])
-    #             new_points[:, i] .= ref_points[:, rand(ref_range)] + randn(2)./h
-    #         end
-    #     end
+        h = KernelDensity.default_bandwidth((ref_points[1, :], ref_points[2, :]))
+        kde_result = kde((ref_points[1, :], ref_points[2, :]), bandwidth=h)
+        g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
+        Threads.@threads for i in 1:batch_size
+            new_points[:, i] .= ref_points[:, rand(ref_range)] + randn(2)./h
+            while SqState.pdf!(𝛑̂_res_vec[Threads.threadid()], state, new_points[:, i]...)/g(new_points[:, i]...)<c || !(θ_range[1]≤new_points[1, i]≤θ_range[2])
+                new_points[:, i] .= ref_points[:, rand(ref_range)] + randn(2)./h
+            end
+        end
 
-    #     show_log && @info "progress: $b/$batch"
-    # end
+        show_log && @info "progress: $b/$batch"
+    end
 
     return sampled_points[2, sortperm(sampled_points[1, :])]
 end
