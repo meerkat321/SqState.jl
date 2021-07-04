@@ -24,13 +24,6 @@ end
     range = (0., 2π)
     n = 1000000
     @test isapprox(sum(SqState.ranged_rand(n, range))/n, π, atol=1e-2)
-
-    p = (x, y) -> exp(-(x)^2/1e-5) * exp(-(y)^2/1e-5)
-    g = (x, y) -> exp(-(x)^2/2) * exp(-(y)^2/2)
-    c = 0.9
-
-    @test SqState.is_rejected([0, 0], p, g, c) == false
-    @test SqState.is_rejected([10, 10], p, g, c) == true
 end
 
 @testset "pdf and non-Gaussian state data generator" begin
@@ -52,7 +45,7 @@ end
     n = 4096
     @info "gen non-gaussian data"
     @time data = gen_nongaussian_training_data(state; n=n, batch_size=64, show_log=false)
-    sampled_pdf = KernelDensity.pdf(kde((LinRange(0, 2π, n), data)), θs, xs)
+    sampled_pdf = KernelDensity.pdf(kde((data[1, :], data[2, :])), θs, xs)
 
     @test sum(abs.(sampled_pdf .- ground_truth_pdf)) / n  < 5e-2
 end
