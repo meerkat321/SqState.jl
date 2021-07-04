@@ -58,19 +58,32 @@ function ranged_rand(range::Tuple{T, T}) where {T <: Number}
 end
 
 function gen_nongaussian_training_data(
-    state::StateMatrix;
-    n::Integer=4096, warm_up_n::Integer=128, batch_size=64,
-    c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
+    state;
+    n=4096, warm_up_n=128, batch_size=64, c=0.9, θ_range=(0., 2π), x_range=(-10., 10.),
     show_log=true
 )
     sampled_points = Matrix{Float64}(undef, 2, n)
     𝛑̂_res_vec = [Matrix{complex(Float64)}(undef, state.dim, state.dim) for _ in 1:Threads.nthreads()]
 
+    return gen_nongaussian_training_data!(
+        sampled_points, 𝛑̂_res_vec,
+        state,
+        n, warm_up_n, batch_size, c, θ_range, x_range,
+        show_log
+    )
+end
+
+function gen_nongaussian_training_data!(
+    sampled_points::Matrix{T}, 𝛑̂_res_vec::Vector{Matrix{Complex{T}}},
+    state::StateMatrix,
+    n::Integer, warm_up_n::Integer, batch_size::Integer, c::Real, θ_range, x_range,
+    show_log::Bool
+) where {T}
     kde_result = kde((ranged_rand(n, θ_range), ranged_rand(n, x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
 
     show_log && @info "Warm up"
-    @time Threads.@threads for i in 1:warm_up_n
+    Threads.@threads for i in 1:warm_up_n
         sampled_points[:, i] .= [ranged_rand(θ_range), ranged_rand(x_range)]
         while SqState.pdf!(𝛑̂_res_vec[Threads.threadid()], state, sampled_points[:, i]...)/g(sampled_points[:, i]...)<c
             sampled_points[:, i] .= [ranged_rand(θ_range), ranged_rand(x_range)]
@@ -98,7 +111,9 @@ function gen_nongaussian_training_data(
         show_log && @info "progress: $b/$batch"
     end
 
-    return sampled_points[2, sortperm(sampled_points[1, :])]
+    sampled_points .= sampled_points[:, sortperm(sampled_points[1, :])]
+
+    return sampled_points
 end
 
 ###########################
