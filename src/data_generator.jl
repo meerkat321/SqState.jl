@@ -68,7 +68,7 @@ function gen_nongaussian_training_data(
     return gen_nongaussian_training_data!(
         sampled_points, 𝛑̂_res_vec,
         state,
-        n, warm_up_n, batch_size, c, θ_range, x_range,
+        warm_up_n, batch_size, c, θ_range, x_range,
         show_log
     )
 end
@@ -76,9 +76,10 @@ end
 function gen_nongaussian_training_data!(
     sampled_points::Matrix{T}, 𝛑̂_res_vec::Vector{Matrix{Complex{T}}},
     state::StateMatrix,
-    n::Integer, warm_up_n::Integer, batch_size::Integer, c::Real, θ_range, x_range,
+    warm_up_n::Integer, batch_size::Integer, c::Real, θ_range, x_range,
     show_log::Bool
 ) where {T}
+    n = size(sampled_points, 2)
     kde_result = kde((ranged_rand(n, θ_range), ranged_rand(n, x_range)))
     g = (θ, x) -> KernelDensity.pdf(kde_result, θ, x)
 

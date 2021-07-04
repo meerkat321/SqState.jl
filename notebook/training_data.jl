@@ -131,8 +131,8 @@ non_gaussuan_data = gen_nongaussian_training_data(non_gaussian_state);
 
 # ╔═╡ 3c778dd6-8480-47ad-8672-450d29f4a274
 scatter(
-	LinRange(0, 2π, 4096),
-	non_gaussuan_data,
+	non_gaussuan_data[1, :],
+	non_gaussuan_data[2, :],
 	ticks=[],
 	legend=false,
 	size=(800, 400),
@@ -153,7 +153,23 @@ heatmap(
 )
 
 # ╔═╡ b7610707-aaeb-4ab2-92a6-d5e44cb6d90b
-@benchmark SqState.gen_nongaussian_training_data(non_gaussian_state)
+begin
+	sampled_points = Matrix{Float64}(undef, 2, 4096)
+    𝛑̂_res_vec = [
+		Matrix{complex(Float64)}(
+			undef, 
+			non_gaussian_state.dim, 
+			non_gaussian_state.dim
+		) 
+		for _ in 1:Threads.nthreads()
+	]
+	@benchmark SqState.gen_nongaussian_training_data!(
+		sampled_points, 𝛑̂_res_vec, 
+		non_gaussian_state,
+		128, 64, 0.9, (0., 2π), (-10, 10),
+		false
+	)
+end
 
 # ╔═╡ Cell order:
 # ╟─a9f16021-8559-47e8-a807-4a72e7940093
