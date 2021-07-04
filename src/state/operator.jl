@@ -128,11 +128,18 @@ end
 
 # |θ, x⟩ = ∑ₙ |n⟩ ⟨n|θ, x⟩ = ∑ₙ ψₙ(θ, x) |n⟩
 # ⟨n|θ, x⟩ = ψₙ(θ, x) = exp(im n θ) (2/π)^(1/4) exp(-x^2) Hₙ(√2 x)/√(2^n n!)
+# coeff_ψₓ = (2/π)^(1/4)/√(2^n n!)
+# ψₓ = coeff_ψₓ(n) exp(im n θ) exp(-x^2) Hₙ(√2 x)
+calc_coeff_ψₙ(n::BigInt) = (n/π)^(1/4) / sqrt(2^n * factorial(n))
+COEFF_ψₓ = [calc_coeff_ψₙ(big(n)) for n in 0:499]
+
+function coeff_ψₙ(n::Integer)
+    (n < 500) && (return COEFF_ψₓ[n+1])
+    return calc_coeff_ψₙ(big(n))
+end
+
 function ψₙ(n::Integer, θ::Real, x::Real)
-    return exp(im * n * θ) *
-        (2/π) ^ (1/4) *
-        exp(-x^2) *
-        hermite(big(n))(sqrt(2)x) / sqrt(2^big(n) * factorial(big(n)))
+    return coeff_ψₙ(n) * exp(im * n * θ - x^2) * hermite(big(n))(sqrt(2)x)
 end
 
 function 𝛑̂!(result::Matrix{<:Complex}, θ::Real, x::Real; dim=DIM)
