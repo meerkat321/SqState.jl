@@ -26,7 +26,7 @@ end
 
 function pdf!(𝐩::Matrix{T}, state::StateMatrix, θs, xs) where {T}
     if state.dim ≥ 455 && T != BigFloat
-        @error "use `pdf(..., T=BigFloat)` if dimension of state is gratter then 454"
+        @error "use `pdf(..., T=BigFloat)` if dimension of state is greater then 454"
         return 𝐩
     end
 
