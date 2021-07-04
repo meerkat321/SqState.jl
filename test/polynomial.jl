@@ -20,9 +20,3 @@ laguerre_horner(n::Integer, α::Integer) = x->laguerre_horner(n, α, x)
         @test abs(test_val - thm_val) < 1e-11
     end
 end
-
-@testset "hermite" begin
-    for x in -10:0.5:10
-        @test hermite(5)(x) ≈ 32x^5 - 160x^3 + 120x
-    end
-end
