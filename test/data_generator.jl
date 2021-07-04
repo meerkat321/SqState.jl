@@ -44,7 +44,7 @@ end
 
     n = 4096
     @info "gen non-gaussian data"
-    @time data = gen_nongaussian_training_data(state; n=n, batch_size=64, show_log=true)
+    @time data = gen_nongaussian_training_data(state; n=n, batch_size=64, show_log=false)
     sampled_pdf = KernelDensity.pdf(kde((LinRange(0, 2π, n), data)), θs, xs)
 
     @test sum(abs.(sampled_pdf .- ground_truth_pdf)) / n  < 5e-2
