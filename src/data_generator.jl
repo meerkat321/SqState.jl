@@ -14,8 +14,8 @@ export
 
 real_tr_mul(𝐚, 𝐛) = sum(real(𝐚[i, :]' * 𝐛[:, i]) for i in 1:size(𝐚, 1))
 
-function pdf(state::StateMatrix, θ::Real, x::Real)
-    return real_tr_mul(𝛑̂(θ, x, dim=state.dim), state.𝛒)
+function pdf(state::StateMatrix, θ::Real, x::Real; T=Float64)
+    return real_tr_mul(𝛑̂(θ, x, dim=state.dim, T=complex(T)), state.𝛒)
 end
 
 function pdf(state::StateMatrix, θs, xs; T=Float64)
