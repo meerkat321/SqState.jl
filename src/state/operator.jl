@@ -135,11 +135,11 @@ COEFF_ψₓ = [calc_coeff_ψₙ(big(n)) for n in 0:499]
 
 function coeff_ψₙ(n::Integer)
     (n < 500) && (return COEFF_ψₓ[n+1])
-    return calc_coeff_ψₙ(big(n))
+    return calc_coeff_ψₙ(n)
 end
 
 function ψₙ(n::Integer, θ::Real, x::Real)
-    return coeff_ψₙ(n) * exp(im * n * θ - x^2) * hermite(big(n))(sqrt(2)x)
+    return coeff_ψₙ(n) * exp(im * n * θ - x^2) * hermiteh(n, sqrt(2)x)
 end
 
 function 𝛑̂!(result::Matrix{<:Complex}, θ::Real, x::Real; dim=DIM)
