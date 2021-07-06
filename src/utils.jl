@@ -95,7 +95,7 @@ function gen_wigner_bin_path(
     return bin_path
 end
 
-range2str(range::AbstractRange) = replace(string(range), ":" => "_")
+range2str(range::AbstractRange) = replace(string(range), r":|," => "_")
 
 check_zero(m_dim, n_dim) = !iszero(m_dim) && !iszero(n_dim)
 
