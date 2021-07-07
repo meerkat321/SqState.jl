@@ -52,12 +52,30 @@ function loss(x, 𝐲)
 
     𝐥̂ = 𝐥̂_real + im * 𝐥̂_imag
     𝛒̂ = 𝐥̂ * 𝐥̂'
+    𝛒̂ = hcat(real.(𝛒̂), imag.(𝛒̂))
 
     # l ∈ (dim, n)
     # l * l' ∈ (dim, dim) # positive semi-definite matrix
     # Flux.mse(l * l', 𝐲)
 
-    return Flux.mse(real.(𝛒̂), real.(𝐲)) + Flux.mse(imag.(𝛒̂), imag.(𝐲))
+    return Flux.mse(𝛒̂, 𝐲)
+end
+
+# DEBUG: remove complex relative operation
+function loss_y(l̂, 𝐲)
+    # l̂ = m(x)
+    𝐥̂_real = reshape(l̂[1:(dim*dim)], (dim, dim))
+    𝐥̂_imag = reshape(l̂[(dim*dim+1):end], (dim, dim))
+
+    𝐥̂ = 𝐥̂_real + im * 𝐥̂_imag
+    𝛒̂ = 𝐥̂ * 𝐥̂'
+    𝛒̂ = hcat(real.(𝛒̂), imag.(𝛒̂))
+
+    # l ∈ (dim, n)
+    # l * l' ∈ (dim, dim) # positive semi-definite matrix
+    # Flux.mse(l * l', 𝐲)
+
+    return Flux.mse(𝛒̂, 𝐲)
 end
 
 file_names = readdir(SqState.training_data_path())
@@ -67,10 +85,12 @@ points = f["points"]
 
 for i in 1:1 # 10000
     x = reshape(Float32.(points[:, i]), (4096, 1, 1)) # 4096 points 1 channel, 1 data in a batch
-    y = ComplexF32.(𝛒s[i])
+    𝐲 = ComplexF32.(𝛒s[i])
+    𝐲 = hcat(real.(𝐲), imag.(𝐲))
 
     @show size(reshape(m(x), :))
-    @show loss(x, y)
-    @show gradient(x->sum(m(x)), x)
-    # @show gradient(x->loss(x, y), x)
+    @show loss(x, 𝐲)
+    # @show gradient(x->sum(m(x)), x)
+    # @show gradient(x->loss(x, 𝐲), x)
+    @show gradient(l̂->loss_y(l̂, 𝐲), rand(Float32, 2*dim*dim))
 end
