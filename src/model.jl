@@ -12,15 +12,14 @@ end
 dim = 70
 
 function loss(l̂, 𝐲)
-
     𝐥̂_real = reshape(l̂[1:(dim*dim)], (dim, dim))
     𝐥̂_imag = reshape(l̂[(dim*dim+1):end], (dim, dim))
 
     𝐥̂ = 𝐥̂_real + im * 𝐥̂_imag
 
-    # l \in (dim, n)
-    # l *l' \in (dim, dim) # positive semi-definite matrix
-    # Flux.mse(l *l', 𝐲)
+    # l ∈ (dim, n)
+    # l * l' ∈ (dim, dim) # positive semi-definite matrix
+    # Flux.mse(l * l', 𝐲)
 
     return Flux.mse(𝐥̂ * 𝐥̂', 𝐲)
 end
