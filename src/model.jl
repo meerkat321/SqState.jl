@@ -1,10 +1,12 @@
+using SqState
+using LinearAlgebra
 using Flux
 using CUDA
 using JLD2
 
 if CUDA.has_cuda()
     @info "CUDA is on"
-    CUDA.allowscalar(false)
+    CUDA.allowscalar(true)
 end
 
 dim = 70
@@ -22,5 +24,11 @@ file_names = readdir(SqState.training_data_path())
 f = jldopen(joinpath(SqState.training_data_path(), file_names[1]), "r")
 points = f["points"]
 𝛒s = f["𝛒s"]
-points1 = points[:, 1] |> gpu
-𝛒s1 = 𝛒s[1] |> gpu
+
+for i in 1:1
+    x = Float32.(points[:, i])
+    y = ComplexF32.(𝛒s[i])
+
+    y_dummy = rand(ComplexF32, sum(1:70))
+    println(loss(y_dummy, y))
+end
