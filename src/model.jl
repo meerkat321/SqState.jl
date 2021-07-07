@@ -1,4 +1,3 @@
-using Flux: stride
 using SqState
 using LinearAlgebra
 using Flux
