@@ -1,4 +1,5 @@
 using SqState
+using QuantumStateBase
 using DataDeps
 using JLD2
 
@@ -29,14 +30,14 @@ function start(;
 
         # points
         state = SqueezedThermalState(ξ(r, θ), n̄, dim=point_dim)
-        gen_gaussian_training_data!(view(points, :, i), state, bias_phase)
+        gaussian_state_sampler!(view(points, :, i), state, bias_phase)
 
         # 𝛒s
         𝛒s[i] = SqueezedThermalState(ξ(r, θ), n̄, dim=label_dim).𝛒
     end
 
     isnothing(file_name) && return
-    data_path = mkpath(joinpath(datadep"SqState", "training_data"))
+    data_path = mkpath(SqState.training_data_path())
     jldsave(joinpath(data_path, "$file_name.jld2");
         points, 𝛒s, args,
         n_data, n_points,
