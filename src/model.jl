@@ -11,34 +11,54 @@ end
 
 dim = 70
 
-function loss(ŷ, 𝐲)
-    l = sum(
-        diagm((i-dim) => ŷ[(sum(1:(i-1))+1):sum(1:i)])
-        for i in 1:dim
-    )
+function loss(l̂, 𝐲)
 
-    return Flux.mse(l * l', 𝐲)
+    𝐥̂_real = reshape(l̂[1:(dim*dim)], (dim, dim))
+    𝐥̂_imag = reshape(l̂[(dim*dim+1):end], (dim, dim))
+
+    𝐥̂ = 𝐥̂_real + im * 𝐥̂_imag
+
+    # l \in (dim, n)
+    # l *l' \in (dim, dim) # positive semi-definite matrix
+    # Flux.mse(l *l', 𝐲)
+
+    return Flux.mse(𝐥̂ * 𝐥̂', 𝐲)
 end
 
-function conv_layers()
+function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer})
     return Chain(
-        Conv((4, ), 1=>128, relu, stride=1, pad=SamePad()),
-        Conv((1, ), 128=>64, relu, stride=1, pad=SamePad()),
-        Conv((4, ), 64=>64, relu, stride=1, pad=SamePad()),
-        Conv((1, ), 64=>128, relu, stride=1, pad=SamePad())
+        Conv((kernel_size[1], ), ch[1]=>ch[2], pad=SamePad()),
+        BatchNorm(ch[2], relu),
+        Conv((kernel_size[2], ), ch[2]=>ch[3], pad=SamePad()),
+        BatchNorm(ch[3], relu),
+        Conv((kernel_size[3], ), ch[3]=>ch[4], pad=SamePad()),
+        BatchNorm(ch[4], relu),
     )
 end
 
 function residual_block()
     return Chain(
-        x -> conv_layers()(x) + Conv((3, ), 1=>128, relu, stride=1, pad=1)(x),
+        x -> conv_layers((128, 64, 64, 128), (1, 4, 1))(x) + x,
         MeanPool((2, ))
     )
 end
 
 function model()
     return Chain(
+        Conv((4, ), 1=>128, relu, pad=SamePad()),
         residual_block(),
+        residual_block(),
+        residual_block(),
+        residual_block(),
+        residual_block(),
+        residual_block(),
+        residual_block(),
+        residual_block(),
+        residual_block(),
+        residual_block(),
+        flatten,
+        Dense(4*128, 2048),
+        Dense(2048, 2*dim*dim)
     )
 end
 
@@ -52,8 +72,8 @@ for i in 1:1 # 10000
     y = ComplexF32.(𝛒s[i])
 
     x = reshape(x, (4096, 1, 1)) # 4096 points 1 channel, 1 data in a batch
-    ŷ = model()(x)
-    println(size(ŷ))
+    ŷ = reshape(model()(x), :)
 
-    # println(loss(ŷ, y))
+    @show size(ŷ)
+    @show loss(ŷ, y)
 end
