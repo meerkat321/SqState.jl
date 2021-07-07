@@ -56,5 +56,5 @@ for i in 1:1 # 10000
     ŷ = model()(x)
     println(size(ŷ))
 
-    # println(loss(y, y))
+    # println(loss(ŷ, y))
 end
