@@ -60,6 +60,23 @@ function model()
             conv_short_cut((96, 128), 1, 0),
         ),
         x -> relu.(x),
+        # res 5
+        SkipConnection(conv_layers((128, 64, 64, 128), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        # res 6
+        SkipConnection(conv_layers((128, 64, 64, 128), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        MeanPool((8, )),
+        BatchNorm(128, relu),
+        # res 7
+        Parallel(+,
+            conv_layers((128, 96, 96, 196), (1, 3, 1), (0, 1, 0)),
+            conv_short_cut((128, 196), 1, 0),
+        ),
+        x -> relu.(x),
+        # res 8
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
     )
 end
 
