@@ -14,7 +14,7 @@ function 𝛒2y(𝛒::Matrix; δ=1e-15)
     𝐥 = cholesky(Hermitian(𝛒 + 𝛅)).L
     l = vcat([diag(𝐥, i-dim) for i in 1:dim]...)
 
-    return vcat(real.(l), imag(l)[1:(end-dim)])
+    return Float32.(vcat(real.(l), imag(l)[1:(end-dim)]))
 end
 
 function preprocess(file_name::String; batch_size=10, dim=70, fragment_size=10000)
