@@ -98,7 +98,7 @@ end
 
 m = is_gpu ? model() |> gpu : model()
 ps = Flux.params(m)
-opt = ADAM(1e-4, (0.7, 0.9))
+opt = ADAM(1e-2, (0.7, 0.9))
 
 loss(x, y) = Flux.mse(m(x), y)
 
@@ -125,16 +125,16 @@ for e in 1:1
     @info "epoch: $e"
     for (f, loader) in enumerate(data_fragments)
         l = 0f0
-        for (b, (x, y)) in enumerate(loader)
+        @time for (b, (x, y)) in enumerate(loader)
             x = is_gpu ? x |> gpu : x
             y = is_gpu ? y |> gpu : y
 
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
 
-            l = loss(x, y)
+            l += loss(x, y)
         end
-        @info "loss: $l"
+        @info "loss: $(l/100)"
     end
 end
 
