@@ -2,15 +2,15 @@ using SqState
 using Flux
 using CUDA
 
-# if CUDA.has_cuda()
-#     @info "CUDA is on"
-#     CUDA.allowscalar(true)
-# end
+if CUDA.has_cuda()
+    @info "CUDA is on"
+    CUDA.allowscalar(false)
+end
 
 dim = 70
 
 file_names = readdir(SqState.training_data_path())
-training_loader = preprocess(file_names[1], batch_size=2)
+training_loader = preprocess(file_names[1], batch_size=100)
 
 function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Integer})
     return Chain(
@@ -41,20 +41,25 @@ function model()
     )
 end
 
-m = model() #|> gpu
+m = model() |> gpu
 ps = Flux.params(m)
-opt = ADAM(1e-10)
+opt = ADAM(1e-4)
 
 loss(x, y) = Flux.mse(m(x), y)
 
-for (i, (x, y)) in enumerate(training_loader)
-    # x, y = x|>gpu, y|>gpu
-    @info "batch: $i"
-    @show size(x)
-    @show size(y)
-    @show size(m(x))
-    @show loss(x, y)
-    gs = Flux.gradient(() -> loss(x, y), ps)
-    Flux.update!(opt, ps, gs)
-    break
+for e in 1:10
+    l = 0f0
+    for (i, (x, y)) in enumerate(training_loader)
+        x, y = x|>gpu, y|>gpu
+        # @info "batch: $i"
+        # @show size(x)
+        # @show size(y)
+        # @show size(m(x))
+        # @show loss(x, y)
+        gs = Flux.gradient(() -> loss(x, y), ps)
+        Flux.update!(opt, ps, gs)
+
+        l = loss(x, y)
+    end
+    @show l
 end
