@@ -77,6 +77,22 @@ function model()
         # res 8
         SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
         x -> relu.(x),
+        # res 9
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        # res 10
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        # res 11
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        MeanPool((2, )),
+        BatchNorm(196, relu),
+        # stage 1
+        flatten,
+        Dense(32*196, 5586, relu),
+        Dense(5586, dim*dim),
+        x -> x ./ sum(x.^2) # l-2 normalize
     )
 end
 
