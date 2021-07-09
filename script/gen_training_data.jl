@@ -2,6 +2,7 @@ using SqState
 using QuantumStateBase
 using DataDeps
 using JLD2
+using Dates
 
 rand2range(x_range) = x_range[1] + (x_range[2]-x_range[1])*rand()
 
@@ -18,7 +19,7 @@ function start(;
     n_data, n_points=4096,
     r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 0.5), bias_phase_range=(0, 2π),
     point_dim=500, label_dim=70,
-    file_name="$(time_ns())"
+    file_name="$(now())"
 )
     args = Matrix{Float64}(undef, 4, n_data)
     points = Matrix{Float64}(undef, n_points, n_data)

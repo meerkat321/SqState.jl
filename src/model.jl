@@ -117,13 +117,13 @@ end
 
 @info "load data"
 data_fragments = Vector{DataLoader}(undef, length(file_names))
-@time @sync for (f, file_name) in enumerate(file_names[1:(end-1)])
+@time @sync for (f, file_name) in enumerate(file_names)
     Threads.@spawn data_fragments[f] = preprocess(file_name, batch_size=100)
 end
 
 for e in 1:1
     @info "epoch: $e"
-    for (f, loader) in enumerate(data_fragments)
+    for (f, loader) in enumerate(data_fragments[1:(end-1)])
         l = 0f0
         @time for (b, (x, y)) in enumerate(loader)
             x = is_gpu ? x |> gpu : x
@@ -134,11 +134,11 @@ for e in 1:1
 
             l += loss(x, y)
         end
-        @info "loss: $(l/100)"
+        @info "loss $f: $(l/100)"
     end
 end
 
-testing_loader = preprocess(file_names[end], batch_size=100)
+testing_loader = data_fragments[end]
 test_loss = 0f0
 for (x, y) in testing_loader
     x = is_gpu ? x |> gpu : x
