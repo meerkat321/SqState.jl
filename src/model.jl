@@ -32,34 +32,39 @@ end
 
 function model()
     return Chain(
-        Conv((5, ), 1=>128, relu, pad=2),
-        Chain([residual_block() for _ = 1:10]...),
-        flatten,
-        Dense(4*128, 2048),
-        Dense(2048, dim*dim)
-        # Dense(4096*128, dim*dim)
+        BatchNorm(1),
+        Conv((32, ), 1=>64),
+        BatchNorm(64, relu)
+
+        # ##############################################################################
+        # Conv((5, ), 1=>128, relu, pad=2),
+        # Chain([residual_block() for _ = 1:10]...),
+        # flatten,
+        # Dense(4*128, 2048),
+        # Dense(2048, dim*dim)
     )
 end
 
-m = model() |> gpu
+m = model() # |> gpu
 ps = Flux.params(m)
-opt = ADAM(1e-4)
+opt = ADAM(1e-4, (0.7, 0.9))
 
 loss(x, y) = Flux.mse(m(x), y)
 
-for e in 1:10
-    l = 0f0
+# for e in 1:10
+#     l = 0f0
     for (i, (x, y)) in enumerate(training_loader)
-        x, y = x|>gpu, y|>gpu
+        # x, y = x|>gpu, y|>gpu
         # @info "batch: $i"
         # @show size(x)
         # @show size(y)
-        # @show size(m(x))
+        @show size(m(x))
         # @show loss(x, y)
-        gs = Flux.gradient(() -> loss(x, y), ps)
-        Flux.update!(opt, ps, gs)
+        # gs = Flux.gradient(() -> loss(x, y), ps)
+        # Flux.update!(opt, ps, gs)
 
-        l = loss(x, y)
+        # l = loss(x, y)
+        break
     end
-    @show l
-end
+#     @show l
+# end
