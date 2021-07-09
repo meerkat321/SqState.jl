@@ -28,5 +28,5 @@ function preprocess(file_name::String; batch_size=10, dim=70, fragment_size=1000
     # 70x70 𝛒, 10000 data in data fragment
     ys = reshape(hcat([𝛒2y(𝛒s[i]) for i in 1:fragment_size]...), (dim*dim, fragment_size))
 
-    return DataLoader((xs, ys), batchsize=batch_size, shuffle=false)
+    return DataLoader((xs, ys), batchsize=batch_size, shuffle=true)
 end

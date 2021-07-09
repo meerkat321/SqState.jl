@@ -1,5 +1,8 @@
+using Flux: length
+using CUDA: length
 using SqState
 using Flux
+using Flux.Data: DataLoader
 using CUDA
 
 is_gpu = true
@@ -99,31 +102,37 @@ opt = ADAM(1e-4, (0.7, 0.9))
 
 loss(x, y) = Flux.mse(m(x), y)
 
-file_names = readdir(SqState.training_data_path())[1:(end-1)]
+file_names = readdir(SqState.training_data_path())
 
-for e in 1:10
-    data_fragments = Channel(49, spawn=true) do ch
-        for (i, file_name) in enumerate(file_names)
-            put!(ch, preprocess(file_name, batch_size=100))
-            @info "Loaded $i files into buffer"
-        end
-    end
+function warm_up_jit()
+    @info "jit..."
+    x, y = first(preprocess(file_names[end], batch_size=1))
+    x = is_gpu ? x |> gpu : x
+    y = is_gpu ? y |> gpu : y
+    gs = Flux.gradient(() -> loss(x, y), ps)
+    Flux.update!(opt, ps, gs)
+end
 
-    for (f, loader) in data_fragments
+@time warm_up_jit()
+
+@info "load data"
+data_fragments = Vector{DataLoader}(undef, length(file_names))
+@time @sync for (f, file_name) in enumerate(file_names[1:(end-1)])
+    Threads.@spawn data_fragments[f] = preprocess(file_name, batch_size=100)
+end
+
+for e in 1:1
+    @info "epoch: $e"
+    for (f, loader) in enumerate(data_fragments)
         l = 0f0
-        for (b, (x, y)) in enumerate(training_loader)
+        for (b, (x, y)) in enumerate(loader)
             x = is_gpu ? x |> gpu : x
             y = is_gpu ? y |> gpu : y
-            # @info "batch: $b"
-            # @show size(x)
-            # @show size(y)
-            # @show size(m(x))
-            # @show loss(x, y)
+
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
 
             l = loss(x, y)
-            break
         end
         @info "loss: $l"
     end
@@ -136,4 +145,4 @@ for (x, y) in testing_loader
     y = is_gpu ? y |> gpu : y
     test_loss += loss(x, y)
 end
-@info "Out data loss: $test_loss"
+@info "Out data loss: $(test_loss/100)"
