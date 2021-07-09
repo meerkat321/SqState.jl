@@ -11,9 +11,6 @@ end
 
 dim = 70
 
-file_names = readdir(SqState.training_data_path())
-training_loader = preprocess(file_names[1], batch_size=100)
-
 function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Any})
     return Chain(
         Conv((kernel_size[1], ), ch[1]=>ch[2], pad=pad[1]),
@@ -102,21 +99,41 @@ opt = ADAM(1e-4, (0.7, 0.9))
 
 loss(x, y) = Flux.mse(m(x), y)
 
-# for e in 1:10
-#     l = 0f0
-    for (i, (x, y)) in enumerate(training_loader)
-        x = is_gpu ? x |> gpu : x
-        y = is_gpu ? y |> gpu : y
-        # @info "batch: $i"
-        # @show size(x)
-        # @show size(y)
-        @show size(m(x))
-        # @show loss(x, y)
-        # gs = Flux.gradient(() -> loss(x, y), ps)
-        # Flux.update!(opt, ps, gs)
+file_names = readdir(SqState.training_data_path())[1:(end-1)]
 
-        # l = loss(x, y)
-        break
+for e in 1:10
+    data_fragments = Channel(49, spawn=true) do ch
+        for (i, file_name) in enumerate(file_names)
+            put!(ch, preprocess(file_name, batch_size=100))
+            @info "Loaded $i files into buffer"
+        end
     end
-#     @show l
-# end
+
+    for (f, loader) in data_fragments
+        l = 0f0
+        for (b, (x, y)) in enumerate(training_loader)
+            x = is_gpu ? x |> gpu : x
+            y = is_gpu ? y |> gpu : y
+            # @info "batch: $b"
+            # @show size(x)
+            # @show size(y)
+            # @show size(m(x))
+            # @show loss(x, y)
+            gs = Flux.gradient(() -> loss(x, y), ps)
+            Flux.update!(opt, ps, gs)
+
+            l = loss(x, y)
+            break
+        end
+        @info "loss: $l"
+    end
+end
+
+testing_loader = preprocess(file_names[end], batch_size=100)
+test_loss = 0f0
+for (x, y) in testing_loader
+    x = is_gpu ? x |> gpu : x
+    y = is_gpu ? y |> gpu : y
+    test_loss += loss(x, y)
+end
+@info "Out data loss: $test_loss"
