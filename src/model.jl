@@ -5,10 +5,10 @@ using Flux.Data: DataLoader
 using CUDA
 using JLD2
 
-# if CUDA.has_cuda()
-#     @info "CUDA is on"
-#     CUDA.allowscalar(false)
-# end
+if CUDA.has_cuda()
+    @info "CUDA is on"
+    CUDA.allowscalar(true)
+end
 
 dim = 70
 
@@ -36,11 +36,11 @@ end
 
 function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Integer})
     return Chain(
-        Conv((kernel_size[1], ), ch[1]=>ch[2], pad=pad[1], init=c_glorot_uniform),
+        Conv((kernel_size[1], ), ch[1]=>ch[2], pad=pad[1]),
         C_BatchNorm(ch[2], vanilla_softplus),
-        Conv((kernel_size[2], ), ch[2]=>ch[3], pad=pad[2], init=c_glorot_uniform),
+        Conv((kernel_size[2], ), ch[2]=>ch[3], pad=pad[2]),
         C_BatchNorm(ch[3], vanilla_softplus),
-        Conv((kernel_size[3], ), ch[3]=>ch[4], pad=pad[3], init=c_glorot_uniform),
+        Conv((kernel_size[3], ), ch[3]=>ch[4], pad=pad[3]),
         C_BatchNorm(ch[4], vanilla_softplus),
     )
 end
@@ -54,16 +54,16 @@ end
 
 function model()
     return Chain(
-        Conv((5, ), 1=>128, vanilla_softplus, pad=2, init=c_glorot_uniform),
+        Conv((5, ), 1=>128, vanilla_softplus, pad=2),
         Chain([residual_block() for _ = 1:10]...),
         flatten,
-        Dense(4*128, 2048, init=c_glorot_uniform),
-        Dense(2048, dim*dim, init=c_glorot_uniform)
+        Dense(4*128, 2048),
+        Dense(2048, dim*dim)
     )
 end
 
-m = model()
-batchsize = 100
+m = model() |> gpu
+batchsize = 2
 
 function loss(x, 𝐲)
     𝐥̂ = reshape(m(x), (dim, dim, batchsize))
@@ -79,6 +79,7 @@ points = f["points"]
 
 x = reshape(ComplexF32.(points), (4096, 1, 10000)) # 4096 points 1 channel, 1 data in a batch
 𝐲 = reshape(hcat([ComplexF32.(𝛒s[i]) for i in 1:10000]...), (70, 70, 10000))
+# y = hcat([vcat([diag(cholesky(𝛒s[i]+1e-9*Matrix(I, dim, dim)).L, d-dim) for d in 1:dim]...) for i in 1:10000]...)
 
 train_loader = DataLoader((x, 𝐲), batchsize=batchsize, shuffle=false)
 
@@ -86,10 +87,12 @@ opt = Momentum(1e-10)
 ps = Flux.params(m)
 
 for (i, (x, y)) in enumerate(train_loader)
+    x, y = x|>gpu, y|>gpu
     @info "batch: $i"
     @show size(x)
     @show size(y)
     @show loss(x, y)
     gs = Flux.gradient(() -> loss(x, 𝐲), ps)
     Flux.update!(opt, ps, gs)
+    break
 end
