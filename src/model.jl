@@ -135,7 +135,7 @@ function training_process(;
             Flux.update!(opt, ps, gs)
 
             push!(in_losses, loss(x, y))
-            push!(out_losses, validation(test_data_loader, loss_func, is_gpu))
+            push!(out_losses, validation(test_data_loader, loss, is_gpu))
         end
 
         in_loss = sum(
