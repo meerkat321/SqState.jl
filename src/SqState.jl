@@ -1,6 +1,12 @@
 module SqState
     using DataDeps
+    using JLD2
+    using LinearAlgebra
+    using Flux
+    using Flux.Data: DataLoader
+    using CUDA
     using QuantumStateBase
+
 
     function __init__()
         register(DataDep("SqState", """Data for SqState.""", ""))
@@ -10,6 +16,6 @@ module SqState
     training_data_path() = joinpath(datadep"SqState", "training_data")
 
     # include("plot.jl")
-    # include("model.jl")
+    include("model.jl")
     include("preprocess.jl")
 end

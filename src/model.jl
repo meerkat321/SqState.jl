@@ -1,7 +1,4 @@
-using SqState
-using Flux
-using Flux.Data: DataLoader
-using CUDA
+export training_process
 
 function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Any})
     return Chain(
@@ -146,11 +143,9 @@ function training_process(;
             x->x/length(test_data_loader),
             out_losses[(end-length(loader)+1):end]
         )
-        @info "in data loss $t: $in_loss\nout data loss: $out_loss"
+        @info "in data loss $t: $in_loss\nout data loss: $out_loss\n"
 
-        if t == 15
-            opt.eta /= 2
-        end
+        (t ≥ 15) && (t % 5 == 0) && (opt.eta /= 2)
     end
 
     return model, in_losses, out_losses
