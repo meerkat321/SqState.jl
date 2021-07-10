@@ -123,6 +123,7 @@ function training_process(;
     end
 
     # training
+    in_losses = Float32[]
     for (t, loader) in enumerate(data_loaders)
         l = 0f0
         @time for (b, (x, y)) in enumerate(loader)
@@ -135,11 +136,14 @@ function training_process(;
             Flux.update!(opt, ps, gs)
         end
         @info "loss $t: $(l/100)"
+        push!(in_losses, l)
 
-        if t%15 == 0
+        if t == 15
             opt.eta /= 2
         end
     end
+
+    return model, in_losses
 end
 
 # testing_loader = data_fragments[end]
