@@ -104,7 +104,7 @@ function training_process(;
     # jit model
     @time begin
         @info "jit..."
-        x, y = first(preprocess(file_names[end], batch_size=1))
+        x, y = first(preprocess(file_names[2], batch_size=1))
         x = is_gpu ? x |> gpu : x
         y = is_gpu ? y |> gpu : y
         gs = Flux.gradient(() -> loss(x, y), ps)
@@ -112,10 +112,11 @@ function training_process(;
     end
 
     # prepare data
+    test_data_loader = preprocess(file_names[1], batch_size=batch_size)
     @info "numbers of data fragments: $(length(file_names)-1)"
     data_loaders = Channel(5, spawn=true) do ch
         for e in 1:epochs
-            for (i, file_name) in enumerate(file_names[1:(end-1)])
+            for (i, file_name) in enumerate(file_names[2:end])
                 put!(ch, preprocess(file_name, batch_size=batch_size))
                 @info "Load epoch $(e), $(i)th files into buffer"
             end
@@ -124,33 +125,41 @@ function training_process(;
 
     # training
     in_losses = Float32[]
+    out_losses = Float32[]
     for (t, loader) in enumerate(data_loaders)
-        l = 0f0
         @time for (b, (x, y)) in enumerate(loader)
             x = is_gpu ? x |> gpu : x
             y = is_gpu ? y |> gpu : y
 
-            l += loss(x, y)
-
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
+
+            push!(in_losses, loss(x, y))
+            push!(out_losses, test_data_loader)
         end
-        @info "loss $t: $(l/100)"
-        push!(in_losses, l)
+
+        in_loss = sum(
+            x->x/length(loader),
+            in_losses[(end-length(loader)+1):end]
+        )
+        out_loss = sum(
+            x->x/length(test_data_loader),
+            out_losses[(end-length(loader)+1):end]
+        )
+        @info "in data loss $t: $in_loss\nout data loss: $out_loss"
 
         if t == 15
             opt.eta /= 2
         end
     end
 
-    return model, in_losses
+    return model, in_losses, out_losses
 end
 
-# testing_loader = data_fragments[end]
-# test_loss = 0f0
-# for (x, y) in testing_loader
-#     x = is_gpu ? x |> gpu : x
-#     y = is_gpu ? y |> gpu : y
-#     test_loss += loss(x, y)
-# end
-# @info "Out data loss: $(test_loss/100)"
+function validation(test_data_loader::DataLoader)
+    x, y = first(test_data_loader)
+    x = is_gpu ? x |> gpu : x
+    y = is_gpu ? y |> gpu : y
+
+    return loss(x, y)
+end
