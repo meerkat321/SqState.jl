@@ -94,7 +94,7 @@ function training_process(;
 
     # prepare model
     m = is_gpu ? model() |> gpu : model()
-    loss(x, y) = Flux.Losses.crossentropy(m(x).^2, y.^2)
+    loss(x, y) = Flux.huber_loss(m(x), y)
     loss_mse(x, y) = Flux.mse(m(x), y)
     ps = Flux.params(m)
     opt = ADAM(1e-2, (0.7, 0.9))
@@ -131,7 +131,7 @@ function training_process(;
             x = is_gpu ? x |> gpu : x
             y = is_gpu ? y |> gpu : y
 
-            opt.eta = 1e-2 / 2^((length(loader)*(t-1)+b)/(2*length(loader)))
+            (t ≥ 15) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(2*length(loader))))
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
 
