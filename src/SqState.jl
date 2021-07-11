@@ -14,7 +14,7 @@ module SqState
     end
 
     training_data_path() = joinpath(datadep"SqState", "training_data")
-    model_path() = joinpath(datadep"Sqstate", "model")
+    model_path() = joinpath(datadep"SqState", "model")
 
     # include("plot.jl")
     include("model.jl")

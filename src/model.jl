@@ -87,6 +87,7 @@ function training_process(model_name;
     batch_size=100, epochs=10,
     is_gpu=true
 )
+    model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
     if CUDA.has_cuda() && is_gpu
         @info "CUDA is on"
         CUDA.allowscalar(false)
@@ -142,10 +143,10 @@ function training_process(model_name;
 
             if out_losses[end] == minimum(out_losses)
                 jldsave(
-                    joinpath(mkdir(model_path()), "$model_name.jld2");
+                    model_file_path;
                     model, in_losses, out_losses, in_losses_mse, out_losses_mse
                 )
-                @warn "model updated!"
+                @warn "'$model_name' model updated!"
             end
         end
 
