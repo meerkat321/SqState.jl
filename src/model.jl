@@ -82,7 +82,7 @@ function model(; dim=70)
     )
 end
 
-function training_process(;
+function training_process(model_name;
     file_names=readdir(SqState.training_data_path()),
     batch_size=100, epochs=10,
     is_gpu=true
@@ -139,8 +139,17 @@ function training_process(;
             push!(out_losses, validation(test_data_loader, loss, is_gpu))
             push!(in_losses_mse, loss_mse(x, y))
             push!(out_losses_mse, validation(test_data_loader, loss_mse, is_gpu))
+
+            if out_losses[end] == minimum(out_losses)
+                jldsave(
+                    joinpath(mkdir(model_path()), "$model_name.jld2");
+                    model, in_losses, out_losses, in_losses_mse, out_losses_mse
+                )
+                @warn "model updated!"
+            end
         end
 
+        # moniter
         in_loss = sum(
             x->x/length(loader),
             in_losses[(end-length(loader)+1):end]
@@ -153,7 +162,11 @@ function training_process(;
             x->x/length(test_data_loader),
             out_losses_mse[(end-length(loader)+1):end]
         )
-        @info "$t\n# learning rate: $(opt.eta)\n# in data loss:  $in_loss\n# out data loss: $out_loss\n# mse out loss:  $(out_loss_mse)"
+        @info "$t\n" *
+            "# learning rate: $(opt.eta)\n" *
+            "# in data loss:  $in_loss\n" *
+            "# out data loss: $out_loss\n" *
+            "# mse out loss:  $(out_loss_mse)"
     end
 
     return model, in_losses, out_losses, in_losses_mse, out_losses_mse
