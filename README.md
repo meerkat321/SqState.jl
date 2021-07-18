@@ -9,5 +9,3 @@ Squeezed state solver for quantum optics.
 ![Website](https://img.shields.io/website?url=https%3A%2F%2Ffoldfelis.github.io%2FSqState.jl%2F)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 ![GitHub](https://img.shields.io/github/license/foldfelis/SqState.jl)
-
-![](gallery/wigner_surface_banner.png)
