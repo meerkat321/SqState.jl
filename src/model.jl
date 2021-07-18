@@ -1,98 +1,182 @@
-using SqState
-using LinearAlgebra
-using Flux
-using Flux.Data: DataLoader
-using CUDA
-using JLD2
+export training_process
 
-if CUDA.has_cuda()
-    @info "CUDA is on"
-    CUDA.allowscalar(true)
-end
-
-dim = 70
-
-vanilla_softplus(x) = log1p.(exp.(x))
-
-c_glorot_uniform(dims...) = Flux.glorot_uniform(dims...) + Flux.glorot_uniform(dims...) * im
-
-function C_BatchNorm(
-    chs::Int,
-    λ=identity;
-    initβ=i->zeros(ComplexF32, i),
-    initγ=i->ones(ComplexF32, i),
-    affine=true,
-    track_stats=true,
-    ϵ=1f-5+1f-5im,
-    momentum=1f-1+1f-1im
-)
-    β = affine ? initβ(chs) : nothing
-    γ = affine ? initγ(chs) : nothing
-    μ = track_stats ? zeros(ComplexF32, chs) : nothing
-    σ² = track_stats ? ones(ComplexF32, chs) : nothing
-
-    return Flux.BatchNorm(λ, β, γ, μ, σ², ϵ, momentum, affine, track_stats, nothing, chs)
-end
-
-function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Integer})
+function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Any})
     return Chain(
         Conv((kernel_size[1], ), ch[1]=>ch[2], pad=pad[1]),
-        C_BatchNorm(ch[2], vanilla_softplus),
+        BatchNorm(ch[2], relu),
         Conv((kernel_size[2], ), ch[2]=>ch[3], pad=pad[2]),
-        C_BatchNorm(ch[3], vanilla_softplus),
+        BatchNorm(ch[3], relu),
         Conv((kernel_size[3], ), ch[3]=>ch[4], pad=pad[3]),
-        C_BatchNorm(ch[4], vanilla_softplus),
+        BatchNorm(ch[4]),
     )
 end
 
-function residual_block()
+function short_cut(ch::NTuple{2, <:Integer}, kernel_size::Integer, pad::Any)
     return Chain(
-        SkipConnection(conv_layers((128, 64, 64, 128), (1, 5, 1), (0, 2, 0)), +),
-        MeanPool((2, ))
+        Conv((kernel_size, ), ch[1]=>ch[2], pad=pad),
+        BatchNorm(ch[2])
     )
 end
 
-function model()
+function model(; dim=70)
     return Chain(
-        Conv((5, ), 1=>128, vanilla_softplus, pad=2),
-        Chain([residual_block() for _ = 1:10]...),
+        # stage 0
+        BatchNorm(1),
+        Conv((31, ), 1=>64, pad=15),
+        BatchNorm(64, relu),
+        # res 1
+        Parallel(+,
+            conv_layers((64, 32, 32, 96), (1, 15, 7), (0, 7, 3)),
+            short_cut((64, 96), 1, 0),
+        ),
+        x -> relu.(x),
+        MeanPool((2, )),
+        BatchNorm(96, relu),
+        # res 2
+        SkipConnection(conv_layers((96, 32, 32, 96), (1, 7, 1), (0, 3, 0)), +),
+        x -> relu.(x),
+        # res 3
+        SkipConnection(conv_layers((96, 32, 32, 96), (1, 7, 1), (0, 3, 0)), +),
+        x -> relu.(x),
+        MeanPool((4, )),
+        BatchNorm(96, relu),
+        # res 4
+        Parallel(+,
+            conv_layers((96, 64, 64, 128), (1, 3, 1), (0, 1, 0)),
+            short_cut((96, 128), 1, 0),
+        ),
+        x -> relu.(x),
+        # res 5
+        SkipConnection(conv_layers((128, 64, 64, 128), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        # res 6
+        SkipConnection(conv_layers((128, 64, 64, 128), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        MeanPool((8, )),
+        BatchNorm(128, relu),
+        # res 7
+        Parallel(+,
+            conv_layers((128, 96, 96, 196), (1, 3, 1), (0, 1, 0)),
+            short_cut((128, 196), 1, 0),
+        ),
+        x -> relu.(x),
+        # res 8
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        # res 9
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        # res 10
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        # res 11
+        SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
+        x -> relu.(x),
+        MeanPool((2, )),
+        BatchNorm(196, relu),
+        # stage 1
         flatten,
-        Dense(4*128, 2048),
-        Dense(2048, dim*dim)
+        Dense(32*196, 5586, relu),
+        Dense(5586, dim*dim),
+        x -> x ./ sum(x.^2) # l-2 normalize
     )
 end
 
-m = model() |> gpu
-batchsize = 2
+function training_process(model_name;
+    file_names=readdir(SqState.training_data_path()),
+    batch_size=100, epochs=10,
+    is_gpu=true
+)
+    model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
+    if CUDA.has_cuda() && is_gpu
+        @info "CUDA is on"
+        CUDA.allowscalar(false)
+    end
 
-function loss(x, 𝐲)
-    𝐥̂ = reshape(m(x), (dim, dim, batchsize))
-    l = sum(sqrt(abs(Flux.mse(𝐥̂[:, :, i]' * 𝐥̂[:, :, i], 𝐲[:, :, i]))) for i in 1:batchsize) / batchsize
+    # prepare model
+    m = is_gpu ? model() |> gpu : model()
+    loss(x, y) = Flux.huber_loss(m(x), y)
+    loss_mse(x, y) = Flux.mse(m(x), y)
+    ps = Flux.params(m)
+    opt = ADAM(1e-2, (0.7, 0.9))
 
-    return l
+    # jit model
+    @time begin
+        @info "jit..."
+        x, y = first(preprocess(file_names[2], batch_size=1))
+        x = is_gpu ? x |> gpu : x
+        y = is_gpu ? y |> gpu : y
+        gs = Flux.gradient(() -> loss(x, y), ps)
+        Flux.update!(opt, ps, gs)
+    end
+
+    # prepare data
+    test_data_loader = preprocess(file_names[1], batch_size=batch_size)
+    @info "numbers of data fragments: $(length(file_names)-1)"
+    data_loaders = Channel(5, spawn=true) do ch
+        for e in 1:epochs
+            for (i, file_name) in enumerate(file_names[2:end])
+                put!(ch, preprocess(file_name, batch_size=batch_size))
+                @info "Load epoch $(e), $(i)th files into buffer"
+            end
+        end
+    end
+
+    # training
+    in_losses = Float32[]
+    in_losses_mse = Float32[]
+    out_losses = Float32[]
+    out_losses_mse = Float32[]
+    for (t, loader) in enumerate(data_loaders)
+        @time for (b, (x, y)) in enumerate(loader)
+            x = is_gpu ? x |> gpu : x
+            y = is_gpu ? y |> gpu : y
+
+            (t ≥ 15) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(2*length(loader))))
+            gs = Flux.gradient(() -> loss(x, y), ps)
+            Flux.update!(opt, ps, gs)
+
+            push!(in_losses, loss(x, y))
+            push!(out_losses, validation(test_data_loader, loss, is_gpu))
+            push!(in_losses_mse, loss_mse(x, y))
+            push!(out_losses_mse, validation(test_data_loader, loss_mse, is_gpu))
+
+            if out_losses[end] == minimum(out_losses)
+                jldsave(
+                    model_file_path;
+                    model, in_losses, out_losses, in_losses_mse, out_losses_mse
+                )
+                @warn "'$model_name' model updated!"
+            end
+        end
+
+        # moniter
+        in_loss = sum(
+            x->x/length(loader),
+            in_losses[(end-length(loader)+1):end]
+        )
+        out_loss = sum(
+            x->x/length(test_data_loader),
+            out_losses[(end-length(loader)+1):end]
+        )
+        out_loss_mse = sum(
+            x->x/length(test_data_loader),
+            out_losses_mse[(end-length(loader)+1):end]
+        )
+        @info "$t\n" *
+            "# learning rate: $(opt.eta)\n" *
+            "# in data loss:  $in_loss\n" *
+            "# out data loss: $out_loss\n" *
+            "# mse out loss:  $(out_loss_mse)"
+    end
+
+    return model, in_losses, out_losses, in_losses_mse, out_losses_mse
 end
 
-file_names = readdir(SqState.training_data_path())
-f = jldopen(joinpath(SqState.training_data_path(), file_names[1]), "r")
-points = f["points"]
-𝛒s = f["𝛒s"]
+function validation(test_data_loader::DataLoader, loss_func, is_gpu)
+    x, y = first(test_data_loader)
+    x = is_gpu ? x |> gpu : x
+    y = is_gpu ? y |> gpu : y
 
-x = reshape(ComplexF32.(points), (4096, 1, 10000)) # 4096 points 1 channel, 1 data in a batch
-𝐲 = reshape(hcat([ComplexF32.(𝛒s[i]) for i in 1:10000]...), (70, 70, 10000))
-# y = hcat([vcat([diag(cholesky(𝛒s[i]+1e-9*Matrix(I, dim, dim)).L, d-dim) for d in 1:dim]...) for i in 1:10000]...)
-
-train_loader = DataLoader((x, 𝐲), batchsize=batchsize, shuffle=false)
-
-opt = Momentum(1e-10)
-ps = Flux.params(m)
-
-for (i, (x, y)) in enumerate(train_loader)
-    x, y = x|>gpu, y|>gpu
-    @info "batch: $i"
-    @show size(x)
-    @show size(y)
-    @show loss(x, y)
-    gs = Flux.gradient(() -> loss(x, 𝐲), ps)
-    Flux.update!(opt, ps, gs)
-    break
+    return loss_func(x, y)
 end
