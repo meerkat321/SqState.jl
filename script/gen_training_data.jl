@@ -4,6 +4,8 @@ using DataDeps
 using JLD2
 using Dates
 
+QuantumStateBase.extend_coeff_ψₙ!(500)
+
 rand2range(x_range) = x_range[1] + (x_range[2]-x_range[1])*rand()
 
 function rand_arg(r_range, θ_range, n̄_range, bias_phase_range)
@@ -19,10 +21,10 @@ function start(;
     n_data, n_points=4096,
     r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 0.5), bias_phase_range=(0, 2π),
     point_dim=500, label_dim=70,
-    file_name="$(now())"
+    file_name="gaussian_$(replace(now(), ':'=>'_'))"
 )
     args = Matrix{Float64}(undef, 4, n_data)
-    points = Matrix{Float64}(undef, n_points, n_data)
+    points = Array{Float64, 3}(undef, 2, n_points, n_data)
     𝛒s = Vector{Matrix{ComplexF64}}(undef, n_data)
 
     for i in 1:n_data
@@ -31,7 +33,7 @@ function start(;
 
         # points
         state = SqueezedThermalState(ξ(r, θ), n̄, dim=point_dim)
-        gaussian_state_sampler!(view(points, :, i), state, bias_phase)
+        gaussian_state_sampler!(points[:, :, i], state, bias_phase)
 
         # 𝛒s
         𝛒s[i] = SqueezedThermalState(ξ(r, θ), n̄, dim=label_dim).𝛒
@@ -48,12 +50,12 @@ function start(;
 end
 
 # jit
-@time start(n_data=10, file_name=nothing)
+@time start(n_data=100, file_name=nothing)
 
 # generate training data
 # about 780 sec for 10000 data
 # about 11 hr for 50 batch files
-for i in 1:50
+@time for i in 1:100
     @show i
     @time start(n_data=10000)
 end
