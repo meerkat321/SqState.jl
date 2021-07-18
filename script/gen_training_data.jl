@@ -21,7 +21,7 @@ function start(;
     n_data, n_points=4096,
     r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 0.5), bias_phase_range=(0, 2π),
     point_dim=500, label_dim=70,
-    file_name="gaussian_$(replace(now(), ':'=>'_'))"
+    file_name="gaussian_$(replace(string(now()), ':'=>'_'))"
 )
     args = Matrix{Float64}(undef, 4, n_data)
     points = Array{Float64, 3}(undef, 2, n_points, n_data)
