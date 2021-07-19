@@ -1,4 +1,5 @@
 module SqState
+    using Dates
     using DataDeps
     using JLD2
     using LinearAlgebra
@@ -16,6 +17,7 @@ module SqState
     training_data_path() = joinpath(datadep"SqState", "training_data")
     model_path() = joinpath(datadep"SqState", "model")
 
+    include("gen_data.jl")
     include("model.jl")
     include("preprocess.jl")
 end
