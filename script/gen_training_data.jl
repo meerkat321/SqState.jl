@@ -1,8 +1,11 @@
+using LinearAlgebra
 using SqState
 using QuantumStateBase
 using DataDeps
 using JLD2
 using Dates
+
+# LinearAlgebra.BLAS.set_num_threads(16)
 
 QuantumStateBase.extend_coeff_ψₙ!(500)
 
@@ -53,8 +56,8 @@ end
 @time start(n_data=100, file_name=nothing)
 
 # generate training data
-# about 780 sec for 10000 data
-# about 11 hr for 50 batch files
+# about 680 sec for 10000 data
+# about 18.9 hr for 100 batch files
 @time for i in 1:100
     @show i
     @time start(n_data=10000)
