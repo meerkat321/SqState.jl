@@ -1,4 +1,6 @@
-export training_process
+export
+    training_process,
+    get_model
 
 function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Any})
     return Chain(
@@ -179,4 +181,8 @@ function validation(test_data_loader::DataLoader, loss_func, is_gpu)
     y = is_gpu ? y |> gpu : y
 
     return loss_func(x, y)
+end
+
+function get_model(model_name::String)
+    return jldopen(joinpath(model_path() , "$model_name.jld2"))["model"]
 end
