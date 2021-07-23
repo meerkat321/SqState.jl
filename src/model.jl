@@ -86,7 +86,7 @@ end
 
 function training_process(model_name;
     file_names=readdir(SqState.training_data_path()),
-    batch_size=100, n_batch=100, epochs=10,
+    batch_size=100, n_batch=55, epochs=10,
     is_gpu=true
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
@@ -117,7 +117,7 @@ function training_process(model_name;
     @info "numbers of data fragments: $n_batch/$(length(file_names)-1)"
     data_loaders = Channel(5, spawn=true) do ch
         for e in 1:epochs
-            for (i, file_name) in enumerate(file_names[2:(n_batch-1)])
+            for (i, file_name) in enumerate(file_names[2:(n_batch+1)])
                 put!(ch, preprocess(file_name, batch_size=batch_size))
                 @info "Load epoch $(e), $(i)th files into buffer"
             end
@@ -134,7 +134,7 @@ function training_process(model_name;
             x = is_gpu ? x |> gpu : x
             y = is_gpu ? y |> gpu : y
 
-            (t ≥ 15) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(2*length(loader))))
+            (t ≥ 15) && (opt.eta > 1e-7) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(2*length(loader))))
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
 
@@ -144,11 +144,13 @@ function training_process(model_name;
             push!(out_losses_mse, validation(test_data_loader, loss_mse, is_gpu))
 
             if out_losses[end] == minimum(out_losses)
-                jldsave(
-                    model_file_path;
-                    m, in_losses, out_losses, in_losses_mse, out_losses_mse
-                )
-                @warn "'$model_name' model updated!"
+                let model = cpu(m) #return model to cpu before serialization
+                    jldsave(
+                        model_file_path;
+                        model, in_losses, out_losses, in_losses_mse, out_losses_mse
+                    )
+                    @warn "'$model_name' model updated!"
+                end
             end
         end
 
@@ -172,7 +174,7 @@ function training_process(model_name;
             "# mse out loss:  $(out_loss_mse)"
     end
 
-    return model, in_losses, out_losses, in_losses_mse, out_losses_mse
+    return m, in_losses, out_losses, in_losses_mse, out_losses_mse
 end
 
 function validation(test_data_loader::DataLoader, loss_func, is_gpu)

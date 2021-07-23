@@ -14,7 +14,7 @@ begin
 	Pkg.add("DataDeps")
 	Pkg.add("JLD2")
 	Pkg.add("Plots")
-		
+
 	using SqState
 	using BenchmarkTools
 	using QuantumStateBase
@@ -79,7 +79,7 @@ d
 w
 
 # ╔═╡ c3552f01-8bfc-48c9-9c46-20b87114c810
-m = get_model("model0")
+m = get_model("model")
 
 # ╔═╡ 9bbe4ab3-06a3-4dd0-8e05-acd977accfb8
 new_data = rand(SqueezedThermalState(ξ(1.4, π/2), 0.5), 4096)
