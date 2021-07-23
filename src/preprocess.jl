@@ -14,7 +14,7 @@ end
 
 function preprocess(file_name::String; batch_size=10, dim=70, fragment_size=10000)
     f = jldopen(joinpath(SqState.training_data_path(), file_name), "r")
-    points = f["points"]
+    points = f["points"][2, :, :]
     𝛒s = f["𝛒s"]
 
     # 4096 points 1 channel, 10000 data in a data fragment

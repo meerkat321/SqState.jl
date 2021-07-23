@@ -86,7 +86,7 @@ end
 
 function training_process(model_name;
     file_names=readdir(SqState.training_data_path()),
-    batch_size=100, epochs=10,
+    batch_size=100, n_batch=100, epochs=10,
     is_gpu=true
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
@@ -114,10 +114,10 @@ function training_process(model_name;
 
     # prepare data
     test_data_loader = preprocess(file_names[1], batch_size=batch_size)
-    @info "numbers of data fragments: $(length(file_names)-1)"
+    @info "numbers of data fragments: $n_batch/$(length(file_names)-1)"
     data_loaders = Channel(5, spawn=true) do ch
         for e in 1:epochs
-            for (i, file_name) in enumerate(file_names[2:end])
+            for (i, file_name) in enumerate(file_names[2:(n_batch-1)])
                 put!(ch, preprocess(file_name, batch_size=batch_size))
                 @info "Load epoch $(e), $(i)th files into buffer"
             end
@@ -146,7 +146,7 @@ function training_process(model_name;
             if out_losses[end] == minimum(out_losses)
                 jldsave(
                     model_file_path;
-                    model, in_losses, out_losses, in_losses_mse, out_losses_mse
+                    m, in_losses, out_losses, in_losses_mse, out_losses_mse
                 )
                 @warn "'$model_name' model updated!"
             end
