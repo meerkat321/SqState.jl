@@ -86,7 +86,7 @@ end
 
 function training_process(model_name;
     file_names=readdir(SqState.training_data_path()),
-    batch_size=100, n_batch=55, epochs=1,
+    batch_size=100, n_batch=100, epochs=1,
     is_gpu=true
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
@@ -97,8 +97,7 @@ function training_process(model_name;
 
     # prepare model
     m = is_gpu ? model() |> gpu : model()
-    loss(x, y) = Flux.huber_loss(m(x), y)
-    loss_mse(x, y) = Flux.mse(m(x), y)
+    loss(x, y) = Flux.mse(m(x), y)
     ps = Flux.params(m)
     opt = ADAM(1e-2, (0.7, 0.9))
 
@@ -126,35 +125,33 @@ function training_process(model_name;
 
     # training
     in_losses = Float32[]
-    in_losses_mse = Float32[]
     out_losses = Float32[]
-    out_losses_mse = Float32[]
     for (t, loader) in enumerate(data_loaders)
         @time for (b, (x, y)) in enumerate(loader)
             x = is_gpu ? x |> gpu : x
             y = is_gpu ? y |> gpu : y
 
-            (t ≥ 15) && (opt.eta > 1e-7) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(2*length(loader))))
+            # (t ≥ 20) && (opt.eta > 1e-7) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(5*length(loader))))
+            (t ≥ 30) && (t % 3 == 0) && (opt.eta /= 2)
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
 
             push!(in_losses, loss(x, y))
             push!(out_losses, validation(test_data_loader, loss, is_gpu))
-            push!(in_losses_mse, loss_mse(x, y))
-            push!(out_losses_mse, validation(test_data_loader, loss_mse, is_gpu))
 
             if out_losses[end] == minimum(out_losses)
                 let model = cpu(m) #return model to cpu before serialization
-                    jldsave(
-                        model_file_path;
-                        model, in_losses, out_losses, in_losses_mse, out_losses_mse
-                    )
+                    jldsave(model_file_path; model, in_losses, out_losses)
                     @warn "'$model_name' model updated!"
                 end
             end
         end
 
         # moniter
+        print("\e[H\e[2J")
+        plt = scatterplot(in_losses, name="In data loss", width=100, color=:green)
+        plt = scatterplot!(plt, out_losses, name="Out data loss", color=:red)
+        println(plt)
         in_loss = sum(
             x->x/length(loader),
             in_losses[(end-length(loader)+1):end]
@@ -163,18 +160,13 @@ function training_process(model_name;
             x->x/length(test_data_loader),
             out_losses[(end-length(loader)+1):end]
         )
-        out_loss_mse = sum(
-            x->x/length(test_data_loader),
-            out_losses_mse[(end-length(loader)+1):end]
-        )
         @info "$t\n" *
             "# learning rate: $(opt.eta)\n" *
             "# in data loss:  $in_loss\n" *
-            "# out data loss: $out_loss\n" *
-            "# mse out loss:  $(out_loss_mse)"
+            "# out data loss: $out_loss\n"
     end
 
-    return m, in_losses, out_losses, in_losses_mse, out_losses_mse
+    return m, in_losses, out_losses
 end
 
 function validation(test_data_loader::DataLoader, loss_func, is_gpu)

@@ -7,6 +7,7 @@ module SqState
     using Flux.Data: DataLoader
     using CUDA
     using QuantumStateBase
+    using UnicodePlots
 
 
     function __init__()
