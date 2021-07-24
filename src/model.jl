@@ -132,7 +132,7 @@ function training_process(model_name;
             y = is_gpu ? y |> gpu : y
 
             # (t ≥ 20) && (opt.eta > 1e-7) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(5*length(loader))))
-            (t ≥ 30) && (t % 3 == 0) && (opt.eta /= 2)
+            (t ≥ 30) && ((t*length(loader)+b) % (5*length(loader)) == 0) && (opt.eta /= 2)
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
 
