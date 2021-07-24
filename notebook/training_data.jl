@@ -94,7 +94,7 @@ begin
 	# SqState.𝛒2y(a)
 	# b = cholesky(Hermitian(a)).L
 	# vcat([diag(b, i-70) for i in 1:70]...)
-	
+
 	# b*b'- Matrix{Float64}(I, 70, 70)*1e-15 ≈ a
 end
 
@@ -107,17 +107,17 @@ begin
 end
 
 # ╔═╡ e470b297-0ec0-48bb-ad75-309626e48fee
-begin	
+begin
 	function merge_l(l_raw, dim)
 		b = Int64((dim^2 - dim)/2 + dim)
 		l = ComplexF64.(l_raw[1:b])
 		for (i, e) in enumerate(l_raw[(b+1):end])
 			l[i] += im * e
 		end
-		
+
 		return l
 	end
-	
+
 	function reshape_l(l, dim)
 		l_ch = zeros(dim, dim)
 		start_i = 1
@@ -125,22 +125,22 @@ begin
 			l_ch += diagm(i => l[start_i:(start_i+(dim-1)+i)])
 			start_i += (dim)+i
 		end
-		
+
 		return l_ch
 	end
-	
+
 	function ch2𝛒(l_ch, dim, δ)
 		𝛒 = (l_ch' * l_ch) - Matrix{Float64}(I, dim, dim) * δ
-		
+
 		return 𝛒
 	end
-	
+
 	function post_processing(l_raw; dim=70, δ=1e-15)
 		return ch2𝛒(reshape_l(merge_l(l_raw, dim), dim), dim, δ)
 	end
-	
+
 	𝛒_new = post_processing(l_new)
-	
+
 	# merge_l(l_new, 70)
 	# reshape_l(merge_l(l_new, 70), 70)
 end
