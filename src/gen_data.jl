@@ -8,15 +8,14 @@ function rand_arg(r_range, θ_range, n̄_range, θ_offset_range)
     r = rand2range(r_range)
     θ = rand2range(θ_range)
     n̄ = rand2range(n̄_range)
-    # θ_offset = rand2range(θ_offset_range)
-    θ_offset = 0.
+    θ_offset = rand2range(θ_offset_range)
 
     return r, θ, n̄, θ_offset
 end
 
 function gen_squeezed_thermal_data(;
     n_data, n_points=4096,
-    r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 0.5), θ_offset_range=(0, 2π),
+    r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 0.5), θ_offset_range=(0, 0),
     point_dim=500, label_dim=70,
     file_name="gaussian_$(replace(string(now()), ':'=>'_'))"
 )
