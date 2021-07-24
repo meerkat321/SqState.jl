@@ -8,7 +8,8 @@ function rand_arg(r_range, θ_range, n̄_range, θ_offset_range)
     r = rand2range(r_range)
     θ = rand2range(θ_range)
     n̄ = rand2range(n̄_range)
-    θ_offset = rand2range(θ_offset_range)
+    # θ_offset = rand2range(θ_offset_range)
+    θ_offset = 0.
 
     return r, θ, n̄, θ_offset
 end

@@ -1,6 +1,7 @@
 export
     training_process,
-    get_model
+    get_model,
+    s_model
 
 function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Any})
     return Chain(
@@ -84,6 +85,25 @@ function model(; dim=70)
     )
 end
 
+function s_model()
+    return Chain(
+        Conv((63, ), 1=>128, pad=31, relu),
+        MeanPool((4, )),
+        Conv((31, ), 128=>256, pad=15, relu),
+        MeanPool((4, )),
+        Conv((15, ), 256=>512, pad=7, relu),
+        MeanPool((4, )),
+        Conv((7, ), 512=>1280, pad=3, relu),
+        MeanPool((4, )),
+
+        flatten,
+
+        Dense(16*1280, 8795, relu),
+        Dense(8795, 70*70),
+        x -> x ./ sum(x.^2) # l-2 normalize
+    )
+end
+
 function training_process(model_name;
     file_names=readdir(SqState.training_data_path()),
     batch_size=100, n_batch=100, epochs=1,
@@ -96,7 +116,8 @@ function training_process(model_name;
     end
 
     # prepare model
-    m = is_gpu ? model() |> gpu : model()
+    # m = is_gpu ? model() |> gpu : model()
+    m = is_gpu ? s_model() |> gpu : s_model()
     loss(x, y) = Flux.mse(m(x), y)
     ps = Flux.params(m)
     opt = ADAM(1e-2, (0.7, 0.9))
