@@ -16,8 +16,10 @@ module SqState
 
     training_data_path() = joinpath(datadep"SqState", "training_data")
     model_path() = joinpath(datadep"SqState", "model")
+    data_path() = joinpath(datadep"SqState", "data")
 
     include("gen_data.jl")
-    include("model.jl")
     include("preprocess.jl")
+    include("model.jl")
+    include("postprocess.jl")
 end
