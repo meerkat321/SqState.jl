@@ -79,7 +79,7 @@ function model(; dim=70)
         # stage 1
         flatten,
         Dense(32*196, 5586, relu),
-        Dense(5586, dim*dim),
+        Dense(5586, dim*dim, tanh),
         x -> x ./ sum(x.^2) # l-2 normalize
     )
 end
