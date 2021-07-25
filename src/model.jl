@@ -1,7 +1,6 @@
 export
     training_process,
-    get_model,
-    s_model
+    get_model
 
 function conv_layers(ch::NTuple{4, <:Integer}, kernel_size::NTuple{3, <:Integer}, pad::NTuple{3, <:Any})
     return Chain(
@@ -79,34 +78,15 @@ function model(; dim=70)
         BatchNorm(196, relu),
         # stage 1
         flatten,
-        Dense(32*196, 5586, relu),
-        Dense(5586, dim*dim, tanh),
-        x -> x ./ sum(x.^2) # l-2 normalize
-    )
-end
-
-function s_model()
-    return Chain(
-        Conv((63, ), 1=>128, pad=31, relu),
-        MeanPool((4, )),
-        Conv((31, ), 128=>256, pad=15, relu),
-        MeanPool((4, )),
-        Conv((15, ), 256=>512, pad=7, relu),
-        MeanPool((4, )),
-        Conv((7, ), 512=>1280, pad=3, relu),
-        MeanPool((4, )),
-
-        flatten,
-
-        Dense(16*1280, 8795, relu),
-        Dense(8795, 70*70),
-        x -> x ./ sum(x.^2) # l-2 normalize
+        Dense(32*196, Int32(dim*dim/4), relu),
+        Dense(Int32(dim*dim/4), dim*dim, tanh),
+        x -> x ./ sqrt(max(sum(x.^2), 1f-12)) # l-2 normalize
     )
 end
 
 function training_process(model_name;
     file_names=readdir(SqState.training_data_path()),
-    batch_size=100, n_batch=100, epochs=1,
+    batch_size=100, n_batch=60, epochs=10,
     is_gpu=true
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
@@ -116,8 +96,7 @@ function training_process(model_name;
     end
 
     # prepare model
-    # m = is_gpu ? model() |> gpu : model()
-    m = is_gpu ? s_model() |> gpu : s_model()
+    m = is_gpu ? model() |> gpu : model()
     loss(x, y) = Flux.mse(m(x), y)
     ps = Flux.params(m)
     opt = ADAM(1e-2, (0.7, 0.9))
@@ -148,43 +127,27 @@ function training_process(model_name;
     in_losses = Float32[]
     out_losses = Float32[]
     for (t, loader) in enumerate(data_loaders)
-        @time for (b, (x, y)) in enumerate(loader)
+        in_loss = out_loss = 0
+        bs = length(loader)
+
+        t1 = time()
+        for (b, (x, y)) in enumerate(loader)
             x = is_gpu ? x |> gpu : x
             y = is_gpu ? y |> gpu : y
 
             # (t ≥ 20) && (opt.eta > 1e-7) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(5*length(loader))))
-            (t ≥ 30) && ((t*length(loader)+b) % (5*length(loader)) == 0) && (opt.eta /= 2)
+            (t ≥ 20) && ((t*bs+b) % (5*bs) == 0) && (opt.eta > 1e-4) && (opt.eta /= 2)
+
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
-
-            push!(in_losses, loss(x, y))
-            push!(out_losses, validation(test_data_loader, loss, is_gpu))
-
-            if out_losses[end] == minimum(out_losses)
-                let model = cpu(m) #return model to cpu before serialization
-                    jldsave(model_file_path; model, in_losses, out_losses)
-                    @warn "'$model_name' model updated!"
-                end
-            end
+            in_loss += loss(x, y)
+            out_loss += validation(test_data_loader, loss, is_gpu)
         end
 
-        # moniter
-        print("\e[H\e[2J")
-        plt = scatterplot(in_losses, name="In data loss", width=100, color=:green)
-        plt = scatterplot!(plt, out_losses, name="Out data loss", color=:red)
-        println(plt)
-        in_loss = sum(
-            x->x/length(loader),
-            in_losses[(end-length(loader)+1):end]
-        )
-        out_loss = sum(
-            x->x/length(test_data_loader),
-            out_losses[(end-length(loader)+1):end]
-        )
-        @info "$t\n" *
-            "# learning rate: $(opt.eta)\n" *
-            "# in data loss:  $in_loss\n" *
-            "# out data loss: $out_loss\n"
+        push!(in_losses, in_loss/bs)
+        push!(out_losses, out_loss/bs)
+        moniter(t*length(loader), t1, opt, bs, in_losses, out_losses)
+        (out_losses[end] == minimum(out_losses)) && (update_model!(model_file_path, model_name, m, in_losses, out_losses))
     end
 
     return m, in_losses, out_losses
@@ -196,6 +159,25 @@ function validation(test_data_loader::DataLoader, loss_func, is_gpu)
     y = is_gpu ? y |> gpu : y
 
     return loss_func(x, y)
+end
+
+function update_model!(model_file_path, model_name, model, in_losses, out_losses)
+    model = cpu(model) #return model to cpu before serialization
+    jldsave(model_file_path; model, in_losses, out_losses)
+    @warn "'$model_name' model updated!"
+end
+
+function moniter(t, t1, opt, n, in_losses, out_losses)
+    plt = scatterplot(in_losses, xlabel="batchs/$n", name="In", width=100, color=:green)
+    plt = scatterplot!(plt, out_losses, name="Out", color=:red)
+
+    print("\e[H\e[2J")
+    println(plt)
+    @info "$t\n" *
+        "# time: $(time()-t1)\n" *
+        "# learning rate: $(opt.eta)\n" *
+        "# in data loss:  $(in_losses[end])\n" *
+        "# out data loss: $(out_losses[end])\n"
 end
 
 function get_model(model_name::String)
