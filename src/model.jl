@@ -20,7 +20,7 @@ function short_cut(ch::NTuple{2, <:Integer}, kernel_size::Integer, pad::Any)
     )
 end
 
-function model(; dim=70)
+function model(; dim=35)
     return Chain(
         # stage 0
         BatchNorm(1),
@@ -78,15 +78,15 @@ function model(; dim=70)
         BatchNorm(196, relu),
         # stage 1
         flatten,
-        Dense(32*196, Int32(dim*dim/4), relu),
-        Dense(Int32(dim*dim/4), dim*dim, tanh),
+        Dense(32*196, Int32(round(dim*dim/4)), relu),
+        Dense(Int32(round(dim*dim/4)), dim*dim),
         x -> x ./ sqrt(max(sum(x.^2), 1f-12)) # l-2 normalize
     )
 end
 
 function training_process(model_name;
     file_names=readdir(SqState.training_data_path()),
-    batch_size=100, n_batch=60, epochs=10,
+    batch_size=50, n_batch=99, epochs=10,
     is_gpu=true
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
@@ -97,7 +97,8 @@ function training_process(model_name;
 
     # prepare model
     m = is_gpu ? model() |> gpu : model()
-    loss(x, y) = Flux.mse(m(x), y)
+    # loss(x, y) = Flux.mse(m(x), y)
+    loss(x, y) = Flux.huber_loss(m(x), y)
     ps = Flux.params(m)
     opt = ADAM(1e-2, (0.7, 0.9))
 
@@ -136,7 +137,16 @@ function training_process(model_name;
             y = is_gpu ? y |> gpu : y
 
             # (t ≥ 20) && (opt.eta > 1e-7) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(5*length(loader))))
-            (t ≥ 20) && ((t*bs+b) % (5*bs) == 0) && (opt.eta > 1e-4) && (opt.eta /= 2)
+            # (t ≥ 20) && ((t*bs+b) % (5*bs) == 0) && (opt.eta > 1e-4) && (opt.eta /= 2)
+            if t ≥ 20
+                if opt.eta > 1.6e-4
+                    ((t*bs+b) % (10*bs) == 0) && (opt.eta /= 2)
+                elseif opt.eta > 5e-5
+                    ((t*bs+b) % (20*bs) == 0) && (opt.eta /= 2)
+                else
+                    ((t*bs+b) % (50*bs) == 0) && (opt.eta /= 2)
+                end
+            end
 
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
@@ -146,7 +156,7 @@ function training_process(model_name;
 
         push!(in_losses, in_loss/bs)
         push!(out_losses, out_loss/bs)
-        moniter(t*length(loader), t1, opt, bs, in_losses, out_losses)
+        (t > 1) && moniter(t, t1, opt, bs, in_losses, out_losses)
         (out_losses[end] == minimum(out_losses)) && (update_model!(model_file_path, model_name, m, in_losses, out_losses))
     end
 
@@ -177,7 +187,8 @@ function moniter(t, t1, opt, n, in_losses, out_losses)
         "# time: $(time()-t1)\n" *
         "# learning rate: $(opt.eta)\n" *
         "# in data loss:  $(in_losses[end])\n" *
-        "# out data loss: $(out_losses[end])\n"
+        "# out data loss: $(out_losses[end])\n" *
+        "# Δloss: $(out_losses[end] - out_losses[end-1])\n"
 end
 
 function get_model(model_name::String)

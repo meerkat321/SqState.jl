@@ -80,43 +80,39 @@ end
 # w
 
 # ╔═╡ c3552f01-8bfc-48c9-9c46-20b87114c810
-m = get_model("model")
+m = get_model("model35")
 
 # ╔═╡ 9bbe4ab3-06a3-4dd0-8e05-acd977accfb8
 begin
-	new_state = SqueezedThermalState(ξ(1.34, 3.7), 0.08)
+	new_state = SqueezedThermalState(ξ(1.5, 0.), 0.08)
 	new_data = rand(new_state, 4096, IsGaussian)
+	𝛒(new_state)
 end
 
 # ╔═╡ 1d5ed4d0-ce20-4a7a-9e62-2886e3b68889
-begin
-	a = 𝛒(new_state)+Matrix{Float64}(I, 70, 70)*1e-15
-	# SqState.𝛒2y(a)
-	# b = cholesky(Hermitian(a)).L
-	# vcat([diag(b, i-70) for i in 1:70]...)
-	# b*b'- Matrix{Float64}(I, 70, 70)*1e-15 ≈ a
-end
+# begin
+# 	a = 𝛒(new_state)+Matrix{Float64}(I, 70, 70)*1e-15
+# 	# SqState.𝛒2y(a)
+# 	# b = cholesky(Hermitian(a)).L
+# 	# vcat([diag(b, i-70) for i in 1:70]...)
+# 	# b*b'- Matrix{Float64}(I, 70, 70)*1e-15 ≈ a
+# end
 
 # ╔═╡ a0e5e657-3c62-44f6-9a6d-20fdb69ce4fb
 # scatter(new_data[1, :], new_data[2, :], size=(800, 400))
 
 # ╔═╡ 398b7a48-ffcb-40f2-b2b3-92b8ce0a4354
 begin
-	l_new = reshape(m(reshape(new_data[2, :], (4096, 1, 1))), 4900)
+	l_new = reshape(m(reshape(new_data[2, :], (4096, 1, 1))), 35*35)
 end
 
 # ╔═╡ e470b297-0ec0-48bb-ad75-309626e48fee
 begin
-	𝛒_new = post_processing(l_new)
-	
-	# tr(𝛒_new)
-
-	# SqState.merge_l(l_new, 70)
-	# reshape_l(merge_l(l_new, 70), 70)
+	𝛒_new = post_processing(l_new, dim=35)
 end
 
 # ╔═╡ 9c15467b-82c0-4e73-9e39-789c0b3ba45f
-sum((𝛒_new - 𝛒(new_state)).^2)
+tr(𝛒_new)
 
 # ╔═╡ df0c2738-5cbd-4265-9867-f4c5b2527461
 plot_wigner(
@@ -126,13 +122,13 @@ plot_wigner(
 
 # ╔═╡ 9a9d0f4f-a61e-4dbb-b545-a711a3110e6e
 plot_wigner(
-	WignerFunction(-10:0.1:10, -10:0.1:10, dim=70)(StateMatrix(𝛒_new, 70)),
+	WignerFunction(-10:0.1:10, -10:0.1:10, dim=35)(StateMatrix(𝛒_new, 35)),
 	Contour
 )
 
 # ╔═╡ Cell order:
 # ╟─a9f16021-8559-47e8-a807-4a72e7940093
-# ╠═a5ac3616-158c-4d9d-a965-7bea0ac1283b
+# ╟─a5ac3616-158c-4d9d-a965-7bea0ac1283b
 # ╟─510d01ca-0394-4db9-982d-21a361132b69
 # ╠═c1f6f093-c12b-484f-9f4f-73b978b4130c
 # ╠═fad3101d-46b4-4089-89ab-b40c73315069
@@ -142,8 +138,8 @@ plot_wigner(
 # ╠═ddc6077f-8f2c-4837-b8b8-137c81bf4456
 # ╠═c3552f01-8bfc-48c9-9c46-20b87114c810
 # ╠═9bbe4ab3-06a3-4dd0-8e05-acd977accfb8
-# ╠═1d5ed4d0-ce20-4a7a-9e62-2886e3b68889
-# ╠═a0e5e657-3c62-44f6-9a6d-20fdb69ce4fb
+# ╟─1d5ed4d0-ce20-4a7a-9e62-2886e3b68889
+# ╟─a0e5e657-3c62-44f6-9a6d-20fdb69ce4fb
 # ╠═398b7a48-ffcb-40f2-b2b3-92b8ce0a4354
 # ╠═e470b297-0ec0-48bb-ad75-309626e48fee
 # ╠═9c15467b-82c0-4e73-9e39-789c0b3ba45f

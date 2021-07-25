@@ -3,6 +3,7 @@ export
     preprocess
 
 function 𝛒2y(𝛒::Matrix; δ=1e-15)
+    𝛒 = 𝛒[1:35, 1:35]
     dim = size(𝛒, 1)
     𝛅 = Matrix{Float64}(I, dim, dim) * δ
 
@@ -12,7 +13,7 @@ function 𝛒2y(𝛒::Matrix; δ=1e-15)
     return Float32.(vcat(real.(l), imag(l)[1:(end-dim)]))
 end
 
-function preprocess(file_name::String; batch_size=10, dim=70, fragment_size=10000)
+function preprocess(file_name::String; batch_size=10, dim=35, fragment_size=10000)
     f = jldopen(joinpath(SqState.training_data_path(), file_name), "r")
     points = f["points"][2, :, :]
     𝛒s = f["𝛒s"]
