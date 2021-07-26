@@ -69,7 +69,7 @@ end
 function training_process(
     model_name;
     data_file_names=readdir(SqState.training_data_path()),
-    batch_size=100, n_batch=99, epochs=3,
+    batch_size=100, n_batch=99, epochs=2,
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
     if CUDA.has_cuda()

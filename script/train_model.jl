@@ -1,3 +1,3 @@
 using SqState
 
-training_process("model0")
+training_process("model")
