@@ -19,6 +19,36 @@ md"
 JingYu Ning
 "
 
+# ╔═╡ 4d8b01d4-dcbe-4d1a-9c22-da4e581d8143
+md"
+## Fock state
+
+Fock state is thhe common basis for quantum mechanics. In this prokect, we construct most of the states in Fock basis. For example, `CoherentState`, `SqueezedState` and `SqueezedThermalState` etc.
+"
+
+# ╔═╡ 16771043-30ec-4d89-8ff7-46161f33b8b3
+FockState(0)
+
+# ╔═╡ c31bba4f-e23e-4f26-aae7-c02c79f4f6b5
+plot_wigner(wf(FockState(0)), Contour)
+
+# ╔═╡ 4974bb09-0901-4721-ac9e-37269c0242b1
+md"
+Also, the `QuantumStateBase` accept various alias like `VacuumState`, `SinglePhotonState`, and `NumberState` etc.
+"
+
+# ╔═╡ b0c1c790-8dcc-4d76-803c-bf6a3bd61d95
+vec(NumberState(5)) == vec(FockState(5))
+
+# ╔═╡ 4a26a842-9907-49df-a954-ced09352f39d
+vec(VacuumState()) == vec(FockState(0))
+
+# ╔═╡ ac4e9d5c-ae31-4b60-a1d7-21017db9da2d
+vec(SinglePhotonState()) == vec(FockState(1))
+
+# ╔═╡ 4dce2059-882d-40b1-b2ec-31c9e44307aa
+
+
 # ╔═╡ 85eee830-aa57-45b1-b412-83faa69c0508
 md"
 ## Cat State in single mode
@@ -1277,6 +1307,14 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╟─79ca1104-0218-4426-8722-0024b92a0eef
 # ╠═b673d52b-0d39-4dba-b2f6-6d3c2c207e3a
+# ╠═4d8b01d4-dcbe-4d1a-9c22-da4e581d8143
+# ╠═16771043-30ec-4d89-8ff7-46161f33b8b3
+# ╠═c31bba4f-e23e-4f26-aae7-c02c79f4f6b5
+# ╟─4974bb09-0901-4721-ac9e-37269c0242b1
+# ╠═b0c1c790-8dcc-4d76-803c-bf6a3bd61d95
+# ╠═4a26a842-9907-49df-a954-ced09352f39d
+# ╠═ac4e9d5c-ae31-4b60-a1d7-21017db9da2d
+# ╠═4dce2059-882d-40b1-b2ec-31c9e44307aa
 # ╟─85eee830-aa57-45b1-b412-83faa69c0508
 # ╠═92f0daf2-ee46-11eb-27f0-5f90c0bcb61d
 # ╠═7c5728ce-5d9e-4f9f-b036-baa09b34b310
