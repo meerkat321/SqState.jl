@@ -85,11 +85,11 @@ md"
 "
 
 # ╔═╡ c3552f01-8bfc-48c9-9c46-20b87114c810
-m = get_model("model_π_35");
+m = get_model("model0")
 
 # ╔═╡ 9bbe4ab3-06a3-4dd0-8e05-acd977accfb8
 begin
-	new_state = SqueezedThermalState(ξ(0.8, π/2), 0.2, dim=100)
+	new_state = SqueezedThermalState(ξ(0.8, π/2), 0.3, dim=100)
 	new_data = rand(new_state, 4096, IsGaussian)
 end
 
@@ -97,7 +97,7 @@ end
 scatter(new_data[1, :], new_data[2, :], legend=false, size=(800, 400))
 
 # ╔═╡ 398b7a48-ffcb-40f2-b2b3-92b8ce0a4354
-r, θ, n̄ = m(reshape(Float32.(new_data[2, :]), (4096, 1, 1)))
+r, θ, n̄ = m(reshape((new_data[2, :]), (4096, 1, 1)))
 
 # ╔═╡ c792e32d-797c-4a96-9045-7ae3bd22d1ea
 md"

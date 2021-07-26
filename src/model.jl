@@ -28,7 +28,7 @@ function res_block(
     shortcut_pad::Any,
     pool_size::Integer;
 )
-    pool = (pool_size > 0) ? MaxPool((pool_size, )) : identity
+    pool = (pool_size > 0) ? MeanPool((pool_size, )) : identity
 
     return Chain(
         Parallel(+,
@@ -51,14 +51,16 @@ function model()
         # res
         res_block((8, 4, 4, 16), (1, 15, 7), (0, 7, 3), 1, 0, -1),
         res_block((16, 8, 8, 32), (1, 15, 7), (0, 7, 3), 1, 0, -1),
-        res_block((32, 16, 16, 64), (1, 15, 7), (0, 7, 3), 1, 0, 2),
+        res_block((32, 16, 16, 64), (1, 15, 7), (0, 7, 3), 1, 0, -1),
+        res_block((64, 32, 32, 128), (1, 15, 7), (0, 7, 3), 1, 0, 2),
+        res_block((128, 32, 32, 64), (1, 15, 7), (0, 7, 3), 1, 0, 2),
         res_block((64, 16, 16, 32), (1, 15, 7), (0, 7, 3), 1, 0, 2),
         res_block((32, 8, 8, 16), (1, 15, 7), (0, 7, 3), 1, 0, 2),
         res_block((16, 4, 4, 8), (1, 15, 7), (0, 7, 3), 1, 0, 2),
 
         # stage 1
         flatten,
-        Dense(8*256, 64, relu),
+        Dense(8*128, 64, relu),
         Dense(64, 16, relu),
         Dense(16, 3, relu)
     )
@@ -67,7 +69,7 @@ end
 function training_process(
     model_name;
     data_file_names=readdir(SqState.training_data_path()),
-    batch_size=50, n_batch=99, epochs=2,
+    batch_size=100, n_batch=99, epochs=3,
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
     if CUDA.has_cuda()
@@ -111,9 +113,9 @@ function training_process(
         in_loss = out_loss = 0
         bs = length(loader)
 
-        t_threshold = 50
+        t_threshold = 30
         if t > t_threshold
-            opt.eta = 1e-2 / 2^((t-t_threshold)/10)
+            opt.eta = 1e-2 / 2^ceil((t-t_threshold)/30)
         end
 
         t1 = time()
@@ -121,7 +123,7 @@ function training_process(
             x, y = gpu(x), gpu(y)
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
-            
+
             in_loss += loss(x, y)
             out_loss += validation(test_data_loader, loss)
         end
