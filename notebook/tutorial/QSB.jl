@@ -47,7 +47,72 @@ vec(VacuumState()) == vec(FockState(0))
 vec(SinglePhotonState()) == vec(FockState(1))
 
 # ╔═╡ 4dce2059-882d-40b1-b2ec-31c9e44307aa
+md"
+## Coherent state
 
+Coherent state is defined as:
+
+$| \alpha \rangle = exp(-\frac{1}{2}|\alpha|^2) 
+\sum^\infty_{n=0} \frac{\alpha^n}{\sqrt{n!}} | n \rangle$
+
+We can therefore define displacement operator and implies that
+
+$| \alpha \rangle = \hat{D}(\alpha) | 0 \rangle$
+
+One can use the pre-defined constructor to declare a coherent state.
+"
+
+# ╔═╡ ab919e88-14b8-4ff8-896c-dcfe706a0ef7
+CoherentState(α(5., π/4))
+
+# ╔═╡ d6ad648e-be5e-408e-a93b-3b24e82001d2
+md"
+It is also recommend to construct a coherent state by apply the displacement operator onto a vacuum state
+"
+
+# ╔═╡ e61381a9-1291-4bd9-adb9-584128607060
+displace!(VacuumState(), α(5., π/4))
+
+# ╔═╡ f20ea730-270d-4a61-a8ba-11fbc6e38358
+plot_wigner(wf(CoherentState(α(5., π/4))), Contour)
+
+# ╔═╡ 3fbb03ea-5a92-4589-9748-63e6a0486240
+md"
+## Squeezed state
+
+Squeezed state is defined as:
+
+$exp(\frac{1}{2} (\xi^* \hat{a}^2 - \xi \hat{a}^{\dagger 2})) | 0 \rangle$
+
+We implies Squeezing operator 
+
+$\hat{S}(\xi) = exp(\frac{1}{2} (\xi^* \hat{a}^2 - \xi \hat{a}^{\dagger 2}))$
+
+One can use the pre-defined constructor to declare a squeezed state.
+"
+
+# ╔═╡ d5cf7b3f-c9a2-4450-8bee-cf510100968f
+SqueezedState(ξ(0.8, π/4))
+
+# ╔═╡ 360282a0-47e1-4501-ae88-ce08c5958c7a
+md"
+It is also recommend to construct a squeezed state by apply the squeezing operator onto a vacuum state
+"
+
+# ╔═╡ ed4b3452-e969-4e37-a9d0-aaec89e59120
+squeeze!(VacuumState(), ξ(0.8, π/4))
+
+# ╔═╡ 1c765e8a-c47e-4133-87ac-810a55c257c9
+plot_wigner(wf(SqueezedState(ξ(0.8, π/4))), Contour)
+
+# ╔═╡ 5e5052e9-9745-40f2-99fa-7eed9e3d5197
+md"
+## Other State
+
+There are numerous of pre-defined constructor to construct state. For example, `ThermalState`, `SqueezedThermalState` etc.
+
+The most powerful featuure is that one can construct their own state by operators such as $a$ and $a^{\dagger}$, $\hat{S}$ and $\hat{D}$ and so on.
+"
 
 # ╔═╡ 85eee830-aa57-45b1-b412-83faa69c0508
 md"
@@ -1314,7 +1379,17 @@ version = "0.9.1+5"
 # ╠═b0c1c790-8dcc-4d76-803c-bf6a3bd61d95
 # ╠═4a26a842-9907-49df-a954-ced09352f39d
 # ╠═ac4e9d5c-ae31-4b60-a1d7-21017db9da2d
-# ╠═4dce2059-882d-40b1-b2ec-31c9e44307aa
+# ╟─4dce2059-882d-40b1-b2ec-31c9e44307aa
+# ╠═ab919e88-14b8-4ff8-896c-dcfe706a0ef7
+# ╟─d6ad648e-be5e-408e-a93b-3b24e82001d2
+# ╠═e61381a9-1291-4bd9-adb9-584128607060
+# ╠═f20ea730-270d-4a61-a8ba-11fbc6e38358
+# ╟─3fbb03ea-5a92-4589-9748-63e6a0486240
+# ╠═d5cf7b3f-c9a2-4450-8bee-cf510100968f
+# ╟─360282a0-47e1-4501-ae88-ce08c5958c7a
+# ╠═ed4b3452-e969-4e37-a9d0-aaec89e59120
+# ╠═1c765e8a-c47e-4133-87ac-810a55c257c9
+# ╟─5e5052e9-9745-40f2-99fa-7eed9e3d5197
 # ╟─85eee830-aa57-45b1-b412-83faa69c0508
 # ╠═92f0daf2-ee46-11eb-27f0-5f90c0bcb61d
 # ╠═7c5728ce-5d9e-4f9f-b036-baa09b34b310
