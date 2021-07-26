@@ -1,4 +1,5 @@
 module SqState
+    using Dates
     using DataDeps
     using JLD2
     using LinearAlgebra
@@ -6,6 +7,7 @@ module SqState
     using Flux.Data: DataLoader
     using CUDA
     using QuantumStateBase
+    using UnicodePlots
 
 
     function __init__()
@@ -15,7 +17,10 @@ module SqState
 
     training_data_path() = joinpath(datadep"SqState", "training_data")
     model_path() = joinpath(datadep"SqState", "model")
+    data_path() = joinpath(datadep"SqState", "data")
 
-    include("model.jl")
+    include("gen_data.jl")
     include("preprocess.jl")
+    include("model.jl")
+    include("postprocess.jl")
 end
