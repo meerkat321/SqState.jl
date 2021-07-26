@@ -9,6 +9,7 @@ begin
 	using QuantumStateBase
 	using QuantumStatePlots
 	wf = WignerFunction(-10:0.1:10, -10:0.1:10)
+	using Plots
 end;
 
 # ╔═╡ 79ca1104-0218-4426-8722-0024b92a0eef
@@ -62,13 +63,26 @@ plot_wigner(wf(catₑ), Contour)
 # ╔═╡ 8d56e643-aef3-426e-b098-bdb45a6f20b3
 plot_wigner(wf(catₒ), Contour)
 
+# ╔═╡ 06cc70ba-3de8-40b2-9ace-00ab2c8656dd
+begin
+	cat_points = rand(catₑ, 4096)
+	
+	scatter(
+		cat_points[1, :], cat_points[2, :],  
+		title="Even cat state", xlabel="θ", ylabel="x", legend=false,
+		ylim=(-5, 5), size=(800, 400),
+	)
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 QuantumStateBase = "73ce9c4f-35d1-4161-b9e6-26915895bfed"
 QuantumStatePlots = "42a22799-231f-43e2-8d9d-80a724399a88"
 
 [compat]
+Plots = "~1.19.3"
 QuantumStateBase = "~1.0.0"
 QuantumStatePlots = "~0.1.2"
 """
@@ -1267,5 +1281,6 @@ version = "0.9.1+5"
 # ╠═92f0daf2-ee46-11eb-27f0-5f90c0bcb61d
 # ╠═7c5728ce-5d9e-4f9f-b036-baa09b34b310
 # ╠═8d56e643-aef3-426e-b098-bdb45a6f20b3
+# ╠═06cc70ba-3de8-40b2-9ace-00ab2c8656dd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
