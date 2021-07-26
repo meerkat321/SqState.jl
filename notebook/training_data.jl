@@ -154,14 +154,11 @@ begin
 	
 	function infer(data::Vector; dim=35)
 		r, θ, n̄ = m(reshape(Float32.(data), (4096, 1, 1)))
-		w = wf(SqueezedThermalState(ξ(r, θ), n̄, dim=dim))
+		w = wf(SqueezedThermalState(ξ(r, 0.f0), n̄, dim=dim))
 
 		return w
 	end
 end
-
-# ╔═╡ 5fa1950e-224c-4a71-bea9-c5301eae585b
-plot_wigner(infer(preprocess("SQ20_5mW.mat")), Contour)
 
 # ╔═╡ 0fe1cc51-8bfd-4dfb-ac2d-ffd5ad655d4d
 # begin
@@ -178,6 +175,20 @@ plot_wigner(infer(preprocess("SQ20_5mW.mat")), Contour)
 # 	)
 # 	close(w_file)
 # end
+
+# ╔═╡ 5fa1950e-224c-4a71-bea9-c5301eae585b
+# plot_wigner(infer(preprocess("SQ20_5mW.mat")), Contour)
+
+# ╔═╡ 4b60cccf-9364-4220-ad8f-cc97e98fbbd6
+begin
+	anim = @animate for f in readdir(joinpath(datadep"SqState", "data/Flow"))
+		plot_wigner(infer(preprocess(f)), QuantumStatePlots.Contour)
+		annotate!(-2.5, 2.5, text("$f", :left))
+	end
+	
+	# gif(anim, joinpath(datadep"SqState", "data/w.gif"), fps=2)
+	gif(anim, fps=2)
+end
 
 # ╔═╡ Cell order:
 # ╟─a9f16021-8559-47e8-a807-4a72e7940093
@@ -201,5 +212,6 @@ plot_wigner(infer(preprocess("SQ20_5mW.mat")), Contour)
 # ╠═457fe01d-3753-463a-bf03-515481765a6a
 # ╠═298bfc5d-6fa8-4117-bbbe-542dcf03a729
 # ╠═059cbff5-16a2-4729-9204-becef66b9801
-# ╠═5fa1950e-224c-4a71-bea9-c5301eae585b
 # ╠═0fe1cc51-8bfd-4dfb-ac2d-ffd5ad655d4d
+# ╠═5fa1950e-224c-4a71-bea9-c5301eae585b
+# ╠═4b60cccf-9364-4220-ad8f-cc97e98fbbd6
