@@ -111,14 +111,17 @@ function training_process(
         in_loss = out_loss = 0
         bs = length(loader)
 
+        t_threshold = 50
+        if t > t_threshold
+            opt.eta = 1e-2 / 2^((t-t_threshold)/10)
+        end
+
         t1 = time()
-        for (b, (x, y)) in enumerate(loader)
+        for (x, y) in loader
             x, y = gpu(x), gpu(y)
-
-            ((t*bs+b) % (50*bs) == 0) && (opt.eta /= 2)
-
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
+            
             in_loss += loss(x, y)
             out_loss += validation(test_data_loader, loss)
         end
