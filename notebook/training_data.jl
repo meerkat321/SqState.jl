@@ -35,17 +35,15 @@ JingYu
 
 # ╔═╡ 510d01ca-0394-4db9-982d-21a361132b69
 md"
-#### Take a glance of data
+## Take a glance of data
 "
 
 # ╔═╡ c1f6f093-c12b-484f-9f4f-73b978b4130c
-# files = readdir(SqState.training_data_path())
-
-# ╔═╡ fad3101d-46b4-4089-89ab-b40c73315069
-# f = jldopen(joinpath(SqState.training_data_path(), files[1]), "r")
-
-# ╔═╡ 1a0ecae3-d655-42e2-b2cf-b7b3100e1559
-# f["args"]
+begin
+	files = readdir(SqState.training_data_path())
+	f = jldopen(joinpath(SqState.training_data_path(), files[1]), "r")
+	f["args"]
+end
 
 # ╔═╡ 5212b01a-3446-4f77-bc45-9585752bda65
 begin
@@ -59,7 +57,6 @@ begin
 		points_plot = scatter(
 			f["points"][1, :, i],
 			f["points"][2, :, i],
-			# ticks=[],
 			title=title,
 			legend=false,
 			size=(800, 400)
@@ -74,78 +71,73 @@ begin
 end
 
 # ╔═╡ d08178ec-2f1c-41af-8a74-0f8160f35dbe
-# d, w = snap();
+d, w = snap();
 
 # ╔═╡ afc535e8-f188-48e0-8c6e-bc8eb6609e74
-# d
+d
 
 # ╔═╡ ddc6077f-8f2c-4837-b8b8-137c81bf4456
-# w
+w
+
+# ╔═╡ aa4b34dc-6ff6-470c-b011-df425e1ea638
+md"
+## Check model
+"
 
 # ╔═╡ c3552f01-8bfc-48c9-9c46-20b87114c810
-m = get_model("model_π_35")
+m = get_model("model_π_35");
 
 # ╔═╡ 9bbe4ab3-06a3-4dd0-8e05-acd977accfb8
 begin
-	new_state = SqueezedThermalState(ξ(1.5, 1.7), 0.3, dim=500)
+	new_state = SqueezedThermalState(ξ(0.8, π/2), 0.2, dim=100)
 	new_data = rand(new_state, 4096, IsGaussian)
-	𝛒(new_state)
 end
-
-# ╔═╡ 1d5ed4d0-ce20-4a7a-9e62-2886e3b68889
-# begin
-# 	a = 𝛒(new_state)+Matrix{Float64}(I, 70, 70)*1e-15
-# 	# SqState.𝛒2y(a)
-# 	# b = cholesky(Hermitian(a)).L
-# 	# vcat([diag(b, i-70) for i in 1:70]...)
-# 	# b*b'- Matrix{Float64}(I, 70, 70)*1e-15 ≈ a
-# end
 
 # ╔═╡ a0e5e657-3c62-44f6-9a6d-20fdb69ce4fb
-# scatter(new_data[1, :], new_data[2, :], size=(800, 400))
+scatter(new_data[1, :], new_data[2, :], legend=false, size=(800, 400))
 
 # ╔═╡ 398b7a48-ffcb-40f2-b2b3-92b8ce0a4354
-begin
-	args = m(reshape(new_data[2, :], (4096, 1, 1))) .* [2, 2π, 0.5]
-end
+r, θ, n̄ = m(reshape(Float32.(new_data[2, :]), (4096, 1, 1)))
 
-# ╔═╡ e470b297-0ec0-48bb-ad75-309626e48fee
-# begin
-# 	𝛒_new = post_processing(l_new, dim=35)
-# end
-
-# ╔═╡ 9c15467b-82c0-4e73-9e39-789c0b3ba45f
-# tr(𝛒_new)
+# ╔═╡ c792e32d-797c-4a96-9045-7ae3bd22d1ea
+md"
+**Theoretical**
+"
 
 # ╔═╡ df0c2738-5cbd-4265-9867-f4c5b2527461
-# plot_wigner(
-# 	WignerFunction(-10:0.1:10, -10:0.1:10, dim=100)(new_state),
-# 	Contour
-# )
+plot_wigner(
+	WignerFunction(-10:0.1:10, -10:0.1:10, dim=100)(new_state),
+	Contour
+)
+
+# ╔═╡ d6b6dd28-30a6-4ae2-aaa9-fa1f49db079d
+md"
+**Model inference**
+"
 
 # ╔═╡ 9a9d0f4f-a61e-4dbb-b545-a711a3110e6e
-# plot_wigner(
-# 	WignerFunction(-10:0.1:10, -10:0.1:10, dim=35)(StateMatrix(𝛒_new, 35)),
-# 	Contour
-# )
+plot_wigner(
+	WignerFunction(-10:0.1:10, -10:0.1:10, dim=100)(
+		SqueezedThermalState(ξ(r, θ), n̄, dim=100)
+	),
+	Contour
+)
 
 # ╔═╡ Cell order:
 # ╟─a9f16021-8559-47e8-a807-4a72e7940093
 # ╟─a5ac3616-158c-4d9d-a965-7bea0ac1283b
 # ╟─510d01ca-0394-4db9-982d-21a361132b69
 # ╠═c1f6f093-c12b-484f-9f4f-73b978b4130c
-# ╠═fad3101d-46b4-4089-89ab-b40c73315069
-# ╠═1a0ecae3-d655-42e2-b2cf-b7b3100e1559
 # ╟─5212b01a-3446-4f77-bc45-9585752bda65
 # ╠═d08178ec-2f1c-41af-8a74-0f8160f35dbe
 # ╠═afc535e8-f188-48e0-8c6e-bc8eb6609e74
 # ╠═ddc6077f-8f2c-4837-b8b8-137c81bf4456
+# ╟─aa4b34dc-6ff6-470c-b011-df425e1ea638
 # ╠═c3552f01-8bfc-48c9-9c46-20b87114c810
 # ╠═9bbe4ab3-06a3-4dd0-8e05-acd977accfb8
-# ╟─1d5ed4d0-ce20-4a7a-9e62-2886e3b68889
-# ╟─a0e5e657-3c62-44f6-9a6d-20fdb69ce4fb
+# ╠═a0e5e657-3c62-44f6-9a6d-20fdb69ce4fb
 # ╠═398b7a48-ffcb-40f2-b2b3-92b8ce0a4354
-# ╠═e470b297-0ec0-48bb-ad75-309626e48fee
-# ╠═9c15467b-82c0-4e73-9e39-789c0b3ba45f
+# ╟─c792e32d-797c-4a96-9045-7ae3bd22d1ea
 # ╠═df0c2738-5cbd-4265-9867-f4c5b2527461
+# ╟─d6b6dd28-30a6-4ae2-aaa9-fa1f49db079d
 # ╠═9a9d0f4f-a61e-4dbb-b545-a711a3110e6e
