@@ -20,7 +20,7 @@ function short_cut(ch::NTuple{2, <:Integer}, kernel_size::Integer, pad::Any)
     )
 end
 
-function model(; dim=35)
+function model(; dim=70)
     return Chain(
         # stage 0
         BatchNorm(1),
@@ -32,7 +32,7 @@ function model(; dim=35)
             short_cut((64, 96), 1, 0),
         ),
         x -> relu.(x),
-        MeanPool((2, )),
+        MaxPool((2, )),
         BatchNorm(96, relu),
         # res 2
         SkipConnection(conv_layers((96, 32, 32, 96), (1, 7, 1), (0, 3, 0)), +),
@@ -40,7 +40,7 @@ function model(; dim=35)
         # res 3
         SkipConnection(conv_layers((96, 32, 32, 96), (1, 7, 1), (0, 3, 0)), +),
         x -> relu.(x),
-        MeanPool((4, )),
+        MaxPool((4, )),
         BatchNorm(96, relu),
         # res 4
         Parallel(+,
@@ -54,7 +54,7 @@ function model(; dim=35)
         # res 6
         SkipConnection(conv_layers((128, 64, 64, 128), (1, 3, 1), (0, 1, 0)), +),
         x -> relu.(x),
-        MeanPool((8, )),
+        MaxPool((8, )),
         BatchNorm(128, relu),
         # res 7
         Parallel(+,
@@ -65,22 +65,76 @@ function model(; dim=35)
         # res 8
         SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
         x -> relu.(x),
+        MaxPool((2, )),
+        BatchNorm(196, relu),
         # res 9
         SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
         x -> relu.(x),
+        MaxPool((2, )),
+        BatchNorm(196, relu),
         # res 10
         SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
         x -> relu.(x),
+        MaxPool((2, )),
+        BatchNorm(196, relu),
         # res 11
         SkipConnection(conv_layers((196, 96, 96, 196), (1, 3, 1), (0, 1, 0)), +),
         x -> relu.(x),
-        MeanPool((2, )),
+        MaxPool((2, )),
         BatchNorm(196, relu),
         # stage 1
         flatten,
-        Dense(32*196, Int32(round(dim*dim/4)), relu),
-        Dense(Int32(round(dim*dim/4)), dim*dim),
-        x -> x ./ sqrt(max(sum(x.^2), 1f-12)) # l-2 normalize
+        Dense(4*196, 196, relu),
+        # Dense(Int32(round(dim*dim/4)), dim*dim),
+        Dense(196, 4, relu),
+        # x -> x ./ sqrt(max(sum(x.^2), 1f-12)) # l-2 normalize
+    )
+end
+
+function s_model()
+    return Chain(
+        # stage 0
+        BatchNorm(1),
+        Conv((31, ), 1=>8, pad=15),
+        BatchNorm(8, relu),
+        # res 1
+        Parallel(+,
+            conv_layers((8, 4, 4, 16), (1, 15, 7), (0, 7, 3)),
+            short_cut((8, 16), 1, 0),
+        ),
+        x -> relu.(x),
+        MeanPool((2, )),
+        BatchNorm(16, relu),
+        # res 2
+        Parallel(+,
+            conv_layers((16, 8, 8, 32), (1, 15, 7), (0, 7, 3)),
+            short_cut((16, 32), 1, 0),
+        ),
+        x -> relu.(x),
+        MeanPool((2, )),
+        BatchNorm(32, relu),
+        # res 3
+        Parallel(+,
+            conv_layers((32, 8, 8, 16), (1, 15, 7), (0, 7, 3)),
+            short_cut((32, 16), 1, 0),
+        ),
+        x -> relu.(x),
+        MeanPool((2, )),
+        BatchNorm(16, relu),
+        # res 4
+        Parallel(+,
+            conv_layers((16, 4, 4, 8), (1, 15, 7), (0, 7, 3)),
+            short_cut((16, 8), 1, 0),
+        ),
+        x -> relu.(x),
+        MeanPool((2, )),
+        BatchNorm(8, relu),
+
+        flatten,
+
+        Dense(8*256, 64, relu),
+        Dense(64, 16, relu),
+        Dense(16, 3, relu)
     )
 end
 
@@ -96,11 +150,11 @@ function training_process(model_name;
     end
 
     # prepare model
-    m = is_gpu ? model() |> gpu : model()
-    # loss(x, y) = Flux.mse(m(x), y)
-    loss(x, y) = Flux.huber_loss(m(x), y)
+    # m = is_gpu ? model() |> gpu : model()
+    m = is_gpu ? s_model() |> gpu : s_model()
+    loss(x, y) = Flux.mse(m(x), y)
     ps = Flux.params(m)
-    opt = ADAM(1e-2, (0.7, 0.9))
+    opt = ADAM(1e-2)
 
     # jit model
     @time begin
@@ -138,15 +192,13 @@ function training_process(model_name;
 
             # (t ≥ 20) && (opt.eta > 1e-7) && (opt.eta = 1e-2 / 2^((length(loader)*(t-15)+b)/(5*length(loader))))
             # (t ≥ 20) && ((t*bs+b) % (5*bs) == 0) && (opt.eta > 1e-4) && (opt.eta /= 2)
-            if t ≥ 20
-                if opt.eta > 1.6e-4
-                    ((t*bs+b) % (10*bs) == 0) && (opt.eta /= 2)
-                elseif opt.eta > 5e-5
-                    ((t*bs+b) % (20*bs) == 0) && (opt.eta /= 2)
-                else
-                    ((t*bs+b) % (50*bs) == 0) && (opt.eta /= 2)
-                end
-            end
+            # if opt.eta > 1e-4
+                ((t*bs+b) % (50*bs) == 0) && (opt.eta /= 2)
+            # elseif opt.eta > 5e-5
+            #     ((t*bs+b) % (20*bs) == 0) && (opt.eta /= 2)
+            # else
+            #     ((t*bs+b) % (50*bs) == 0) && (opt.eta /= 2)
+            # end
 
             gs = Flux.gradient(() -> loss(x, y), ps)
             Flux.update!(opt, ps, gs)
