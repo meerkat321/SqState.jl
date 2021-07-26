@@ -6,6 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ b673d52b-0d39-4dba-b2f6-6d3c2c207e3a
 begin
+	using BenchmarkTools
 	using QuantumStateBase
 	using QuantumStatePlots
 	wf = WignerFunction(-10:0.1:10, -10:0.1:10)
@@ -112,6 +113,8 @@ md"
 There are numerous of pre-defined constructor to construct state. For example, `ThermalState`, `SqueezedThermalState` etc.
 
 The most powerful featuure is that one can construct their own state by operators such as $a$ and $a^{\dagger}$, $\hat{S}$ and $\hat{D}$ and so on.
+
+The following sectioon is about constructing a cat state.
 "
 
 # ╔═╡ 85eee830-aa57-45b1-b412-83faa69c0508
@@ -169,14 +172,28 @@ begin
 	)
 end
 
+# ╔═╡ b39f1784-95ec-4529-b922-fe6bed27eae2
+md"
+## The blazing fast non-Gaussian data sampler
+
+It is always a difficult topic when it comes to sampling data from arbitrary prabability density function.
+
+In this project, we introduse a super fast non-Gaussian prabability density function sampler. The sampler is implemented by a **specia adaptive rejection** method. And can sample about 4000 points from a pdf in few seconds.
+"
+
+# ╔═╡ 1b8d62a2-3bdc-4a22-9f21-bbb5198f8b7b
+@benchmark rand(catₑ, 4096)
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 QuantumStateBase = "73ce9c4f-35d1-4161-b9e6-26915895bfed"
 QuantumStatePlots = "42a22799-231f-43e2-8d9d-80a724399a88"
 
 [compat]
+BenchmarkTools = "~1.1.1"
 Plots = "~1.19.3"
 QuantumStateBase = "~1.0.0"
 QuantumStatePlots = "~0.1.2"
@@ -230,6 +247,12 @@ version = "0.16.10"
 
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[BenchmarkTools]]
+deps = ["JSON", "Logging", "Printf", "Statistics", "UUIDs"]
+git-tree-sha1 = "c31ebabde28d102b602bada60ce8922c266d205b"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.1.1"
 
 [[BinaryProvider]]
 deps = ["Libdl", "Logging", "SHA"]
@@ -1372,7 +1395,7 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╟─79ca1104-0218-4426-8722-0024b92a0eef
 # ╠═b673d52b-0d39-4dba-b2f6-6d3c2c207e3a
-# ╠═4d8b01d4-dcbe-4d1a-9c22-da4e581d8143
+# ╟─4d8b01d4-dcbe-4d1a-9c22-da4e581d8143
 # ╠═16771043-30ec-4d89-8ff7-46161f33b8b3
 # ╠═c31bba4f-e23e-4f26-aae7-c02c79f4f6b5
 # ╟─4974bb09-0901-4721-ac9e-37269c0242b1
@@ -1395,5 +1418,7 @@ version = "0.9.1+5"
 # ╠═7c5728ce-5d9e-4f9f-b036-baa09b34b310
 # ╠═8d56e643-aef3-426e-b098-bdb45a6f20b3
 # ╠═06cc70ba-3de8-40b2-9ace-00ab2c8656dd
+# ╟─b39f1784-95ec-4529-b922-fe6bed27eae2
+# ╠═1b8d62a2-3bdc-4a22-9f21-bbb5198f8b7b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
