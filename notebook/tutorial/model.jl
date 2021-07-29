@@ -5,15 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 926e4270-ee52-11eb-15b9-0b59dac4c681
-begin
-	using Pkg
-	Pkg.develop(path="/home/admin/Documents/GitHub/SqState.jl")
-	Pkg.add("QuantumStateBase")
-	Pkg.add("QuantumStatePlots")
-	Pkg.add("DataDeps")
-	Pkg.add("Plots")
-	Pkg.add("MAT")
-end
+using Pkg; Pkg.develop(path="../.."); Pkg.activate("../..")
 
 # ╔═╡ 1d009b9d-dcf2-4bdf-8dd8-fef135cb8524
 begin
@@ -75,10 +67,10 @@ begin
 
 		# sample
 		data_indices = sort!(rand(1:size(data, 1), 4096))
-		
+
 		return data[data_indices, 1] # 1: x; 2: θ
 	end
-		
+
 	function infer(data::Vector; dim=35)
 		r, θ, n̄ = m(reshape(Float32.(data), (4096, 1, 1)))
 		w = wf(SqueezedThermalState(ξ(r, 0.f0), n̄, dim=dim))
@@ -101,7 +93,7 @@ data = preprocess("SQ20_5mW.mat")
 md"
 ## Let the model do the magic
 
-the model will infere the arguments for the state via the given quaduture data. 
+the model will infere the arguments for the state via the given quaduture data.
 "
 
 # ╔═╡ b015f3e0-89d8-4ecd-a3e5-23d9cc83a6e5
@@ -129,7 +121,7 @@ begin
 		plot_wigner(infer(preprocess(f)), QuantumStatePlots.Contour)
 		annotate!(-2.5, 2.5, text("$f", :left))
 	end
-	
+
 	gif(anim, fps=2)
 end
 
