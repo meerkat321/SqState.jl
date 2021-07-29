@@ -70,6 +70,7 @@ function training_process(
     model_name;
     data_file_names=readdir(SqState.training_data_path()),
     batch_size=100, n_batch=99, epochs=2,
+    η₀=1e-2, f_threshold=30, Δf=30
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
     if CUDA.has_cuda()
@@ -81,17 +82,18 @@ function training_process(
 
     # prepare model
     m = gpu(model())
+
+    # loss and opt
+    in_losses = [0f0]
+    out_losses = [0f0]
     loss(x, y) = Flux.mse(m(x), y)
-    ps = Flux.params(m)
-    opt = ADAM(1e-2)
+    opt = ADAM(η₀)
 
     # jit model
     @time begin
         @info "jit..."
         x, y = first(preprocess(data_file_names[2], batch_size=1))
-        x, y = gpu(x), gpu(y)
-        gs = Flux.gradient(() -> loss(x, y), ps)
-        Flux.update!(opt, ps, gs)
+        Flux.train!(loss, Flux.params(m), [(gpu(x), gpu(y))], opt)
     end
 
     # prepare data
@@ -107,41 +109,35 @@ function training_process(
     end
 
     # training
-    in_losses = Float32[]
-    out_losses = Float32[]
-    for (t, loader) in enumerate(data_loaders)
-        in_loss = out_loss = 0
-        bs = length(loader)
+    t0 = now()
+    for (f, loader) in enumerate(data_loaders)
+        data = [(gpu(x), gpu(y)) for (x, y) in loader]
 
-        t_threshold = 30
-        if t > t_threshold
-            opt.eta = 1e-2 / 2^ceil((t-t_threshold)/30)
-        end
+        # adjust learning rate
+        (f > f_threshold) && (opt.eta = η₀ / 2^ceil((f-f_threshold)/Δf))
 
-        t1 = time()
-        for (x, y) in loader
-            x, y = gpu(x), gpu(y)
-            gs = Flux.gradient(() -> loss(x, y), ps)
-            Flux.update!(opt, ps, gs)
+        # call back
+        evalcb() = moniter(f, opt.eta, in_losses, out_losses, now()-t0)
+        throttled_cb = Flux.throttle(evalcb, 10)
 
-            in_loss += loss(x, y)
-            out_loss += validation(test_data_loader, loss)
-        end
+        Flux.train!(loss, Flux.params(m), data, opt, cb=throttled_cb)
 
-        push!(in_losses, in_loss/bs)
-        push!(out_losses, out_loss/bs)
-        (t > 1) && moniter(t, t1, opt, bs, in_losses, out_losses)
-        (out_losses[end] == minimum(out_losses)) && (update_model!(model_file_path, model_name, m, in_losses, out_losses))
+        # trace loss and update stored model
+        push!(in_losses, validation(loader, loss))
+        push!(out_losses, validation(test_data_loader, loss))
+        (out_losses[end] == minimum(out_losses[2:end])) && (update_model!(model_file_path, model_name, m, in_losses, out_losses))
     end
 
     return m, in_losses, out_losses
 end
 
-function validation(test_data_loader::DataLoader, loss_func)
-    x, y = first(test_data_loader)
-    x, y = gpu(x), gpu(y)
+function validation(data_loader::DataLoader, loss_func)
+    losses = 0f0
+    for (x, y) in data_loader
+        losses += loss_func(gpu(x), gpu(y))
+    end
 
-    return loss_func(x, y)
+    return losses / length(data_loader)
 end
 
 function update_model!(model_file_path, model_name, model, in_losses, out_losses)
@@ -150,18 +146,33 @@ function update_model!(model_file_path, model_name, model, in_losses, out_losses
     @warn "'$model_name' model updated!"
 end
 
-function moniter(t, t1, opt, n, in_losses, out_losses)
-    plt = scatterplot(in_losses, xlabel="batchs/$n", name="In", width=100, color=:green)
+function moniter(f, η, in_losses, out_losses, Δt)
+    plt = scatterplot(in_losses, xlabel="10K", name="In", width=90, color=:green)
     plt = scatterplot!(plt, out_losses, name="Out", color=:red)
+
+    d, h, m, s = format_time(Δt)
+    info_str = "$f 10K\n" *
+        "# time: $d $h $m $s\n" *
+        "# learning rate: $η\n" *
+        "# in data loss:  $(in_losses[end])\n" *
+        "# out data loss: $(out_losses[end])\n"
+    (f > 1) && (info_str *= "# Δloss: $(out_losses[end] - out_losses[end-1])\n")
 
     print("\e[H\e[2J")
     println(plt)
-    @info "$t\n" *
-        "# time: $(time()-t1)\n" *
-        "# learning rate: $(opt.eta)\n" *
-        "# in data loss:  $(in_losses[end])\n" *
-        "# out data loss: $(out_losses[end])\n" *
-        "# Δloss: $(out_losses[end] - out_losses[end-1])\n"
+    @info info_str
+end
+
+function format_time(Δt::Millisecond)
+    d = floor(Δt, Day)
+    Δt -= Millisecond(d)
+    h = floor(Δt, Hour)
+    Δt -= Millisecond(h)
+    m = floor(Δt, Minute)
+    Δt -= Millisecond(m)
+    s = floor(Δt, Second)
+
+    return d, h, m, s
 end
 
 function get_model(model_name::String)
