@@ -8,4 +8,5 @@
 
 ## Notebooks
 
-* [Generate training data](notebook/training_data.jl.html)
+* [Tutorial of `QuantumStateBase`](notebook/QSB.jl.html)
+* [Demo of real time system](notebook/model.jl.html)
