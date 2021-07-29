@@ -61,6 +61,7 @@ function model()
         # stage 1
         flatten,
         Dense(8*128, 64, relu),
+        Dropout(0.5),
         Dense(64, 16, relu),
         Dense(16, 3, relu)
     )
@@ -69,8 +70,8 @@ end
 function training_process(
     model_name;
     data_file_names=readdir(SqState.training_data_path()),
-    batch_size=100, n_batch=99, epochs=2,
-    η₀=1e-2, f_threshold=30, Δf=30
+    batch_size=100, n_batch=99, epochs=6,
+    η₀=1e-2, f_threshold=100, Δf=50
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
     if CUDA.has_cuda()
@@ -84,8 +85,8 @@ function training_process(
     m = gpu(model())
 
     # loss and opt
-    in_losses = [0f0]
-    out_losses = [0f0]
+    in_losses = Float32[]
+    out_losses = Float32[]
     loss(x, y) = Flux.mse(m(x), y)
     opt = ADAM(η₀)
 
@@ -116,16 +117,13 @@ function training_process(
         # adjust learning rate
         (f > f_threshold) && (opt.eta = η₀ / 2^ceil((f-f_threshold)/Δf))
 
-        # call back
-        evalcb() = moniter(f, opt.eta, in_losses, out_losses, now()-t0)
-        throttled_cb = Flux.throttle(evalcb, 10)
-
-        Flux.train!(loss, Flux.params(m), data, opt, cb=throttled_cb)
+        Flux.train!(loss, Flux.params(m), data, opt)
 
         # trace loss and update stored model
         push!(in_losses, validation(loader, loss))
         push!(out_losses, validation(test_data_loader, loss))
-        (out_losses[end] == minimum(out_losses[2:end])) && (update_model!(model_file_path, model_name, m, in_losses, out_losses))
+        moniter(f, opt.eta, in_losses, out_losses, now()-t0)
+        (out_losses[end] == minimum(out_losses)) && (update_model!(model_file_path, model_name, m, in_losses, out_losses))
     end
 
     return m, in_losses, out_losses
