@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 4daac2cf-dd9c-4bff-861a-fdcb828df03c
-using Pkg; Pkg.develop(path="../.."); Pkg.activate("../..")
+using Pkg; Pkg.develop(path=".."); Pkg.activate("..")
 
 # ╔═╡ b673d52b-0d39-4dba-b2f6-6d3c2c207e3a
 begin
