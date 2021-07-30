@@ -46,7 +46,6 @@ function format_time(Δt::Millisecond)
     return d, h, m, s
 end
 
-
 function training_process(
     model_name;
     data_file_names=readdir(SqState.training_data_path()),
