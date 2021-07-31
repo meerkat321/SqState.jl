@@ -25,6 +25,7 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 [compat]
 BenchmarkTools = "1.1"
 CUDA = "3.3"
+Dash = "0.1"
 DataDeps = "0.7"
 Flux = "0.12"
 JLD2 = "0.4"
