@@ -12,34 +12,30 @@ function banner()
     ])
 end
 
-function get_data()
-    data = rand(10, 10)
-
-    return [data[:, i] for i in 1:size(data, 2)]
-end
-
 color_config = [:colorscale=>"twilight", :cmid=>0, :zmid=>0]
 
-function get_surface(width::Integer, height::Integer)
-    data = PlotlyJS.surface(z=get_data(); color_config...)
-    layout = Layout(width=width, height=height)
+function get_surface(data::Vector, width::Integer, height::Integer)
+    data = PlotlyJS.surface(z=data; color_config...)
+    layout = Layout(title="Wigner Function", width=width, height=height)
 
     return plot(data, layout)
 end
 
-function get_density_matrix(width::Integer, height::Integer)
-    data = PlotlyJS.heatmap(z=get_data(); color_config...)
-    layout = Layout(width=width, height=height)
+function get_density_matrix(data::Vector, width::Integer, height::Integer)
+    data = PlotlyJS.heatmap(z=data; color_config...)
+    layout = Layout(title="Density Matrix (Real Part)", width=width, height=height)
 
     return plot(data, layout)
 end
 
 function plots(width::Integer, height::Integer)
+    ρ, w = infer("SQ20_5mW.mat")
+
     return html_div(
         style=Dict("columnCount"=>2),
         [
-            dcc_graph(id="surface-graph", figure=get_surface(width, height)),
-            dcc_graph(id="density-matrix-graph", figure=get_density_matrix(width, height),)
+            dcc_graph(id="surface-graph", figure=get_surface(w, width, height)),
+            dcc_graph(id="density-matrix-graph", figure=get_density_matrix(ρ, width, height))
         ]
     )
 end
