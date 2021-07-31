@@ -24,4 +24,6 @@ module SqState
     include("model.jl")
     include("training.jl")
     include("postprocess.jl")
+
+    include("real_time_system.jl")
 end
