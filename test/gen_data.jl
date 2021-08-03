@@ -49,6 +49,8 @@ end
 
         @test 𝛒s[i] == 𝛒(state)
     end
+
+    rm(joinpath(SqState.training_data_path(), "ci.jld2"))
 end
 
 @testset "gen_non_gaussian_data" begin

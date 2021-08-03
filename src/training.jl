@@ -109,5 +109,9 @@ function training_process(
 end
 
 function get_model(model_name::String)
-    return jldopen(joinpath(model_path() , "$model_name.jld2"))["model"]
+    f = jldopen(joinpath(model_path() , "$model_name.jld2"))
+    model = f["model"]
+    close(f)
+
+    return model
 end

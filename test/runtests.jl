@@ -7,6 +7,5 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
     include("gen_data.jl")
     include("preprocess.jl")
     include("model.jl")
-
-    rm(joinpath(SqState.training_data_path(), "ci.jld2"))
+    include("training.jl")
 end
