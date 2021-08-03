@@ -110,7 +110,13 @@ begin
 end
 
 # ╔═╡ 90e1807a-0779-4156-9b19-44cab50e2efc
-argv
+scatter(argv[1, :], size=(800, 200), legend=false, title="r")
+
+# ╔═╡ b24b71fc-2f37-408d-9888-318eeba180dd
+scatter(argv[2, :], size=(800, 200), legend=false, title="θ")
+
+# ╔═╡ c730f57d-1b41-4165-b50c-e564fbda8861
+scatter(argv[3, :], size=(800, 200), legend=false, title="n̄")
 
 # ╔═╡ 5bb4f85c-af93-456c-af73-2dc069d0237a
 md"
@@ -156,5 +162,7 @@ end
 # ╟─8ff17755-21eb-45c2-adbc-27a5d021f79f
 # ╠═870e4dd3-f8e6-45a1-87ba-721237e00066
 # ╠═90e1807a-0779-4156-9b19-44cab50e2efc
+# ╠═b24b71fc-2f37-408d-9888-318eeba180dd
+# ╠═c730f57d-1b41-4165-b50c-e564fbda8861
 # ╟─5bb4f85c-af93-456c-af73-2dc069d0237a
 # ╠═3fdf7f29-b8b6-478b-9b4d-fb96407e99ae
