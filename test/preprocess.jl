@@ -14,3 +14,8 @@
 
     rm(joinpath(SqState.training_data_path(), "ci.jld2"))
 end
+
+@testset "inference" begin
+    # file_name = readdir(joinpath(SqState.data_path(), "Flow"))[end]
+    # ρ, w_reshaped = infer(file_name, n_sample=10, fix_θ=true, dim=70)
+end

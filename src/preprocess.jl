@@ -28,7 +28,7 @@ end
 #############
 
 function get_data(data_name::String)
-    data_file = matopen(joinpath(datadep"SqState", "data/Flow/$data_name"))
+    data_file = matopen(joinpath(data_path(), "Flow/$data_name"))
     data = read(data_file, "data_sq")
     close(data_file)
 
