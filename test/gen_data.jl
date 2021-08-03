@@ -1,7 +1,11 @@
+using DataDeps
 using QuantumStateBase
 using KernelDensity
 
 @testset "utils" begin
+    # download data set
+    @time @test SqState.data_path() == joinpath(datadep"SqState", "data")
+
     n = 1e5
 
     trapezoid_area(top, bottom, n) = (top + bottom) * n / 2
