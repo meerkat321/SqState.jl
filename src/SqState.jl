@@ -8,10 +8,21 @@ module SqState
     using CUDA
     using QuantumStateBase
     using UnicodePlots
-
+    using Transformers
 
     function __init__()
-        register(DataDep("SqState", """Data for SqState.""", ""))
+        register(DataDep(
+            "SqState",
+            """Data for SqState.""",
+            # https://drive.google.com/file/d/1UzaPBpTuhxvmyUWnoOupEr3cRZUMc-0-/view?usp=sharing
+            "https://docs.google.com/uc?export=download&id=1UzaPBpTuhxvmyUWnoOupEr3cRZUMc-0-",
+            "8bc0c64d09b17c92df4c2065064ae09edb0ea56b05bdc196a0e7d21a998e1fea";
+            fetch_method=Transformers.Datasets.download_gdrive,
+            post_fetch_method=unpack
+        ))
+    end
+
+    function sq_fetch(r, l)
         mkpath(joinpath(DataDeps.standard_loadpath[1], "SqState"))
     end
 
