@@ -4,5 +4,8 @@ using Test
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 
 @testset "SqState.jl" begin
-    @time SqState.model_path()
+    include("gen_data.jl")
+    include("preprocess.jl")
+    include("model.jl")
+    include("training.jl")
 end

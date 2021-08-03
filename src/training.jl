@@ -50,7 +50,8 @@ function training_process(
     model_name;
     data_file_names=readdir(SqState.training_data_path()),
     batch_size=100, n_batch=100, epochs=6,
-    η₀=1e-2, f_threshold=50, Δf=50
+    η₀=1e-2, f_threshold=50, Δf=50,
+    show_moniter=true
 )
     model_file_path = joinpath(mkpath(model_path()), "$model_name.jld2")
     if CUDA.has_cuda()
@@ -77,6 +78,7 @@ function training_process(
     end
 
     # prepare data
+    (".gitkeep" in data_file_names) && (data_file_names = filter(x->x!=".gitkeep", data_file_names))
     test_data_loader = preprocess(data_file_names[1], batch_size=batch_size)
     @info "numbers of data fragments: $n_batch/$(length(data_file_names)-1)"
     data_loaders = Channel(5, spawn=true) do ch
@@ -101,7 +103,7 @@ function training_process(
         # trace loss and update stored model
         push!(in_losses, validation(loader, loss))
         push!(out_losses, validation(test_data_loader, loss))
-        moniter(f, opt.eta, in_losses, out_losses, now()-t0)
+        show_moniter && moniter(f, opt.eta, in_losses, out_losses, now()-t0)
         (out_losses[end] == minimum(out_losses)) && (update_model!(model_file_path, model_name, m, in_losses, out_losses))
     end
 
@@ -109,5 +111,9 @@ function training_process(
 end
 
 function get_model(model_name::String)
-    return jldopen(joinpath(model_path() , "$model_name.jld2"))["model"]
+    f = jldopen(joinpath(model_path() , "$model_name.jld2"))
+    model = f["model"]
+    close(f)
+
+    return model
 end
