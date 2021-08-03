@@ -35,14 +35,20 @@ function gen_squeezed_thermal_data(;
         𝛒s[i] = SqueezedThermalState(ξ(r, θ), n̄, dim=label_dim).𝛒
     end
 
-    isnothing(file_name) && return
-    data_path = mkpath(SqState.training_data_path())
-    jldsave(joinpath(data_path, "$file_name.jld2");
-        points, 𝛒s, args,
+    if !isnothing(file_name)
+        data_path = mkpath(SqState.training_data_path())
+        jldsave(joinpath(data_path, "$file_name.jld2");
+            points, 𝛒s, args,
+            n_data, n_points,
+            r_range, θ_range, n̄_range, θ_offset_range,
+            point_dim, label_dim
+        )
+    end
+
+    return points, 𝛒s, args,
         n_data, n_points,
         r_range, θ_range, n̄_range, θ_offset_range,
         point_dim, label_dim
-    )
 end
 
 function gen_non_gaussian_data()
