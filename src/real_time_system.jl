@@ -12,12 +12,14 @@ function banner()
     ])
 end
 
-function ctl(init_filename::String)
+function ctl(marks::Dict)
     return html_div([
         html_h2("Inference"),
-        html_div("Enter file name: "),
-        dcc_input(id="file-name", value=init_filename, type="text"),
-        html_button(id="submit-button-state", children="submit", n_clicks=0),
+        dcc_slider(
+            id="file",
+            min=1, max=length(marks), value=length(marks),
+            marks=marks,
+        )
     ])
 end
 
@@ -46,7 +48,7 @@ end
 
 function get_plots(filename::String, width::Integer, height::Integer)
     isempty(filename) && (return []) # TODO: handle non-exist file
-    ρ, w = infer(filename)
+    ρ, w = infer(filename, fix_θ=false)
 
     return [
         dcc_graph(figure=get_surface(w, width, height)),
@@ -63,21 +65,24 @@ function plots(init_filename::String, width::Integer, height::Integer)
     )
 end
 
-function gen_app(; width=500, height=500, init_filename="SQ20_5mW.mat")
+function gen_app(; width=500, height=500)
+    files = readdir(joinpath(data_path(), "Flow"))
+    f2m = f -> match(r"_([^\/]+).mat", f).captures[]
+    marks = Dict([i=>f2m(f) for (i, f) in enumerate(files)])
+
     app = dash(external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
     app.layout = html_div([
         banner(),
-        ctl(init_filename),
-        plots(init_filename, width, height),
+        ctl(marks),
+        plots(files[21], width, height),
     ])
 
     callback!(
         app,
         Output("plots", "children"),
-        Input("submit-button-state", "n_clicks"),
-        State("file-name", "value")
-    ) do _, input_value
-        get_plots(input_value, width, height)
+        Input("file", "value"),
+    ) do i
+        return get_plots(files[i], width, height)
     end
 
     return app
