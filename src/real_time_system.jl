@@ -14,7 +14,12 @@ end
 
 function ctl(marks::Dict)
     return html_div([
+        dcc_interval(id="interval", interval=3*1000, n_intervals=0),
         html_h2("Inference"),
+        dcc_radioitems(id="mode", options=[
+            Dict("label"=>"Single", "value"=>"S"),
+            Dict("label"=>"Continuous", "value"=>"C"),
+        ], value="S"),
         dcc_slider(
             id="file",
             min=1, max=length(marks), value=length(marks),
@@ -83,6 +88,17 @@ function gen_app(; width=500, height=500)
         Input("file", "value"),
     ) do i
         return get_plots(files[i], width, height)
+    end
+
+    callback!(
+        app,
+        Output("file", "value"),
+        Input("interval", "n_intervals"),
+        State("mode", "value")
+    ) do n, mode
+        (mode=="S") && (return no_update())
+
+        return (n-1) % length(files) + 1
     end
 
     return app
