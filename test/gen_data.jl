@@ -26,14 +26,14 @@ end
     point_dim, label_dim = gen_squeezed_thermal_data(
         n_data=n, n_points=4096,
         r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 0.5), θ_offset_range=(0, 0),
-        point_dim=500, label_dim=70,
+        point_dim=900, label_dim=100,
         file_name="ci"
     )
 
     @test all([
         n_data==n, n_points==4096,
         r_range==(0, 2), θ_range==(0, 2π), n̄_range==(0, 0.5), θ_offset_range==(0, 0),
-        point_dim==500, label_dim==70,
+        label_dim==100,
         "ci.jld2" in readdir(SqState.training_data_path())
     ])
 
