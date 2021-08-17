@@ -9,6 +9,7 @@ module SqState
     using QuantumStateBase
     using UnicodePlots
     using Fetch
+    using MAT
 
     function __init__()
         register(DataDep(
