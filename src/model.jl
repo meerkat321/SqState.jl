@@ -26,16 +26,16 @@ function res_block(
     shortcut_pad::Any,
     pool_size::Integer;
 )
-    pool = (pool_size > 0) ? MeanPool((pool_size, )) : identity
+    pool = (pool_size > 0) ? MaxPool((pool_size, )) : identity
 
     return Chain(
         Parallel(+,
             conv_layers(conv_ch, conv_kernel_size, conv_pad),
             shortcut((conv_ch[1], conv_ch[end]), shortcut_kernel_size, shortcut_pad),
         ),
-        x -> relu.(x),
+        x -> gelu.(x),
         pool,
-        BatchNorm(conv_ch[end], relu)
+        BatchNorm(conv_ch[end], gelu)
     )
 end
 
@@ -44,7 +44,7 @@ function model()
         # stage 0
         BatchNorm(1),
         Conv((31, ), 1=>8, pad=15),
-        BatchNorm(8, relu),
+        BatchNorm(8, gelu),
 
         # res
         res_block((8, 4, 4, 16), (1, 15, 7), (0, 7, 3), 1, 0, -1),
@@ -58,8 +58,9 @@ function model()
 
         # stage 1
         flatten,
-        Dense(8*64, 64, relu),
-        Dense(64, 16, relu),
-        Dense(16, 3, relu)
+        Dense(8*64, 64, gelu),
+        Dense(64, 16, gelu),
+        Dense(16, 8, gelu),
+        Dense(8, 3, relu)
     )
 end
