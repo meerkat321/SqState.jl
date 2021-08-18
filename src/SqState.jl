@@ -10,6 +10,7 @@ module SqState
     using UnicodePlots
     using Fetch
     using MAT
+    using NeuralOperators
 
     function __init__()
         register(DataDep(
