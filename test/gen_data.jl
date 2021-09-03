@@ -27,10 +27,12 @@ end
 
     θs = LinRange(0, 2π, 10)
     xs = LinRange(-10, 10, 10)
-    point_dim = 900
     n_points = 4096
     for i in 1:n
         r, θ, n̄, c1, c2, c3 = args[:, i]
+
+        point_dim = 100
+
         state =
             c1 * SqueezedState(ξ(r, θ), dim=point_dim, rep=StateMatrix) +
             c2 * SqueezedThermalState(ξ(r, θ), n̄, dim=point_dim) +

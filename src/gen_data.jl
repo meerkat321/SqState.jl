@@ -15,10 +15,20 @@ function rand_arg(r_range, θ_range, n̄_range)
     return r, θ, n̄, c1, c2, c3
 end
 
+function construct_state(r, θ, n̄, c1, c2, c3, dim)
+    sq = ξ(r, θ)
+    state =
+        c1 * SqueezedState(sq, dim=dim, rep=StateMatrix) +
+        c2 * SqueezedThermalState(sq, n̄, dim=dim) +
+        c3 * ThermalState(n̄, dim=dim)
+
+    return state
+end
+
 function gen_data(;
     n_data, n_points=4096,
-    r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 1.67),
-    point_dim=900, label_dim=100,
+    r_range=(0, 2), θ_range=(0, 2π), n̄_range=(0, 1.),
+    point_dim=1000, label_dim=100,
     file_name="sq_sqth_th_$(replace(string(now()), ':'=>'_'))"
 )
     args = Matrix{Float64}(undef, 6, n_data)
@@ -29,15 +39,12 @@ function gen_data(;
         args[:, i] .= r, θ, n̄, c1, c2, c3 = rand_arg(r_range, θ_range, n̄_range)
 
         # points
-        sq = ξ(r, θ)
-        state =
-            c1 * SqueezedState(sq, dim=point_dim, rep=StateMatrix) +
-            c2 * SqueezedThermalState(sq, n̄, dim=point_dim) +
-            c3 * ThermalState(n̄, dim=point_dim)
+        point_dim = (r > 1) ? point_dim : label_dim
+        state = construct_state(r, θ, n̄, c1, c2, c3, point_dim)
         gaussian_state_sampler!(view(points, :, :, i), state, 0.)
 
         # 𝛒s
-        𝛒s[i] = state.𝛒
+        𝛒s[i] = (r > 1) ? construct_state(r, θ, n̄, c1, c2, c3, point_dim).𝛒 : state.𝛒
     end
 
     if !isnothing(file_name)
