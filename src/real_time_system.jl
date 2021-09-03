@@ -12,7 +12,7 @@ function banner()
     ])
 end
 
-function ctl(marks::Dict)
+function ctl()
     return html_div([
         dcc_interval(id="interval", interval=3*1000, n_intervals=0),
         html_h2("Inference"),
@@ -20,11 +20,7 @@ function ctl(marks::Dict)
             Dict("label"=>"Single", "value"=>"S"),
             Dict("label"=>"Continuous", "value"=>"C"),
         ], value="S"),
-        dcc_slider(
-            id="file",
-            min=1, max=length(marks), value=length(marks),
-            marks=marks,
-        )
+        html_button(id="snap", children="Snap", n_clicks=0),
     ])
 end
 
@@ -72,33 +68,31 @@ end
 
 function gen_app(; width=500, height=500)
     files = readdir(joinpath(data_path(), "Flow"))
-    f2m = f -> match(r"_([^\/]+).mat", f).captures[]
-    marks = Dict([i=>f2m(f) for (i, f) in enumerate(files)])
 
     app = dash(external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
     app.layout = html_div([
         banner(),
-        ctl(marks),
+        ctl(),
         plots(files[21], width, height),
     ])
 
     callback!(
         app,
         Output("plots", "children"),
-        Input("file", "value"),
-    ) do i
-        return get_plots(files[i], width, height)
+        Input("snap", "n_clicks"),
+    ) do n
+        return get_plots(files[(n-1) % length(files) + 1], width, height)
     end
 
     callback!(
         app,
-        Output("file", "value"),
+        Output("snap", "n_clicks"),
         Input("interval", "n_intervals"),
         State("mode", "value")
     ) do n, mode
         (mode=="S") && (return no_update())
 
-        return (n-1) % length(files) + 1
+        return n
     end
 
     return app
