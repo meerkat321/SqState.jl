@@ -8,7 +8,7 @@ function update_model!(model_file_path, model)
     @warn "model updated!"
 end
 
-function train(model_name::String; epochs=5, η₀=1f-2, batch_size=100)
+function train(model_name::String; epochs=5, η₀=1e-2, batch_size=100)
     if has_cuda()
         @info "CUDA is on"
         device = gpu
@@ -41,7 +41,7 @@ function train(model_name::String; epochs=5, η₀=1f-2, batch_size=100)
         push!(losses, validation_loss)
         (losses[end] == minimum(losses)) && update_model!(joinpath(model_path(), "$model_name.jld2"), m)
     end
-    call_back = Flux.throttle(validate, 10, leading=false, trailing=true)
+    call_back = Flux.throttle(validate, 5, leading=false, trailing=true)
 
     for e in 1:epochs
         @info "Epoch $e"
