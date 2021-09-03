@@ -2,12 +2,10 @@ module SqState
     using Dates
     using DataDeps
     using JLD2
-    using LinearAlgebra
     using Flux
     using Flux.Data: DataLoader
     using CUDA
     using QuantumStateBase
-    using UnicodePlots
     using Fetch
     using MAT
     using NeuralOperators
