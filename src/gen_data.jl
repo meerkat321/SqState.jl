@@ -51,7 +51,7 @@ function gen_data(;
         data_path = mkpath(SqState.training_data_path())
         jldsave(joinpath(data_path, "$file_name.jld2"); points, 𝛒s, args)
 
-        file = matopen(joinpath(data_path, "$file_name.mat"), "w")
+        file = matopen(joinpath(data_path, "../mat_data/$file_name.mat"), "w")
         write(file, "points", points); write(file, "dms", 𝛒s); write(file, "args", args)
         close(file)
     end
