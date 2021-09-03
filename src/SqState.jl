@@ -17,7 +17,6 @@ module SqState
             "SqState",
             """Data and models for SqState.""",
             "https://drive.google.com/file/d/1UzaPBpTuhxvmyUWnoOupEr3cRZUMc-0-/view?usp=sharing",
-            "8bc0c64d09b17c92df4c2065064ae09edb0ea56b05bdc196a0e7d21a998e1fea";
             fetch_method=gdownload,
             post_fetch_method=unpack
         ))
