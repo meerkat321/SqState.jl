@@ -34,6 +34,6 @@ function model()
         flatten,
         Dense(8*64, 64, σ),
         Dense(64, 16, σ),
-        Dense(16, 3)
+        Dense(16, 3, relu)
     )
 end
