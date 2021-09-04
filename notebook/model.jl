@@ -51,7 +51,7 @@ The experiments of the following data are accomplish by YiRu in NTHU
 
 # ╔═╡ 1b4271a4-8540-4881-b6cb-7a3dd8e9d0b1
 begin
-	data_path = joinpath(datadep"SqState", "data/Flow")
+	data_path = joinpath(SqState.data_path(), "Flow")
 	files = readdir(data_path)
 end
 
@@ -79,7 +79,7 @@ the model will infere the arguments for the state via the given quaduture data.
 "
 
 # ╔═╡ b015f3e0-89d8-4ecd-a3e5-23d9cc83a6e5
-r, θ, n̄ = SqState.infer_arg(data, 100)
+r, θ, n̄, c1, c2, c3 = SqState.infer_arg(data, 100)
 
 # ╔═╡ d02b6dbc-a45d-4900-881a-30b550564f6d
 md"
@@ -87,7 +87,10 @@ After the inference, we can construct the quantum state and plot the Wigner func
 "
 
 # ╔═╡ 90a4e898-f95a-4bd1-8825-9c7d8561a683
-state = SqueezedThermalState(ξ(r, θ), n̄)
+state =
+	c1 * SqueezedState(ξ(r, θ), rep=StateMatrix) +
+	c2 * SqueezedThermalState(ξ(r, θ), n̄) +
+	c3 * ThermalState(n̄)
 
 # ╔═╡ d7756447-61ae-49f7-b0cb-ea1ff0432d29
 begin
@@ -102,7 +105,7 @@ Calculate all args for all data
 
 # ╔═╡ 870e4dd3-f8e6-45a1-87ba-721237e00066
 begin
-	argv = Matrix{Float64}(undef, 3, length(files))
+	argv = Matrix{Float64}(undef, 6, length(files))
 	for i in 1:size(argv, 2)
 		dataᵢ = SqState.get_data(files[i])
 		argv[:, i:i] .= SqState.infer_arg(dataᵢ, 10)

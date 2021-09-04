@@ -40,7 +40,7 @@ function sample(data::Matrix, n::Integer)
 end
 
 function infer_arg(data::Matrix, n_sample::Integer; m=get_model("model"))
-    argv = zeros(Float32, 3)
+    argv = zeros(Float32, 6)
     for _ in 1:n_sample
         argv += m(reshape(Float32.(sample(data, 4096)), (4096, 1, 1)))
     end
@@ -49,11 +49,15 @@ function infer_arg(data::Matrix, n_sample::Integer; m=get_model("model"))
 end
 
 function calc_w(
-    r::T, θ::T, n̄::T, dim::Integer, fix_θ::Bool;
+    r::T, θ::T, n̄::T, c1::T, c2::T, c3::T, dim::Integer, fix_θ::Bool;
     wf=WignerFunction(LinRange(-3, 3, 100), LinRange(-3, 3, 100), dim=dim)
 ) where {T<:Real}
     θ = fix_θ ? zero(T) : θ
-    state = SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
+    sq = ξ(r, θ)
+    state =
+        c1 * SqueezedState(sq, dim=dim, rep=StateMatrix) +
+        c2 * SqueezedThermalState(sq, n̄, dim=dim) +
+        c3 * ThermalState(n̄, dim=dim)
     w = wf(state)
 
     return state, w
@@ -61,7 +65,7 @@ end
 
 reshape_infered_data(data::Matrix) = [data[:, i] for i in 1:size(data, 2)]
 
-function infer(data_name::String; n_sample=10, fix_θ=true, dim=70)
+function infer(data_name::String; n_sample=10, fix_θ=true, dim=100)
     data = get_data(data_name)
     state, w = calc_w(infer_arg(data, n_sample)..., dim, fix_θ)
 
