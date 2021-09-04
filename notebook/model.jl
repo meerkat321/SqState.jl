@@ -94,7 +94,7 @@ state =
 
 # ╔═╡ d7756447-61ae-49f7-b0cb-ea1ff0432d29
 begin
-	wf = WignerFunction(LinRange(-3, 3, 100), LinRange(-3, 3, 100))
+	wf = WignerFunction(LinRange(-3, 3, 101), LinRange(-3, 3, 101))
 	plot_wigner(wf(state), Contour)
 end
 
@@ -146,13 +146,25 @@ begin
 		return w
 	end
 	
-	anim = @animate for f in readdir(joinpath(datadep"SqState", "data/Flow"))
+	anim = @animate for f in files
 		plot_wigner(get_w(f, fix_θ=true), QuantumStatePlots.Contour)
 		annotate!(-2.5, 2.5, text("$f", :left))
 	end
 
 	gif(anim, fps=2)
 end
+
+# ╔═╡ c2fcff08-cbab-47f6-b5b3-5a2989b11c91
+# begin
+# 	𝐰s = Array{Float64}(undef, 101, 101, 21)
+# 	for (i, f) in enumerate(files)
+# 		𝐰s[:, :, i] .= get_w(f, fix_θ=true).𝐰_surface
+# 	end
+	
+# 	wfile = matopen("w.mat", "w")
+# 	write(wfile, "ws", 𝐰s)
+# 	close(wfile)
+# end
 
 # ╔═╡ Cell order:
 # ╟─05865de0-1458-4c59-880c-8619d4c7dd83
@@ -172,9 +184,10 @@ end
 # ╠═d7756447-61ae-49f7-b0cb-ea1ff0432d29
 # ╟─8ff17755-21eb-45c2-adbc-27a5d021f79f
 # ╠═870e4dd3-f8e6-45a1-87ba-721237e00066
-# ╠═90e1807a-0779-4156-9b19-44cab50e2efc
-# ╠═b24b71fc-2f37-408d-9888-318eeba180dd
-# ╠═c730f57d-1b41-4165-b50c-e564fbda8861
-# ╠═203ee767-c38b-4123-be29-0d237dc57c40
+# ╟─90e1807a-0779-4156-9b19-44cab50e2efc
+# ╟─b24b71fc-2f37-408d-9888-318eeba180dd
+# ╟─c730f57d-1b41-4165-b50c-e564fbda8861
+# ╟─203ee767-c38b-4123-be29-0d237dc57c40
 # ╟─5bb4f85c-af93-456c-af73-2dc069d0237a
 # ╠═3fdf7f29-b8b6-478b-9b4d-fb96407e99ae
+# ╠═c2fcff08-cbab-47f6-b5b3-5a2989b11c91

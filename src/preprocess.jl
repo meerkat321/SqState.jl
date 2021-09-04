@@ -50,7 +50,7 @@ end
 
 function calc_w(
     r::T, θ::T, n̄::T, c1::T, c2::T, c3::T, dim::Integer, fix_θ::Bool;
-    wf=WignerFunction(LinRange(-3, 3, 100), LinRange(-3, 3, 100), dim=dim)
+    wf=WignerFunction(LinRange(-3, 3, 101), LinRange(-3, 3, 101), dim=dim)
 ) where {T<:Real}
     θ = fix_θ ? zero(T) : θ
     sq = ξ(r, θ)
