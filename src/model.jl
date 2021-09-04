@@ -20,7 +20,10 @@ function model()
 
         # fourier operator
         FourierOperator(64=>64, modes, σ, permuted=true),
-        MeanPool((4, )),
+        FourierOperator(64=>64, modes, σ, permuted=true),
+        MeanPool((2, )),
+        FourierOperator(64=>64, modes, σ, permuted=true),
+        MeanPool((2, )),
         FourierOperator(64=>64, modes, σ, permuted=true),
         MeanPool((4, )),
         FourierOperator(64=>64, modes, σ, permuted=true),

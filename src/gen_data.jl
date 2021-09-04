@@ -44,7 +44,7 @@ function gen_data(;
         gaussian_state_sampler!(view(points, :, :, i), state, 0.)
 
         # 𝛒s
-        𝛒s[i] = (r > 1) ? construct_state(r, θ, n̄, c1, c2, c3, point_dim).𝛒 : state.𝛒
+        𝛒s[i] = (r > 1) ? state.𝛒[1:label_dim, 1:label_dim] : state.𝛒
     end
 
     if !isnothing(file_name)

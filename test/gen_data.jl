@@ -23,7 +23,7 @@ end
 
     points, 𝛒s, args = gen_data(n_data=n, file_name="ci")
     @test "ci.jld2" in readdir(SqState.training_data_path())
-    @test "ci.mat" in readdir(SqState.training_data_path())
+    @test "ci.mat" in readdir(joinpath(SqState.training_data_path(), "../mat_data"))
 
     θs = LinRange(0, 2π, 10)
     xs = LinRange(-10, 10, 10)
@@ -38,11 +38,11 @@ end
             c2 * SqueezedThermalState(ξ(r, θ), n̄, dim=point_dim) +
             c3 * ThermalState(n̄, dim=point_dim)
 
-        @test 𝛒s[i] == 𝛒(state)
+        @test 𝛒s[i] ≈ 𝛒(state)
     end
 
     rm(joinpath(SqState.training_data_path(), "ci.jld2"))
-    rm(joinpath(SqState.training_data_path(), "ci.mat"))
+    rm(joinpath(SqState.training_data_path(), "../mat_data/ci.mat"))
 end
 
 @testset "gen_non_gaussian_data" begin

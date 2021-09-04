@@ -34,8 +34,9 @@ function train(model_name::String; epochs=5, η₀=1e-2, batch_size=100)
 
     t = 1
     losses = Float32[]
+    data_validation = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_test] |> device
     function validate()
-        validation_loss = sum(loss(device(𝐱), device(𝐲)) for (𝐱, 𝐲) in loader_test)/length(loader_test)
+        validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(loader_test)
         @info "$(t)0k data\n η: $(opt.eta)\n loss: $validation_loss"
 
         push!(losses, validation_loss)
@@ -43,15 +44,12 @@ function train(model_name::String; epochs=5, η₀=1e-2, batch_size=100)
     end
     call_back = Flux.throttle(validate, 5, leading=false, trailing=true)
 
-    for e in 1:epochs
-        @info "Epoch $e"
-        for loader_train in data_loaders
-            data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
+    for loader_train in data_loaders
+        data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
 
-            @time Flux.train!(loss, params(m), data, opt, cb=call_back)
-            (t % 50 == 0) && (opt.eta /= 2)
-            t += 1
-        end
+        @time Flux.train!(loss, params(m), data, opt, cb=call_back)
+        (t % 50 == 0) && (opt.eta /= 2)
+        t += 1
     end
 end
 
