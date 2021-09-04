@@ -46,7 +46,6 @@ function train(model_name::String; epochs=5, η₀=1e-2, batch_size=100)
 
     for loader_train in data_loaders
         data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
-
         @time Flux.train!(loss, params(m), data, opt, cb=call_back)
         (t % 50 == 0) && (opt.eta /= 2)
         t += 1

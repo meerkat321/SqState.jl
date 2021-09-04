@@ -38,7 +38,7 @@ end
             c2 * SqueezedThermalState(ξ(r, θ), n̄, dim=point_dim) +
             c3 * ThermalState(n̄, dim=point_dim)
 
-        @test 𝛒s[i] ≈ 𝛒(state)
+        @test isapprox(𝛒s[i], 𝛒(state), rtol=1e-8)
     end
 
     rm(joinpath(SqState.training_data_path(), "ci.jld2"))
