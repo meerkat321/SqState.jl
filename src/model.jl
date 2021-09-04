@@ -1,12 +1,12 @@
 export model
 
-function fourier_block(ch::Pair{S, S}, modes::NTuple{N, S}, pool_size::S, σ) where {N, S<:Integer}
-    pool = (pool_size > 0) ? MaxPool((pool_size, )) : identity
+function DenseCh(ch::Pair{S, S}, σ=identity, p::S=0) where {S <: Integer}
+    pool = (p > 0) ? MaxPool((p, )) : identity
 
     return Chain(
-        FourierOperator(ch, modes, σ, permuted=true),
+        Conv((1, ), ch, σ),
         pool,
-        BatchNorm(ch[end], σ),
+        BatchNorm(ch[end]),
     )
 end
 
@@ -16,24 +16,25 @@ function model()
 
     return Chain(
         # stage 0
-        BatchNorm(1),
         Conv((1, ), 1=>64, σ),
-        BatchNorm(64),
 
         # fourier operator
-        fourier_block(64=>64, modes, 0, σ),
-        fourier_block(64=>64, modes, 0, σ),
-        fourier_block(64=>64, modes, 2, σ),
-        fourier_block(64=>64, modes, 2, σ),
-        fourier_block(64=>64, modes, 4, σ),
-        fourier_block(64=>64, modes, 4, identity),
+        FourierOperator(64=>64, modes, σ, permuted=true),
+        FourierOperator(64=>64, modes, σ, permuted=true),
+        MeanPool((2, )),
+        FourierOperator(64=>64, modes, σ, permuted=true),
+        MeanPool((2, )),
+        FourierOperator(64=>64, modes, σ, permuted=true),
+        MeanPool((4, )),
+        FourierOperator(64=>64, modes, σ, permuted=true),
+        MeanPool((4, )),
+        FourierOperator(64=>64, modes, permuted=true),
 
         # stage 1
-        Conv((1, ), 64=>8),
-        BatchNorm(8),
+        Conv((1, ), 64=>8, σ),
         flatten,
         Dense(8*64, 64, σ),
         Dense(64, 16, σ),
-        Dense(16, 3)
+        Dense(16, 6, relu)
     )
 end
