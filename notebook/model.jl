@@ -142,10 +142,10 @@ begin
 			SqState.infer_arg(data, n_sample)..., dim, fix_θ,
 			wf=wf
 		)
-		
+
 		return w
 	end
-	
+
 	anim = @animate for f in files
 		plot_wigner(get_w(f, fix_θ=true), QuantumStatePlots.Contour)
 		annotate!(-2.5, 2.5, text("$f", :left))
@@ -160,11 +160,39 @@ end
 # 	for (i, f) in enumerate(files)
 # 		𝐰s[:, :, i] .= get_w(f, fix_θ=true).𝐰_surface
 # 	end
-	
+
 # 	wfile = matopen("w.mat", "w")
 # 	write(wfile, "ws", 𝐰s)
 # 	close(wfile)
 # end
+
+# ╔═╡ 87ca3223-89cf-4dc3-aa25-f66e9bb22a2b
+# begin
+# 	argvfile = matopen("argv.mat", "w")
+# 	write(argvfile, "argv", argv)
+# 	close(argvfile)
+# end
+
+# ╔═╡ e9ea5eba-70fc-40d0-8bb4-62a289305a7c
+begin
+	rs = [0.0952 0.0809 0.1271 0.1572 0.2652 0.2753 0.3454 0.3492]
+	n̄s = [0.2549 0.2417 0.2283 0.2355 0.2402 0.2761 0.2793 0.2595]
+	
+	𝐰s_sqth = Array{Float64}(undef, 101, 101, 8)
+	𝐰s_th = Array{Float64}(undef, 101, 101, 8)
+	for (i, (r, n̄)) in enumerate(zip(rs, n̄s))
+		𝐰s_sqth[:, :, i] .= wf(SqueezedThermalState(ξ(r, 0.), n̄)).𝐰_surface
+		𝐰s_th[:, :, i] .= wf(ThermalState(n̄)).𝐰_surface
+	end
+	
+	# w_sqth_th_file = matopen("w_sqth_th.mat", "w")
+	# write(w_sqth_th_file, "w_sqth", 𝐰s_sqth)
+	# write(w_sqth_th_file, "w_th", 𝐰s_th)
+	# close(w_sqth_th_file)
+end
+
+# ╔═╡ e4ccfa2e-6988-40ff-8403-188998242e04
+heatmap(𝐰s_sqth[:, :, 8])
 
 # ╔═╡ Cell order:
 # ╟─05865de0-1458-4c59-880c-8619d4c7dd83
@@ -191,3 +219,6 @@ end
 # ╟─5bb4f85c-af93-456c-af73-2dc069d0237a
 # ╠═3fdf7f29-b8b6-478b-9b4d-fb96407e99ae
 # ╠═c2fcff08-cbab-47f6-b5b3-5a2989b11c91
+# ╠═87ca3223-89cf-4dc3-aa25-f66e9bb22a2b
+# ╠═e9ea5eba-70fc-40d0-8bb4-62a289305a7c
+# ╠═e4ccfa2e-6988-40ff-8403-188998242e04

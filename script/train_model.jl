@@ -1,3 +1,3 @@
 using SqState
 
-train("model1")
+train("model1_MSE")
