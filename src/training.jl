@@ -18,16 +18,17 @@ function train(model_name::String; epochs=5, η₀=1e-2, batch_size=100)
     end
 
     m = model() |> device
-    loss(x, y) = Flux.mse(m(x), y)
+    # loss(x, y) = Flux.mse(m(x), y)
+    loss(𝐱, 𝐲) = sum(abs2, 𝐲 .- m(𝐱)) / size(𝐱)[end]
     opt = Flux.ADAM(η₀)
 
     # prepare data
     data_file_names = filter(x->x!=".gitkeep", readdir(SqState.training_data_path()))
-    loader_test = preprocess(data_file_names[1], batch_size=batch_size)
+    loader_test = preprocess_q2l(data_file_names[1], batch_size=batch_size)
     @info "numbers of data fragments: $(length(data_file_names)-1)"
     data_loaders = Channel(5, spawn=true) do ch
         for e in 1:epochs, (i, file_name) in enumerate(data_file_names[2:end])
-            put!(ch, preprocess(file_name, batch_size=batch_size))
+            put!(ch, preprocess_q2l(file_name, batch_size=batch_size))
             @info "Load epoch $e, file $i into buffer"
         end
     end
@@ -47,7 +48,7 @@ function train(model_name::String; epochs=5, η₀=1e-2, batch_size=100)
     for loader_train in data_loaders
         data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
         @time Flux.train!(loss, params(m), data, opt, cb=call_back)
-        (t % 50 == 0) && (opt.eta /= 2)
+        (t % 30 == 0) && (opt.eta /= 2)
         t += 1
     end
 end
