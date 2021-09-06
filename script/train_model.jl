@@ -1,3 +1,4 @@
 using SqState
 
-train("model1_MSE")
+train("model")
+# SqState.train_old_model("cnn")

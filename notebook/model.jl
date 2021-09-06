@@ -174,25 +174,38 @@ end
 # end
 
 # ╔═╡ e9ea5eba-70fc-40d0-8bb4-62a289305a7c
-begin
-	rs = [0.0952 0.0809 0.1271 0.1572 0.2652 0.2753 0.3454 0.3492]
-	n̄s = [0.2549 0.2417 0.2283 0.2355 0.2402 0.2761 0.2793 0.2595]
+# begin
+# 	rs = [0.0952 0.0809 0.1271 0.1572 0.2652 0.2753 0.3454 0.3492]
+# 	n̄s = [0.2549 0.2417 0.2283 0.2355 0.2402 0.2761 0.2793 0.2595]
 	
-	𝐰s_sqth = Array{Float64}(undef, 101, 101, 8)
-	𝐰s_th = Array{Float64}(undef, 101, 101, 8)
-	for (i, (r, n̄)) in enumerate(zip(rs, n̄s))
-		𝐰s_sqth[:, :, i] .= wf(SqueezedThermalState(ξ(r, 0.), n̄)).𝐰_surface
-		𝐰s_th[:, :, i] .= wf(ThermalState(n̄)).𝐰_surface
-	end
+# 	𝐰s_sqth = Array{Float64}(undef, 101, 101, 8)
+# 	𝐰s_th = Array{Float64}(undef, 101, 101, 8)
+# 	for (i, (r, n̄)) in enumerate(zip(rs, n̄s))
+# 		𝐰s_sqth[:, :, i] .= wf(SqueezedThermalState(ξ(r, 0.), n̄)).𝐰_surface
+# 		𝐰s_th[:, :, i] .= wf(ThermalState(n̄)).𝐰_surface
+# 	end
 	
-	# w_sqth_th_file = matopen("w_sqth_th.mat", "w")
-	# write(w_sqth_th_file, "w_sqth", 𝐰s_sqth)
-	# write(w_sqth_th_file, "w_th", 𝐰s_th)
-	# close(w_sqth_th_file)
-end
+# 	w_sqth_th_file = matopen("w_sqth_th.mat", "w")
+# 	write(w_sqth_th_file, "w_sqth", 𝐰s_sqth)
+# 	write(w_sqth_th_file, "w_th", 𝐰s_th)
+# 	close(w_sqth_th_file)
+#   heatmap(𝐰s_sqth[:, :, 8])
+# end
 
-# ╔═╡ e4ccfa2e-6988-40ff-8403-188998242e04
-heatmap(𝐰s_sqth[:, :, 8])
+# ╔═╡ 16f28d60-1fd4-4f2b-88c3-5f82ae48fd75
+# begin
+# 	rs = [0.0609 0.1382 0.3428 0.3692 0.4676 0.4820 0.5393 0.5445]
+	
+# 	𝐰s_sq = Array{Float64}(undef, 101, 101, 8)
+# 	for (i, r) in enumerate(rs)
+# 		𝐰s_sq[:, :, i] .= wf(SqueezedState(ξ(r, 0.))).𝐰_surface
+# 	end
+	
+# 	w_sq_file = matopen("w_sq.mat", "w")
+# 	write(w_sq_file, "w_sq", 𝐰s_sq)
+# 	close(w_sq_file)
+# 	heatmap(𝐰s_sq[:, :, 8])
+# end
 
 # ╔═╡ Cell order:
 # ╟─05865de0-1458-4c59-880c-8619d4c7dd83
@@ -221,4 +234,4 @@ heatmap(𝐰s_sqth[:, :, 8])
 # ╠═c2fcff08-cbab-47f6-b5b3-5a2989b11c91
 # ╠═87ca3223-89cf-4dc3-aa25-f66e9bb22a2b
 # ╠═e9ea5eba-70fc-40d0-8bb4-62a289305a7c
-# ╠═e4ccfa2e-6988-40ff-8403-188998242e04
+# ╠═16f28d60-1fd4-4f2b-88c3-5f82ae48fd75

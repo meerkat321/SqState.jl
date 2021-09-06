@@ -37,8 +37,8 @@ end;
 
 # ╔═╡ cd92e6bd-af62-4879-9f71-9a059754fbf5
 begin
-	# dir = "1stPaperData"
-	dir = "Flow"
+	dir = "1stPaperData"
+	# dir = "Flow"
 	data_path = joinpath(SqState.data_path(), dir)
 	files = filter(x->contains(x, "SQ"), readdir(data_path))#[end:-1:1]
 end
