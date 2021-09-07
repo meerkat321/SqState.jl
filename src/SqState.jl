@@ -1,13 +1,14 @@
 module SqState
-    using Dates
+    using QuantumStateBase
+
+    using Fetch
     using DataDeps
-    using JLD2
+
+    using CUDA
     using Flux
     using Flux.Data: DataLoader
-    using CUDA
-    using QuantumStateBase
-    using Fetch
-    using MAT
+    using JLD2
+
     using NeuralOperators
 
     function __init__()
@@ -20,10 +21,7 @@ module SqState
         ))
     end
 
-    training_data_path() = joinpath(datadep"SqState", "training_data")
-    model_path() = joinpath(datadep"SqState", "model")
-    data_path() = joinpath(datadep"SqState", "data")
-
+    include("utils.jl")
     include("gen_data.jl")
     include("preprocess.jl")
     include("model.jl")

@@ -1,14 +1,4 @@
-export
-    train,
-    get_model
-
-function get_model(model_name::String)
-    f = jldopen(joinpath(model_path() , "$model_name.jld2"))
-    model = f["model"]
-    close(f)
-
-    return model
-end
+export train
 
 function update_model!(model_file_path, model)
     model = cpu(model)
