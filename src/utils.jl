@@ -4,7 +4,6 @@
 
 training_data_path() = mkpath(joinpath(datadep"SqState", "training_data"))
 model_path() = mkpath(joinpath(datadep"SqState", "model"))
-data_path() = mkpath(joinpath(datadep"SqState", "data"))
 
 ############
 # gen data #
