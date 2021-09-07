@@ -1,6 +1,5 @@
 using DataDeps
 using QuantumStateBase
-using KernelDensity
 
 @testset "gen_data" begin
     n = 2
