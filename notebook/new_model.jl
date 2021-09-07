@@ -28,105 +28,147 @@ begin
 	using MAT
 end;
 
-# ╔═╡ 6d192e93-b290-429e-8aa8-135e908a4b2a
-[
-	"model1"=>"hloss=0.03643, t=70", 
-	"model1_adam"=>"hloss=0.23, t=32",
-	"model1_decent"=>"hloss=0.065, t=61"
-];
-
-# ╔═╡ cd92e6bd-af62-4879-9f71-9a059754fbf5
-begin
-	dir = "1stPaperData"
-	# dir = "Flow"
-	data_path = joinpath(SqState.data_path(), dir)
-	files = filter(x->contains(x, "SQ"), readdir(data_path))#[end:-1:1]
-end
-
 # ╔═╡ 19754c31-09f5-4568-b54e-a4528addb515
-# dim = 100
+dim = 200;
 
-# ╔═╡ 0d40169a-d3c9-4716-a011-e8039ccc5f09
-# function infer_𝛒(data::Matrix, n_sample::Integer)
-# 	𝛒 = Matrix{ComplexF64}(undef, dim, dim)
-#     for _ in 1:n_sample
-#         𝛒 += post_processing(
-# 			reshape(m(reshape(Float32.(SqState.sample(data, 4096)), (:, 1, 1))), :),
-# 			dim=dim
-# 		)
-#     end
-# 	𝛒 ./= n_sample
-
-#     return 𝛒
-# end
-
-# ╔═╡ 9e698140-f00f-456e-8e31-4e9de4586327
+# ╔═╡ d7be84cb-4b60-4b7d-b6ea-b928a5a6f317
 # begin
-# 	𝛒s = Array{ComplexF64}(undef, dim, dim, 9)
-# 	for (i, f) in enumerate(files)
-# 		𝛒s[:, :, i] .= infer_𝛒(
-# 			SqState.get_data(joinpath("1stPaperData", f)), 
-# 			2
-# 		)
-# 	end
+# 	f = matopen("all.mat", "w")
+# 	write(f, "flow_argv", flow_argv)
+# 	write(f, "prev_paper_argv", prev_paper_argv)
+# 	write(f, "flow_dm", flow_𝛒)
+# 	write(f, "prev_paper_dm", prev_paper_𝛒)
+# 	write(f, "flow_w", flow_𝐰)
+# 	write(f, "prev_paper_w", prev_paper_𝐰)
+# 	close(f)
 # end
 
-# ╔═╡ 137d7d10-a9e9-4b2e-a3ad-c1f0095e62f9
-# begin
-# 	wf = WignerFunction(LinRange(-3, 3, 101), LinRange(-3, 3, 101), dim=dim)
-# 	plot_wigner(wf(StateMatrix(𝛒s[:, :, i], dim)), Contour)
-# end
+# ╔═╡ 236e0f31-43e0-4339-b230-c2a72a55c13c
+@bind i Slider(1:21)
 
 # ╔═╡ 9a3fae9a-c8d4-42c1-92c0-90fdb1161397
 @bind refresh Button("refresh!")
 
 # ╔═╡ 5c46c1ad-dacb-4edf-9f1d-dd5861b660ae
-refresh; m = get_model("model1_decent");
+refresh; m = get_model("model");
 
 # ╔═╡ 634f65c4-1d48-4403-b5ba-82e85257519e
 begin 
 	refresh
-	argv = Matrix{Float64}(undef, 6, length(files))
-	for i in 1:size(argv, 2)
+	dir = "Flow"
+	data_path = joinpath(SqState.data_path(), dir)
+	files = filter(x->contains(x, "SQ"), readdir(data_path))#[end:-1:1]
+	flow_argv = Matrix{Float64}(undef, 6, length(files))
+	for i in 1:size(flow_argv, 2)
 		dataᵢ = SqState.get_data(joinpath(dir, files[i]))
-		argv[:, i:i] .= SqState.infer_arg(dataᵢ, 10)
+		flow_argv[:, i:i] .= SqState.infer_arg(dataᵢ, 10)
+	end
+	
+	dir = "1stPaperData"
+	data_path = joinpath(SqState.data_path(), dir)
+	files = filter(x->contains(x, "SQ"), readdir(data_path))[end:-1:1]
+	prev_paper_argv = Matrix{Float64}(undef, 6, length(files))
+	for i in 1:size(prev_paper_argv, 2)
+		dataᵢ = SqState.get_data(joinpath(dir, files[i]))
+		prev_paper_argv[:, i:i] .= SqState.infer_arg(dataᵢ, 10)
 	end
 end
 
+# ╔═╡ f93a3a99-c8ab-4554-b9b9-2e8ee009a6a9
+begin
+	flow_𝛒 = Array{ComplexF64}(undef, dim, dim, size(flow_argv, 2))
+	for i in 1:size(flow_argv, 2)
+		r, θ, n̄, c1, c2, c3 = flow_argv[:, i]
+		c1, c2, c3 = c1/sum([c1, c2, c3]), c2/sum([c1, c2, c3]), c3/sum([c1, c2, c3])
+		θ = 0.
+		flow_𝛒[:, :, i] .= 𝛒(
+			c1 * SqueezedState(ξ(r, θ), rep=StateMatrix, dim=dim) + 
+			c2 * SqueezedThermalState(ξ(r, θ), n̄, dim=dim) + 
+			c3 * ThermalState(n̄, dim=dim)
+		)
+	end
+	
+	prev_paper_𝛒 = Array{ComplexF64}(undef, dim, dim, size(prev_paper_argv, 2))
+	for i in 1:size(prev_paper_argv, 2)
+		r, θ, n̄, c1, c2, c3 = prev_paper_argv[:, i]
+		c1, c2, c3 = c1/sum([c1, c2, c3]), c2/sum([c1, c2, c3]), c3/sum([c1, c2, c3])
+		prev_paper_𝛒[:, :, i] .= 𝛒(
+			c1 * SqueezedState(ξ(r, θ), rep=StateMatrix, dim=dim) + 
+			c2 * SqueezedThermalState(ξ(r, θ), n̄, dim=dim) + 
+			c3 * ThermalState(n̄, dim=dim)
+		)
+	end
+end
+
+# ╔═╡ dc2d3311-4b32-4d23-bddd-b7899d7e3511
+begin
+	wf = WignerFunction(LinRange(-10, 10, 101), LinRange(-10, 10, 101), dim=dim)
+	prev_paper_𝐰 = Array{Float64}(undef, 101, 101, size(prev_paper_𝛒, 3))
+	for i in size(prev_paper_𝛒, 3)
+		prev_paper_𝐰[:, :, i] .= wf(StateMatrix(prev_paper_𝛒[:, :, 1], dim)).𝐰_surface
+	end
+	
+	wf = WignerFunction(LinRange(-3, 3, 101), LinRange(-3, 3, 101), dim=dim)
+	flow_𝐰 = Array{Float64}(undef, 101, 101, size(flow_𝛒, 3))
+	for i in size(flow_𝛒, 3)
+		flow_𝐰[:, :, i] .= wf(StateMatrix(flow_𝛒[:, :, 1], dim)).𝐰_surface
+	end
+end
+
+# ╔═╡ 61f9eb55-4916-4666-89d3-53f9dddcacb3
+plot_wigner(wf(StateMatrix(flow_𝛒[:, :, i], dim)), Contour)
+
 # ╔═╡ d6b78977-76d8-457f-8750-ecbfda7bad13
-scatter(argv[1, :], size=(800, 200), legend=false, title="r")
+scatter(flow_argv[1, :], size=(800, 200), legend=false, title="r")
 
 # ╔═╡ c04c95e6-ea7f-41d5-967f-5b51cf34be6d
-scatter(argv[2, :], size=(800, 200), legend=false, title="θ")
+scatter(flow_argv[2, :], size=(800, 200), legend=false, title="θ")
 
 # ╔═╡ e1b9bbb3-ac8d-42bc-a98e-3ab0c8b3725b
-scatter(argv[3, :], size=(800, 200), legend=false, title="n̄")
+scatter(flow_argv[3, :], size=(800, 200), legend=false, title="n̄")
 
 # ╔═╡ 7a39bb3e-5f9e-45a5-a7b8-30142844ebe9
 begin
 	plot(size=(800, 200), legend=:left)
-	scatter!(argv[4, :], label="c₁")
-	scatter!(argv[5, :], label="c₂")
-	scatter!(argv[6, :], label="c₃")
+	scatter!(flow_argv[4, :], label="c₁")
+	scatter!(flow_argv[5, :], label="c₂")
+	scatter!(flow_argv[6, :], label="c₃")
 end
 
-# ╔═╡ ebcc83ca-25f9-4819-933b-dda3b1ec9381
-@bind i Slider(1:9; default=1, show_value=true)
+# ╔═╡ 70d83e1f-5e2c-4583-b2ae-7a7b09ce7da3
+scatter(prev_paper_argv[1, :], size=(800, 200), legend=false, title="r")
+
+# ╔═╡ 507a5e70-21ca-41e1-9218-8a280bef8b94
+scatter(prev_paper_argv[2, :], size=(800, 200), legend=false, title="θ")
+
+# ╔═╡ 3c765713-199b-4736-9554-4605cf65c6ea
+scatter(prev_paper_argv[3, :], size=(800, 200), legend=false, title="n̄")
+
+# ╔═╡ 601a8008-cc6a-4dd4-8170-4b4d74a3be15
+begin
+	plot(size=(800, 200), legend=:left)
+	scatter!(prev_paper_argv[4, :], label="c₁")
+	scatter!(prev_paper_argv[5, :], label="c₂")
+	scatter!(prev_paper_argv[6, :], label="c₃")
+end
 
 # ╔═╡ Cell order:
 # ╠═12aa895e-0dfb-11ec-0cf1-972537d99a98
-# ╠═6d192e93-b290-429e-8aa8-135e908a4b2a
 # ╠═ad2ef451-25d1-4001-abf1-ee9c9314b0fe
 # ╠═5c46c1ad-dacb-4edf-9f1d-dd5861b660ae
-# ╠═cd92e6bd-af62-4879-9f71-9a059754fbf5
-# ╟─19754c31-09f5-4568-b54e-a4528addb515
-# ╟─0d40169a-d3c9-4716-a011-e8039ccc5f09
-# ╟─9e698140-f00f-456e-8e31-4e9de4586327
-# ╟─137d7d10-a9e9-4b2e-a3ad-c1f0095e62f9
 # ╠═634f65c4-1d48-4403-b5ba-82e85257519e
+# ╠═19754c31-09f5-4568-b54e-a4528addb515
+# ╠═f93a3a99-c8ab-4554-b9b9-2e8ee009a6a9
+# ╠═dc2d3311-4b32-4d23-bddd-b7899d7e3511
+# ╠═d7be84cb-4b60-4b7d-b6ea-b928a5a6f317
+# ╠═61f9eb55-4916-4666-89d3-53f9dddcacb3
+# ╟─236e0f31-43e0-4339-b230-c2a72a55c13c
 # ╟─d6b78977-76d8-457f-8750-ecbfda7bad13
 # ╟─c04c95e6-ea7f-41d5-967f-5b51cf34be6d
 # ╟─e1b9bbb3-ac8d-42bc-a98e-3ab0c8b3725b
 # ╟─7a39bb3e-5f9e-45a5-a7b8-30142844ebe9
+# ╟─70d83e1f-5e2c-4583-b2ae-7a7b09ce7da3
+# ╟─507a5e70-21ca-41e1-9218-8a280bef8b94
+# ╟─3c765713-199b-4736-9554-4605cf65c6ea
+# ╟─601a8008-cc6a-4dd4-8170-4b4d74a3be15
 # ╟─9a3fae9a-c8d4-42c1-92c0-90fdb1161397
-# ╟─ebcc83ca-25f9-4819-933b-dda3b1ec9381

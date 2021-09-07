@@ -27,7 +27,6 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25, n_valid
 
     m = model() |> device
     loss(x, y) = Flux.mse(m(x), y)
-    # opt = Flux.Momentum(η₀, 0.9)
     opt = Flux.Optimiser(WeightDecay(1e-4), Flux.Momentum(η₀, 0.9))
 
     # prepare data
@@ -56,7 +55,7 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25, n_valid
     for loader_train in data_loaders
         data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
         @time Flux.train!(loss, params(m), data, opt, cb=call_back)
-        (t % 30 == 0) && (opt.os[2].eta /= 2)
+        (t > 50) && (opt.os[2].eta = 1e-2 / 2^ceil((t-50)/30))
         t += 1
     end
 end
