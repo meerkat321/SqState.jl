@@ -1,7 +1,5 @@
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-**Squeezed state solver for quantum optics.**
-
 ## Source code status
 
 [![CI](https://github.com/foldfelis-QO/SqState.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/foldfelis-QO/SqState.jl/actions/workflows/ci.yml)
