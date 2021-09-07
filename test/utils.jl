@@ -14,3 +14,7 @@
 
     @test tr(SqState.construct_state(r, θ, n̄, c1, c2, c3, 200).𝛒) ≈ 1
 end
+
+@testset "inference" begin
+    # TODO: inference test
+end
