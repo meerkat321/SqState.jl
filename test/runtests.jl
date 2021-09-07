@@ -8,5 +8,5 @@ using Test
     include("gen_data.jl")
     include("preprocess.jl")
     include("model.jl")
-    # include("training.jl")
+    include("training.jl")
 end

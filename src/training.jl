@@ -6,7 +6,7 @@ function update_model!(model_file_path, model)
     @warn "model updated!"
 end
 
-function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25, n_validation_batch=100)
+function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     if has_cuda()
         @info "CUDA is on"
         device = gpu
@@ -32,7 +32,7 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25, n_valid
 
     t = 1
     losses = Float32[]
-    data_validation = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_test][1:n_validation_batch] |> device
+    data_validation = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_test] |> device
     function validate()
         validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(data_validation)
         @info "$(t)0k data\n η: $(opt.os[2].eta)\n loss: $validation_loss"
