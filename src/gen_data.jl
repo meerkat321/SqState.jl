@@ -58,7 +58,3 @@ function gen_data(;
 
     return points, 𝛒s, args
 end
-
-function gen_non_gaussian_data()
-    # QuantumStateBase.extend_coeff_ψₙ!(500)
-end

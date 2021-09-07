@@ -9,7 +9,6 @@ module SqState
     using Fetch
     using MAT
     using NeuralOperators
-    using LinearAlgebra
 
     function __init__()
         register(DataDep(
@@ -30,6 +29,4 @@ module SqState
     include("model.jl")
     include("training.jl")
     include("postprocess.jl")
-
-    include("real_time_system.jl")
 end
