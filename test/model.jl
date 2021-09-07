@@ -2,13 +2,14 @@
     m = model()
 
     n = 6
-    gen_data(n_data=n, file_name="ci")
-    loader = preprocess("ci.jld2", batch_size=2)
+    points, 𝛒s, args = gen_data(n_data=n)
+    jldsave(joinpath(SqState.training_data_path(), "test.jld2"); points, 𝛒s, args)
+
+    loader = SqState.preprocess_q2args("test.jld2", batch_size=2)
     x, y = first(loader)
 
     ŷ = m(x)
     @test size(ŷ) == (6, 2)
 
-    rm(joinpath(SqState.training_data_path(), "ci.jld2"))
-    rm(joinpath(SqState.training_data_path(), "../mat_data/ci.mat"))
+    rm(joinpath(SqState.training_data_path(), "test.jld2"))
 end
