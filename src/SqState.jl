@@ -1,35 +1,31 @@
 module SqState
-    using Dates
+    using QuantumStateBase
+
+    using Fetch
     using DataDeps
-    using JLD2
+
+    using CUDA
     using Flux
     using Flux.Data: DataLoader
-    using CUDA
-    using QuantumStateBase
-    using Fetch
-    using MAT
+    using JLD2
+
     using NeuralOperators
-    using LinearAlgebra
 
     function __init__()
         register(DataDep(
             "SqState",
             """Data and models for SqState.""",
             "https://drive.google.com/file/d/1UzaPBpTuhxvmyUWnoOupEr3cRZUMc-0-/view?usp=sharing",
+            "d867cf78dfb0497f372fff29f76426b1dec07ee02147a3b7d59c4f040ed4a04d",
             fetch_method=gdownload,
             post_fetch_method=unpack
         ))
     end
 
-    training_data_path() = joinpath(datadep"SqState", "training_data")
-    model_path() = joinpath(datadep"SqState", "model")
-    data_path() = joinpath(datadep"SqState", "data")
-
+    include("utils.jl")
     include("gen_data.jl")
     include("preprocess.jl")
     include("model.jl")
     include("training.jl")
     include("postprocess.jl")
-
-    include("real_time_system.jl")
 end

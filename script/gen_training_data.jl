@@ -1,15 +1,21 @@
-# using LinearAlgebra
+# using LinearAlgebra; LinearAlgebra.BLAS.set_num_threads(16)
+using Dates
 using SqState
+using JLD2
+using MAT
 
-# LinearAlgebra.BLAS.set_num_threads(16)
-
-# jit
-@time gen_data(n_data=100, file_name=nothing)
-
-# generate training data
-# about 680 sec for 10000 data
-# about 18.9 hr for 100 batch files
 @time for i in 1:101
     @show i
-    @time gen_data(n_data=10000)
+    @time begin
+        file_name="sq_sqth_th_$(replace(string(now()), ':'=>'_'))"
+        points, 𝛒s, args = gen_data(n_data=10000)
+
+        data_path = mkpath(SqState.training_data_path())
+        jldsave(joinpath(data_path, "$file_name.jld2"); points, 𝛒s, args)
+
+        data_path = mkpath("training_data_mat")
+        file = matopen(joinpath(data_path, "$file_name.mat"), "w")
+        write(file, "points", points); write(file, "dms", 𝛒s); write(file, "args", args)
+        close(file)
+    end
 end
