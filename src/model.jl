@@ -20,5 +20,12 @@ function model()
         flatten,
         Dense(4*64, 32, σ),
         Dense(32, 6, relu),
+
+        # enbading
+
+        Dense(6, 32, relu),
+        Dense(32, 256, relu),
+        Dense(256, 1024, relu),
+        Dense(1024, 4096, relu),
     )
 end

@@ -17,7 +17,8 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
 
     m = model() |> device
     loss(x, y) = Flux.mse(m(x), y)
-    opt = Flux.Optimiser(WeightDecay(1e-4), Flux.Momentum(η₀, 0.9))
+    # opt = Flux.Optimiser(WeightDecay(1e-4), Flux.Momentum(η₀, 0.9))
+    opt = Flux.ADAM(η₀)
 
     # prepare data
     data_file_names = filter(x->x!=".gitkeep", readdir(SqState.training_data_path()))
@@ -35,7 +36,7 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     data_validation = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_test] |> device
     function validate()
         validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(data_validation)
-        @info "$(t)0k data\n η: $(opt.os[2].eta)\n loss: $validation_loss"
+        @info "$(t)0k data\n η: $(opt.eta)\n loss: $validation_loss"
 
         push!(losses, validation_loss)
         (losses[end] == minimum(losses)) && update_model!(joinpath(model_path(), "$model_name.jld2"), m)
@@ -45,7 +46,7 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     for loader_train in data_loaders
         data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
         @time Flux.train!(loss, params(m), data, opt, cb=call_back)
-        (t > 50) && (opt.os[2].eta = 1e-2 / 2^ceil((t-50)/30))
+        (t > 50) && (opt.eta = 1e-2 / 2^ceil((t-50)/30))
         t += 1
     end
 end
