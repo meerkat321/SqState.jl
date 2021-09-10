@@ -6,7 +6,7 @@ function update_model!(model_file_path, model)
     @warn "model updated!"
 end
 
-function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
+function train(model_name::String; epochs=1, η₀=1e-3, batch_size=25)
     if has_cuda()
         @info "CUDA is on"
         device = gpu
@@ -17,7 +17,6 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
 
     m = model() |> device
     loss(x, y) = Flux.mse(m(x), y)
-    # opt = Flux.Optimiser(WeightDecay(1e-4), Flux.Momentum(η₀, 0.9))
     opt = Flux.ADAM(η₀)
 
     # prepare data
@@ -41,12 +40,11 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
         push!(losses, validation_loss)
         (losses[end] == minimum(losses)) && update_model!(joinpath(model_path(), "$model_name.jld2"), m)
     end
-    call_back = Flux.throttle(validate, 20, leading=false, trailing=true)
+    call_back = Flux.throttle(validate, 10, leading=false, trailing=true)
 
     for loader_train in data_loaders
         data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
         @time Flux.train!(loss, params(m), data, opt, cb=call_back)
-        (t > 50) && (opt.eta = 1e-2 / 2^ceil((t-50)/30))
         t += 1
     end
 end

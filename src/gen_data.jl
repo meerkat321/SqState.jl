@@ -16,7 +16,7 @@ function gen_data(;
         # points
         point_dim = (r > 1) ? point_dim : label_dim
         state = construct_state(r, θ, n̄, c1, c2, c3, point_dim)
-        _, _, σs[ :, i] = gaussian_state_sampler!(view(points, :, :, i), state, 0.)
+        _, _, σs[:, i] = gaussian_state_sampler!(view(points, :, :, i), state, 0.)
 
         # 𝛒s
         𝛒s[i] = (r > 1) ? state.𝛒[1:label_dim, 1:label_dim] : state.𝛒

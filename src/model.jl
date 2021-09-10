@@ -23,9 +23,9 @@ function model()
 
         # enbading
 
-        Dense(6, 32, relu),
-        Dense(32, 256, relu),
-        Dense(256, 1024, relu),
+        Dense(6, 32, σ),
+        Dense(32, 256, σ),
+        Dense(256, 1024, σ),
         Dense(1024, 4096, relu),
     )
 end
