@@ -1,9 +1,9 @@
 export train
 
-function update_model!(model_file_path, model)
+function update_model!(model_path::String, model_name::String, model)
     model = cpu(model)
-    jldsave(model_file_path; model)
-    @warn "model updated!"
+    jldsave(joinpath(model_path, "$model_name.jld2"); model)
+    @warn "'$model_name' updated!"
 end
 
 function train(model_name::String; epochs=1, η₀=1e-3, batch_size=25)
@@ -43,11 +43,14 @@ function train(model_name::String; epochs=1, η₀=1e-3, batch_size=25)
             # collect loss
             validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(data_validation)
             in_data_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data)/length(data)
-            @info "$(t)0k data\n η: $(opt.eta)\n in loss: $in_data_loss\n out loss: $validation_loss"
+            @info "$(t)0k data\n η: $(opt.eta)\n in  loss: $in_data_loss\n out loss: $validation_loss"
 
             # update saved model
             push!(losses, validation_loss)
-            (losses[end] == minimum(losses)) && update_model!(joinpath(model_path(), "$model_name.jld2"), m)
+            (losses[end] == minimum(losses)) && update_model!(model_path(), model_name, m)
+
+            # descent η
+            (t % 30 == 0) && (opt.eta /= 2)
 
             # update indicator
             t += 1

@@ -15,7 +15,7 @@ begin
 end
 
 # ╔═╡ 123d6209-7354-43ab-8867-7eb4dbc1a9e9
-m = SqState.get_model("encoder_decoder")
+m = SqState.get_model("model_linear")
 
 # ╔═╡ 1ca7a3ce-e071-4c3d-b1eb-0df244327fb8
 begin
@@ -52,7 +52,7 @@ begin
     opt = Flux.Optimiser(WeightDecay(1f-4), Flux.ADAM(1e-1))
 	# opt = Flux.ADAM(1e-1)
 	loss(x, y) = Flux.mse(t(x), y)
-    Flux.@epochs 5 begin
+    Flux.@epochs 1000 begin
 		Flux.train!(loss, params(t), arg_data[2:end], opt)
 		@show loss(arg_data[1][1], arg_data[1][2])
 	end

@@ -15,11 +15,11 @@ function model()
         Conv((2, ), 64=>32, σ, stride=2),
         Conv((2, ), 32=>16, σ, stride=2),
         Conv((4, ), 16=>8, σ, stride=4),
-        Conv((4, ), 8=>4, σ, stride=4),
+        Conv((4, ), 8=>8, σ, stride=4),
 
         flatten,
-        Dense(4*64, 32, σ),
-        Dense(32, 6, relu),
+        Dense(8*64, 64, σ),
+        Dense(64, 6, relu),
 
         # enbading
 
