@@ -1,9 +1,9 @@
 export train
 
-function update_model!(model_file_path, model)
+function update_model!(model_path::String, model_name::String, model)
     model = cpu(model)
-    jldsave(model_file_path; model)
-    @warn "model updated!"
+    jldsave(joinpath(model_path, "$model_name.jld2"); model)
+    @warn "'$model_name' updated!"
 end
 
 function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
@@ -33,19 +33,27 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     t = 1
     losses = Float32[]
     data_validation = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_test] |> device
-    function validate()
-        validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(data_validation)
-        @info "$(t)0k data\n η: $(opt.os[2].eta)\n loss: $validation_loss"
-
-        push!(losses, validation_loss)
-        (losses[end] == minimum(losses)) && update_model!(joinpath(model_path(), "$model_name.jld2"), m)
-    end
-    call_back = Flux.throttle(validate, 20, leading=false, trailing=true)
-
     for loader_train in data_loaders
-        data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
-        @time Flux.train!(loss, params(m), data, opt, cb=call_back)
-        (t > 50) && (opt.os[2].eta = 1e-2 / 2^ceil((t-50)/30))
-        t += 1
+        @time begin
+            data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
+
+            # training
+            Flux.train!(loss, params(m), data, opt)
+
+            # collect loss
+            validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(data_validation)
+            in_data_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data)/length(data)
+            @info "$(t)0k data\n η: $(opt.os[2].eta)\n in  loss: $in_data_loss\n out loss: $validation_loss"
+
+            # update saved model
+            push!(losses, validation_loss)
+            (losses[end] == minimum(losses)) && update_model!(model_path(), model_name, m)
+
+            # descent η
+            (t > 50) && (opt.os[2].eta = η₀ / 2^ceil((t-50)/30))
+
+            # update indicator
+            t += 1
+        end
     end
 end
