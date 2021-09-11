@@ -6,7 +6,7 @@ function update_model!(model_path::String, model_name::String, model)
     @warn "'$model_name' updated!"
 end
 
-function train(model_name::String; epochs=1, η₀=1e-3, batch_size=25)
+function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     if has_cuda()
         @info "CUDA is on"
         device = gpu
@@ -17,7 +17,7 @@ function train(model_name::String; epochs=1, η₀=1e-3, batch_size=25)
 
     m = model() |> device
     loss(x, y) = Flux.mse(m(x), y)
-    opt = Flux.ADAM(η₀)
+    opt = Flux.Optimiser(WeightDecay(1e-4), Flux.Momentum(η₀, 0.9))
 
     # prepare data
     data_file_names = filter(x->x!=".gitkeep", readdir(SqState.training_data_path()))
@@ -43,14 +43,14 @@ function train(model_name::String; epochs=1, η₀=1e-3, batch_size=25)
             # collect loss
             validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(data_validation)
             in_data_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data)/length(data)
-            @info "$(t)0k data\n η: $(opt.eta)\n in  loss: $in_data_loss\n out loss: $validation_loss"
+            @info "$(t)0k data\n η: $(opt.os[2].eta)\n in  loss: $in_data_loss\n out loss: $validation_loss"
 
             # update saved model
             push!(losses, validation_loss)
             (losses[end] == minimum(losses)) && update_model!(model_path(), model_name, m)
 
             # descent η
-            (t % 30 == 0) && (opt.eta /= 2)
+            (t > 50) && (opt.os[2].eta = η₀ / 2^ceil((t-50)/30))
 
             # update indicator
             t += 1
