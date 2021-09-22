@@ -1,3 +1,3 @@
 using SqState
 
-train("model_linear")
+train("model_new")

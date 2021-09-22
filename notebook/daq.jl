@@ -4,21 +4,34 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
+end
+
 # ╔═╡ c20a65e2-1549-11ec-0f36-d1f894ed944a
 begin
 	using HTTP
 	using Plots
 	using JSON3
+	using PlutoUI
+	using Mmap
 end
 
+# ╔═╡ 4bdfeeb6-889d-461c-a6af-405d3f33846e
+@bind m PlutoUI.Button("measure")
+
 # ╔═╡ ae846045-a729-4482-9a16-9a9f16d5c378
-r = HTTP.get("http://192.168.50.5:7788")
-
-# ╔═╡ 5dfce636-5b9a-4fd2-9720-53fa4a3296d8
-b = String(r.body)
-
-# ╔═╡ 992764f0-43b7-4dd3-b05a-c87468515b2c
-d = reshape(collect(JSON3.read(b).Data), 2, :)
+begin
+	m
+	r = HTTP.get("http://192.168.50.5:7788")
+	b = String(r.body)
+	d = reshape(collect(JSON3.read(b).Data), 2, :)
+end
 
 # ╔═╡ c11cb789-3293-4c16-bae9-e68964b35be3
 begin
@@ -26,17 +39,36 @@ begin
 	plot!(d[2, :])
 end
 
+# ╔═╡ 083f242e-f973-43a7-b22d-6b18e836b446
+fn = "b"
+
+# ╔═╡ 74b89765-5feb-408d-b6c7-57ae5bcd0b90
+function save()
+	wd = open("$fn.bin", "w+")
+	write(wd, d)
+	close(wd)
+	
+	rd = open("$fn.bin")   # default is read-only
+	Mmap.mmap(rd, Matrix{Float64}, (2, 4096))
+end
+
+# ╔═╡ 1c0bd481-5d3a-49f1-9e69-6037a87165bc
+# save()
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 HTTP = "~0.9.14"
 JSON3 = "~1.9.1"
 Plots = "~1.21.3"
+PlutoUI = "~0.7.10"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -248,6 +280,11 @@ deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll",
 git-tree-sha1 = "8a954fed8ac097d5be04921d595f741115c1b2ad"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+0"
+
+[[HypertextLiteral]]
+git-tree-sha1 = "72053798e1be56026b81d4e2682dbe58922e5ec9"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.0"
 
 [[IniFile]]
 deps = ["Test"]
@@ -498,6 +535,12 @@ git-tree-sha1 = "2dbafeadadcf7dadff20cd60046bba416b4912be"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.21.3"
 
+[[PlutoUI]]
+deps = ["Base64", "Dates", "HypertextLiteral", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "Suppressor"]
+git-tree-sha1 = "26b4d16873562469a0a1e6ae41d90dec9e51286d"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.10"
+
 [[Preferences]]
 deps = ["TOML"]
 git-tree-sha1 = "00cfd92944ca9c760982747e9a1d0d5d86ab1e5a"
@@ -611,6 +654,11 @@ deps = ["Dates", "UUIDs"]
 git-tree-sha1 = "8445bf99a36d703a09c601f9a57e2f83000ef2ae"
 uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
 version = "1.7.3"
+
+[[Suppressor]]
+git-tree-sha1 = "a819d77f31f83e5792a76081eee1ea6342ab8787"
+uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
+version = "0.2.0"
 
 [[TOML]]
 deps = ["Dates"]
@@ -861,9 +909,11 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╠═c20a65e2-1549-11ec-0f36-d1f894ed944a
-# ╠═ae846045-a729-4482-9a16-9a9f16d5c378
-# ╠═5dfce636-5b9a-4fd2-9720-53fa4a3296d8
-# ╠═992764f0-43b7-4dd3-b05a-c87468515b2c
-# ╠═c11cb789-3293-4c16-bae9-e68964b35be3
+# ╟─4bdfeeb6-889d-461c-a6af-405d3f33846e
+# ╟─ae846045-a729-4482-9a16-9a9f16d5c378
+# ╟─c11cb789-3293-4c16-bae9-e68964b35be3
+# ╠═083f242e-f973-43a7-b22d-6b18e836b446
+# ╟─74b89765-5feb-408d-b6c7-57ae5bcd0b90
+# ╠═1c0bd481-5d3a-49f1-9e69-6037a87165bc
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
