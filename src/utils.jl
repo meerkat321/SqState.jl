@@ -15,19 +15,17 @@ function rand_arg(r_range, θ_range, n̄_range)
     r = rand2range(r_range)
     θ = rand2range(θ_range)
     n̄ = rand2range(n̄_range)
+    n̄0 = rand2range(n̄_range)
     c1 = rand()
-    c2 = (1 - c1) * rand()
-    c3 = 1 - c1 - c2
+    c2 = 1 - c1
 
-    return r, θ, n̄, c1, c2, c3
+    return r, θ, n̄, n̄0, c1, c2
 end
 
-function construct_state(r, θ, n̄, c1, c2, c3, dim)
-    sq = ξ(r, θ)
+function construct_state(r, θ, n̄, n̄0, c1, c2, dim)
     state =
-        c1 * SqueezedState(sq, rep=StateMatrix, dim=dim) +
-        c2 * SqueezedThermalState(sq, n̄, dim=dim) +
-        c3 * ThermalState(n̄, dim=dim)
+        c1 * SqueezedThermalState(ξ(r, θ), n̄, dim=dim) +
+        c2 * ThermalState(n̄0, dim=dim)
 
     return state
 end
