@@ -7,7 +7,7 @@ using MAT
 @time for i in 1:101
     @show i
     @time begin
-        file_name="sq_sqth_th_$(replace(string(now()), ':'=>'_'))"
+        file_name="sqth_th_$(replace(string(now()), ':'=>'_'))"
         points, 𝛒s, args, σs = gen_data(n_data=10000)
 
         data_path = mkpath(SqState.training_data_path())
