@@ -1,4 +1,4 @@
-using Zygote, LinearAlgebra
+using Zygote, LinearAlgebra, ChainRulesCore
 
 export
     model,
@@ -27,19 +27,25 @@ function model()
     )
 end
 
-struct gram2ρ
-    dim::Int64
-end
+struct gram2ρ end
 
 Flux.@functor gram2ρ
 
+to_complex(𝐱::AbstractArray) = 𝐱[:, :, :, 1] + im.*𝐱[:, :, :, 2]
+
+function ChainRulesCore.rrule(::typeof(to_complex), 𝐱::AbstractArray)
+    function to_complex_pullback(𝐲̄)
+        return NoTangent(), cat(real.(𝐲̄), imag.(𝐲̄), dims=4)
+    end
+
+    return to_complex(𝐱), to_complex_pullback
+end
+
 function (m::gram2ρ)(x)
-    x = Zygote.hook(real, x)
+    x = to_complex(Zygote.hook(real, x))
+    𝛒 = reshape(Flux.batched_mul(Flux.batched_adjoint(x), x), size(x, 2)^2, 1, :)
 
-    x = x[:, :, :, 1] + im.*x[:, :, :, 2]
-    𝛒 = reshape(Flux.batched_mul(x, Flux.batched_transpose(x)), m.dim*m.dim, 1, :)
-
-    return cat(real.(𝛒), imag.(𝛒), dims=2)
+    return hcat(real.(𝛒), imag.(𝛒))
 end
 
 function model_ae()
@@ -53,13 +59,13 @@ function model_ae()
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 64=>6, σ,),
+        Conv((1, ), 64=>6, σ),
 
         flatten,
         Dense(6*4096, 5*4096, σ),
         Dense(5*4096, 2*100*100),
         x -> reshape(x, 100, 100, :, 2), # gram matrix
-        gram2ρ(100), # 𝛒
+        gram2ρ(), # 𝛒
 
         # enbading (dim*dim, 2, batch)
 
