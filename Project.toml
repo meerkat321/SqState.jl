@@ -9,8 +9,10 @@ DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 Fetch = "bb354801-46f6-40b6-9c3d-d42d7a74c775"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NeuralOperators = "ea5c82af-86e5-48da-8ee1-382d6ad7af4b"
 QuantumStateBase = "73ce9c4f-35d1-4161-b9e6-26915895bfed"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 CUDA = "3.4"
