@@ -62,7 +62,7 @@ function model_ae()
     modes = (24, )
     ch = 64=>64
     σ = gelu
-    dim = 35
+    dim = 70
 
     return Chain(
         Conv((1, ), 1=>64),
@@ -70,15 +70,11 @@ function model_ae()
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 64=>32, σ),
-        Conv((1, ), 32=>16, σ),
-        Conv((1, ), 16=>8, σ),
-        Conv((1, ), 8=>4, σ),
-        Conv((1, ), 8=>2, σ),
+        Conv((1, ), 64=>4, σ),
 
         flatten,
-        Dense(2*4096, 4096, σ),
-        Dense(4096, dim*dim), # cholesky
+        Dense(4*4096, 2*4096, σ),
+        Dense(2*4096, dim*dim), # cholesky
         Cholesky2ρ(),
 
         # enbading (dim*dim, 2, batch)
@@ -88,13 +84,10 @@ function model_ae()
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 64=>32, σ),
-        Conv((1, ), 32=>16, σ),
-        Conv((1, ), 16=>8, σ),
-        Conv((1, ), 8=>4, σ),
+        Conv((1, ), 64=>1, σ),
 
         flatten,
-        Dense(4*dim*dim, 4096, σ),
+        Dense(dim*dim, 4096, σ),
         Dense(4096, 4096, relu), # std
     )
 end
