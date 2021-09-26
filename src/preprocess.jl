@@ -22,6 +22,7 @@ function preprocess_q2σs(file_name::String; batch_size=50)
 
     # σs, 10000 data in data fragment
     ys = f["σs"]
+    # ys = reshape(xs, 4096, :)
 
     close(f)
 

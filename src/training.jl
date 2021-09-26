@@ -60,7 +60,7 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     end
 end
 
-function train_ae(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
+function train_ae(model_name::String; epochs=10, η₀=1e-4, batch_size=25)
     if has_cuda()
         @info "CUDA is on"
         device = gpu
@@ -70,8 +70,9 @@ function train_ae(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     end
 
     m = model_ae() |> device
-    loss(𝐱, 𝐲) = sum(abs2, 𝐲 .- m(𝐱)) / size(𝐱)[end]
-    opt = Flux.Optimiser(WeightDecay(1e-4), Flux.Momentum(η₀, 0.9))
+    # loss(𝐱, 𝐲) = sum(abs2, 𝐲 .- m(𝐱)) / size(𝐱)[end]
+    loss(x, y) = Flux.mse(m(x), y)
+    opt = Flux.Optimiser(WeightDecay(1e-4), Flux.ADAM(η₀))
 
     # prepare data
     data_file_names = filter(x->x!=".gitkeep", readdir(SqState.training_data_path()))
