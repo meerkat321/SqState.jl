@@ -60,7 +60,7 @@ function train(model_name::String; epochs=10, η₀=1e-2, batch_size=25)
     end
 end
 
-function train_ae(model_name::String; epochs=10, η₀=1e-4, batch_size=25)
+function train_ae(model_name::String; epochs=4, η₀=1e-4, batch_size=25)
     if has_cuda()
         @info "CUDA is on"
         device = gpu
@@ -82,6 +82,7 @@ function train_ae(model_name::String; epochs=10, η₀=1e-4, batch_size=25)
         for e in 1:epochs, (i, file_name) in enumerate(data_file_names[2:end])
             put!(ch, preprocess_q2σs(file_name, batch_size=batch_size))
             @info "Load epoch $e, file $i into buffer"
+            flush(stdout)
         end
     end
 
@@ -105,7 +106,7 @@ function train_ae(model_name::String; epochs=10, η₀=1e-4, batch_size=25)
             (losses[end] == minimum(losses)) && update_model!(model_path(), model_name, m)
 
             # descent η
-            (t > 50) && (opt.os[2].eta = η₀ / 2^ceil((t-50)/30))
+            (t > 50) && (opt.os[2].eta = η₀ / 2^ceil((t-50)/50))
 
             # update indicator
             t += 1

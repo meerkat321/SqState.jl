@@ -58,6 +58,8 @@ function (m::Cholesky2ρ)(x)
     return hcat(real.(𝛒), imag.(𝛒))
 end
 
+l2_norm(x) = x ./ sqrt(max(sum(x.^2), 1f-12))
+
 function model_ae()
     modes = (24, )
     ch = 64=>64
@@ -70,11 +72,12 @@ function model_ae()
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 64=>4, σ),
+        Conv((1, ), 64=>4),
 
         flatten,
         Dense(4*4096, 2*4096, σ),
         Dense(2*4096, dim*dim), # cholesky
+        # l2_norm, # l-2 normalize
         Cholesky2ρ(),
 
         # enbading (dim*dim, 2, batch)
@@ -84,10 +87,10 @@ function model_ae()
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 64=>1, σ),
+        Conv((1, ), 64=>4),
 
         flatten,
-        Dense(dim*dim, 4096, σ),
-        Dense(4096, 4096, relu), # std
+        Dense(4*dim*dim, 2*4096, σ),
+        Dense(2*4096, 4096), # std
     )
 end
