@@ -23,7 +23,7 @@ args = SqState.rand_arg((0, 1), (0, 2π), (0, 1))
 
 # ╔═╡ f0cfd6f3-1e55-46cf-bd58-937e52cb7daa
 begin
-	dim = 35
+	dim = 100
 	state = SqState.construct_state(args..., 1000)
 	d = rand(state, 4096, IsGaussian)
 	ρ = m(reshape(d[1, :], :, 1, 1))

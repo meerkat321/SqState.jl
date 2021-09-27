@@ -97,23 +97,23 @@ function model_ae()
 end
 
 function model_q2ρ()
-    modes = (24, )
-    ch = 64=>64
+    modes = (12, )
+    ch = 32=>32
     σ = gelu
-    dim = 35
+    dim = 100
 
     return Chain(
-        Conv((1, ), 1=>64),
+        Conv((1, ), 1=>32),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 64=>4),
+        Conv((1, ), 32=>128, σ),
+        Conv((1, ), 128=>3),
 
         flatten,
-        Dense(4*4096, 4096, σ),
-        Dense(4096, dim*dim), # cholesky
-        l2_norm, # l-2 normalize
+        Dense(3*4096, dim*dim), # cholesky
+        # l2_norm, # l-2 normalize
         Cholesky2ρ(),
     )
 end

@@ -29,7 +29,7 @@ function preprocess_q2σs(file_name::String; batch_size=50)
     return DataLoader((xs, ys), batchsize=batch_size, shuffle=true)
 end
 
-function preprocess_q2ρ(file_name::String; batch_size=50, dim=35)
+function preprocess_q2ρ(file_name::String; batch_size=50, dim=100)
     f = jldopen(joinpath(SqState.training_data_path(), file_name), "r")
     points = f["points"][2, :, :]
 
