@@ -1,6 +1,7 @@
 export
     train,
-    train_ae
+    train_ae,
+    train_q2ρ
 
 function update_model!(model_path::String, model_name::String, model)
     model = cpu(model)
@@ -81,6 +82,60 @@ function train_ae(model_name::String; epochs=4, η₀=1e-4, batch_size=25)
     data_loaders = Channel(5, spawn=true) do ch
         for e in 1:epochs, (i, file_name) in enumerate(data_file_names[2:end])
             put!(ch, preprocess_q2σs(file_name, batch_size=batch_size))
+            @info "Load epoch $e, file $i into buffer"
+            flush(stdout)
+        end
+    end
+
+    t = 1
+    losses = Float32[]
+    data_validation = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_test] |> device
+    for loader_train in data_loaders
+        @time begin
+            data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
+
+            # training
+            Flux.train!(loss, params(m), data, opt)
+
+            # collect loss
+            validation_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data_validation)/length(data_validation)
+            in_data_loss = sum(loss(𝐱, 𝐲) for (𝐱, 𝐲) in data)/length(data)
+            @info "$(t)0k data\n η: $(opt.os[2].eta)\n in  loss: $in_data_loss\n out loss: $validation_loss"
+
+            # update saved model
+            push!(losses, validation_loss)
+            (losses[end] == minimum(losses)) && update_model!(model_path(), model_name, m)
+
+            # descent η
+            (t > 50) && (opt.os[2].eta = η₀ / 2^ceil((t-50)/50))
+
+            # update indicator
+            t += 1
+        end
+    end
+end
+
+function train_q2ρ(model_name::String; epochs=4, η₀=1e-4, batch_size=25)
+    if has_cuda()
+        @info "CUDA is on"
+        device = gpu
+        CUDA.allowscalar(false)
+    else
+        device = cpu
+    end
+
+    m = model_q2ρ() |> device
+    # loss(x, y) = Flux.mse(m(x), y)
+    loss(𝐱, 𝐲) = sum(abs2, 𝐲 .- m(𝐱)) / size(𝐱)[end]
+    opt = Flux.Optimiser(WeightDecay(1e-4), Flux.ADAM(η₀))
+
+    # prepare data
+    data_file_names = filter(x->x!=".gitkeep", readdir(SqState.training_data_path()))
+    loader_test = preprocess_q2ρ(data_file_names[1], batch_size=batch_size)
+    @info "numbers of data fragments: $(length(data_file_names)-1)"
+    data_loaders = Channel(5, spawn=true) do ch
+        for e in 1:epochs, (i, file_name) in enumerate(data_file_names[2:end])
+            put!(ch, preprocess_q2ρ(file_name, batch_size=batch_size))
             @info "Load epoch $e, file $i into buffer"
             flush(stdout)
         end

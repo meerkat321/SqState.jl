@@ -2,7 +2,8 @@ using Zygote, LinearAlgebra, ChainRulesCore
 
 export
     model,
-    model_ae
+    model_ae,
+    model_q2ρ
 
 function model()
     modes = (24, )
@@ -92,5 +93,27 @@ function model_ae()
         flatten,
         Dense(4*dim*dim, 2*4096, σ),
         Dense(2*4096, 4096), # std
+    )
+end
+
+function model_q2ρ()
+    modes = (24, )
+    ch = 64=>64
+    σ = gelu
+    dim = 35
+
+    return Chain(
+        Conv((1, ), 1=>64),
+        FourierOperator(ch, modes, σ, permuted=true),
+        FourierOperator(ch, modes, σ, permuted=true),
+        FourierOperator(ch, modes, σ, permuted=true),
+        FourierOperator(ch, modes, permuted=true),
+        Conv((1, ), 64=>4),
+
+        flatten,
+        Dense(4*4096, 4096, σ),
+        Dense(4096, dim*dim), # cholesky
+        l2_norm, # l-2 normalize
+        Cholesky2ρ(),
     )
 end
