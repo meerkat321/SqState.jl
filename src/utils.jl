@@ -22,12 +22,24 @@ function rand_arg(r_range, θ_range, n̄_range)
     return r, θ, n̄, n̄0, c1, c2
 end
 
-function construct_state(r, θ, n̄, n̄0, c1, c2, dim)
+function rand_arg_sq(r_range, θ_range, n̄_range)
+    r = rand2range(r_range)
+    θ = rand2range(θ_range)
+    n̄ = rand2range(n̄_range)
+
+    return r, θ, n̄
+end
+
+function construct_state_sqth_th(r, θ, n̄, n̄0, c1, c2, dim)
     state =
         c1 * SqueezedThermalState(ξ(r, θ), n̄, dim=dim) +
         c2 * ThermalState(n̄0, dim=dim)
 
     return state
+end
+
+function construct_state_sqth(r, θ, n̄, dim)
+    return SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
 end
 
 #############
