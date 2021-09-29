@@ -16,13 +16,16 @@ begin
 end
 
 # ╔═╡ f51d1bc5-5ffc-4f6d-a5b1-cee378907dd1
-readdir(SqState.training_data_path())
+readdir(joinpath(SqState.training_data_path(), "sqth"))
 
 # ╔═╡ ec885764-37f6-4aa0-a399-6e0b20312ede
-jldopen(joinpath(SqState.training_data_path(), "sqth_th_2021-09-24T17_57_48.332.jld2"))["𝛒s"]
+jldopen(joinpath(SqState.training_data_path(), "sqth", "sqth_2021-09-28T19_18_55.338.jld2"))["𝛒s"]
+
+# ╔═╡ d65ed2f8-9d3a-4916-9874-a6c33676bb60
+sum(isnothing.(jldopen(joinpath(SqState.training_data_path(), "sqth", "sqth_2021-09-28T19_19_33.958.jld2"))["𝛒s"]))
 
 # ╔═╡ f4c98102-6b12-4f04-b46a-d02ef0c72882
-σs = jldopen(joinpath(SqState.training_data_path(), "sqth_th_2021-09-24T17_57_48.332.jld2"))["σs"]
+σs = jldopen(joinpath(SqState.training_data_path(), "sqth", "sqth_2021-09-28T19_18_55.338.jld2"))["σs"]
 
 # ╔═╡ c97e24d0-3c31-4624-8c88-6f182c0c161b
 scatter(σs[:, 7])
@@ -32,5 +35,6 @@ scatter(σs[:, 7])
 # ╠═15c5ae4b-1910-4728-ae27-c3f8a601746e
 # ╠═f51d1bc5-5ffc-4f6d-a5b1-cee378907dd1
 # ╠═ec885764-37f6-4aa0-a399-6e0b20312ede
+# ╠═d65ed2f8-9d3a-4916-9874-a6c33676bb60
 # ╠═f4c98102-6b12-4f04-b46a-d02ef0c72882
 # ╠═c97e24d0-3c31-4624-8c88-6f182c0c161b

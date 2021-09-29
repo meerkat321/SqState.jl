@@ -11,7 +11,7 @@ model_path() = mkpath(joinpath(datadep"SqState", "model"))
 
 rand2range(x_range) = x_range[1] + (x_range[2]-x_range[1])*rand()
 
-function rand_arg(r_range, θ_range, n̄_range)
+function rand_arg_sqth_th(r_range, θ_range, n̄_range)
     r = rand2range(r_range)
     θ = rand2range(θ_range)
     n̄ = rand2range(n̄_range)
@@ -22,7 +22,7 @@ function rand_arg(r_range, θ_range, n̄_range)
     return r, θ, n̄, n̄0, c1, c2
 end
 
-function rand_arg_sq(r_range, θ_range, n̄_range)
+function rand_arg_sqth(r_range, θ_range, n̄_range)
     r = rand2range(r_range)
     θ = rand2range(θ_range)
     n̄ = rand2range(n̄_range)

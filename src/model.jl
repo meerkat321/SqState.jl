@@ -52,21 +52,21 @@ function reshape_cholesky(x)
     return 𝐱
 end
 
-# function (m::Cholesky2ρ)(x)
-#     𝐱 = reshape_cholesky(Zygote.hook(real, x))
-#     𝛒 = Flux.batched_mul(𝐱, Flux.batched_adjoint(𝐱))
-#     𝛒 = cat([reshape(𝛒[:, :, i]/tr(𝛒[:, :, i]), size(𝛒, 1), size(𝛒, 2), 1) for i in axes(𝛒, 3)]..., dims=3)
-#     𝛒 = reshape(𝛒, size(𝛒, 1)*size(𝛒, 2), 1, :)
-
-#     return hcat(real.(𝛒), imag.(𝛒))
-# end
-
 function (m::Cholesky2ρ)(x)
     𝐱 = reshape_cholesky(Zygote.hook(real, x))
-    𝛒 = reshape(Flux.batched_mul(𝐱, Flux.batched_adjoint(𝐱)), size(𝐱, 1)^2, 1, :)
+    𝛒 = Flux.batched_mul(𝐱, Flux.batched_adjoint(𝐱))
+    𝛒 = cat([reshape(𝛒[:, :, i]/tr(𝛒[:, :, i]), size(𝛒, 1), size(𝛒, 2), 1) for i in axes(𝛒, 3)]..., dims=3)
+    𝛒 = reshape(𝛒, size(𝛒, 1)*size(𝛒, 2), 1, :)
 
     return hcat(real.(𝛒), imag.(𝛒))
 end
+
+# function (m::Cholesky2ρ)(x)
+#     𝐱 = reshape_cholesky(Zygote.hook(real, x))
+#     𝛒 = reshape(Flux.batched_mul(𝐱, Flux.batched_adjoint(𝐱)), size(𝐱, 1)^2, 1, :)
+
+#     return hcat(real.(𝛒), imag.(𝛒))
+# end
 
 l2_norm(x) = x ./ sqrt(max(sum(x.^2), 1f-12))
 
@@ -105,22 +105,62 @@ l2_norm(x) = x ./ sqrt(max(sum(x.^2), 1f-12))
 #     )
 # end
 
+function res_block(
+    ch::NTuple{4, <:Integer},
+    conv_kernel_size::NTuple{3, <:Integer},
+    conv_pad::NTuple{3, <:Any},
+    shortcut_kernel_size::Integer,
+    shortcut_pad::Any,
+    pool_size::Integer,
+    σ=identity
+)
+    conv_layers = Chain(
+        Conv((conv_kernel_size[1], ), ch[1]=>ch[2], pad=conv_pad[1]),
+        BatchNorm(ch[2], σ),
+        Conv((conv_kernel_size[2], ), ch[2]=>ch[3], pad=conv_pad[2]),
+        BatchNorm(ch[3], σ),
+        Conv((conv_kernel_size[3], ), ch[3]=>ch[4], pad=conv_pad[3]),
+        BatchNorm(ch[4]),
+    )
+    shortcut = Chain(
+        Conv((shortcut_kernel_size, ), ch[1]=>ch[end], pad=shortcut_pad),
+        BatchNorm(ch[end])
+    )
+    pool = (pool_size > 0) ? MaxPool((pool_size, )) : identity
+
+    return Chain(
+        Parallel(+, conv_layers, shortcut),
+        x -> σ.(x),
+        pool,
+        BatchNorm(ch[end], σ)
+    )
+end
+
 function model_q2ρ()
     modes = (12, )
-    ch = 32=>32
+    ch = 64=>64
     σ = gelu
     dim = 100
 
     return Chain(
-        Conv((1, ), 1=>32),
+        Conv((1, ), 1=>64),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 32=>128, σ),
-        Conv((1, ), 128=>3),
+        Conv((1, ), 64=>128, σ),
+        Conv((1, ), 128=>4),
+
+        # BatchNorm(8, σ),
+        # res_block((8, 4, 4, 16), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+        # res_block((16, 8, 8, 32), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+        # res_block((32, 8, 8, 16), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+        # res_block((16, 4, 4, 8), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
 
         flatten,
+        Dense(4*4096, 3*4096, σ),
+        Dense(3*4096, 3*4096, σ),
+        Dense(3*4096, 3*4096, σ),
         Dense(3*4096, dim*dim), # cholesky
         Cholesky2ρ(),
     )

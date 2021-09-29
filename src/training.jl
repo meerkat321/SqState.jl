@@ -115,7 +115,7 @@ end
 #     end
 # end
 
-function train_q2ρ(prefix::String, model_name::String; epochs=5, η₀=1e-4, batch_size=25)
+function train_q2ρ(prefix::String, model_name::String; epochs=10, η₀=1e-4, batch_size=25)
     if has_cuda()
         @info "CUDA is on"
         device = gpu
@@ -125,7 +125,8 @@ function train_q2ρ(prefix::String, model_name::String; epochs=5, η₀=1e-4, ba
     end
 
     m = model_q2ρ() |> device
-    loss(𝐱, 𝐲) = sum(abs2, 𝐲 .- m(𝐱)) / size(𝐱)[end]
+    # loss(𝐱, 𝐲) = sum(abs2, 𝐲 .- m(𝐱)) / size(𝐱)[end]
+    loss(𝐱, 𝐲) = Flux.mse(m(𝐱), 𝐲)
     opt = Flux.Optimiser(WeightDecay(1e-4), Flux.ADAM(η₀))
 
     # prepare data
@@ -148,7 +149,7 @@ function train_q2ρ(prefix::String, model_name::String; epochs=5, η₀=1e-4, ba
             data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader_train] |> device
 
             # descent η
-            (t > 100) && (opt.os[2].eta = η₀ / 2^ceil((t-100)/50))
+            (t > 50) && (opt.os[2].eta = η₀ / 2^ceil((t-50)/50))
 
             # training
             Flux.train!(loss, params(m), data, opt)

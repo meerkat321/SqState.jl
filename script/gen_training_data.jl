@@ -14,14 +14,14 @@ function gen_data(prefix::String, gen_func)
             data_path = mkpath(joinpath(SqState.training_data_path(), prefix))
             jldsave(joinpath(data_path, "$file_name.jld2"); points, 𝛒s, args, σs)
 
-            data_path = mkpath("training_data_mat/$prefix")
-            file = matopen(joinpath(data_path, "$file_name.mat"), "w")
-            write(file, "points", points); write(file, "dms", 𝛒s); write(file, "args", args); write(file, "stds", σs)
-            close(file)
+            # data_path = mkpath("training_data_mat/$prefix")
+            # file = matopen(joinpath(data_path, "$file_name.mat"), "w")
+            # write(file, "points", points); write(file, "dms", 𝛒s); write(file, "args", args); write(file, "stds", σs)
+            # close(file)
         end
     end
 end
 
-gen_data("sqth_th", gen_data_sqth_th)
+# gen_data("sqth_th", gen_data_sqth_th)
 
 gen_data("sqth", gen_data_sqth)

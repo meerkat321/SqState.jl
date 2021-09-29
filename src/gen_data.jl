@@ -13,7 +13,7 @@ function gen_data_sqth_th(;
     σs = Matrix{Float64}(undef, n_points, n_data)
 
     for i in 1:n_data
-        args[:, i] .= r, θ, n̄, c1, c2, c3 = rand_arg(r_range, θ_range, n̄_range)
+        args[:, i] .= r, θ, n̄, c1, c2, c3 = rand_arg_sqth_th(r_range, θ_range, n̄_range)
 
         # points
         point_dim = (r > 1) ? point_dim : label_dim
@@ -38,7 +38,7 @@ function gen_data_sqth(;
     σs = Matrix{Float64}(undef, n_points, n_data)
 
     for i in 1:n_data
-        args[:, i] .= r, θ, n̄ = rand_arg_sq(r_range, θ_range, n̄_range)
+        args[:, i] .= r, θ, n̄ = rand_arg_sqth(r_range, θ_range, n̄_range)
 
         # points
         point_dim = (r > 1) ? point_dim : label_dim
