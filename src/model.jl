@@ -3,7 +3,8 @@ using Zygote, LinearAlgebra, ChainRulesCore
 export
     model,
     model_ae,
-    model_q2ρ
+    model_q2ρ,
+    model_q2args
 
 # function model()
 #     modes = (24, )
@@ -136,32 +137,54 @@ function res_block(
     )
 end
 
-function model_q2ρ()
+# function model_q2ρ()
+#     modes = (12, )
+#     ch = 64=>64
+#     σ = gelu
+#     dim = 100
+
+#     return Chain(
+#         Conv((1, ), 1=>64),
+#         FourierOperator(ch, modes, σ, permuted=true),
+#         FourierOperator(ch, modes, σ, permuted=true),
+#         FourierOperator(ch, modes, σ, permuted=true),
+#         FourierOperator(ch, modes, permuted=true),
+#         Conv((1, ), 64=>128, σ),
+#         Conv((1, ), 128=>4),
+
+#         # BatchNorm(8, σ),
+#         # res_block((8, 4, 4, 16), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+#         # res_block((16, 8, 8, 32), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+#         # res_block((32, 8, 8, 16), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+#         # res_block((16, 4, 4, 8), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+
+#         flatten,
+#         Dense(4*4096, 3*4096, σ),
+#         Dense(3*4096, 3*4096, σ),
+#         Dense(3*4096, 3*4096, σ),
+#         Dense(3*4096, dim*dim), # cholesky
+#         Cholesky2ρ(),
+#     )
+# end
+
+function model_q2args()
     modes = (12, )
-    ch = 64=>64
+    ch = 32=>32
     σ = gelu
-    dim = 100
 
     return Chain(
-        Conv((1, ), 1=>64),
+        Conv((1, ), 1=>32),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, σ, permuted=true),
         FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 64=>128, σ),
-        Conv((1, ), 128=>4),
-
-        # BatchNorm(8, σ),
-        # res_block((8, 4, 4, 16), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
-        # res_block((16, 8, 8, 32), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
-        # res_block((32, 8, 8, 16), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
-        # res_block((16, 4, 4, 8), (1, 15, 7), (0, 7, 3), 1, 0, 2, σ),
+        Conv((1, ), 32=>128, σ),
+        Conv((1, ), 128=>1),
 
         flatten,
-        Dense(4*4096, 3*4096, σ),
-        Dense(3*4096, 3*4096, σ),
-        Dense(3*4096, 3*4096, σ),
-        Dense(3*4096, dim*dim), # cholesky
-        Cholesky2ρ(),
+        Dense(4096, 1024, σ),
+        Dense(1024, 256, σ),
+        Dense(256, 64, σ),
+        Dense(64, 3, relu),
     )
 end
