@@ -42,6 +42,76 @@ function construct_state_sqth(r, θ, n̄, dim)
     return SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
 end
 
+#########
+# model #
+#########
+
+to_complex(𝐱1::AbstractArray, 𝐱2::AbstractArray) = 𝐱1 + im.*𝐱2
+
+function ChainRulesCore.rrule(::typeof(to_complex), 𝐱1::AbstractArray, 𝐱2::AbstractArray)
+    function to_complex_pullback(𝐲̄)
+        return NoTangent(), real.(𝐲̄), imag.(𝐲̄)
+    end
+
+    return to_complex(𝐱1, 𝐱2), to_complex_pullback
+end
+
+struct Cholesky2ρ end
+
+Flux.@functor Cholesky2ρ
+
+function reshape_cholesky(x)
+    dim = Int(sqrt(size(x, 1)))
+    𝐱_row = reshape(x, dim, dim, :)
+    𝐱_real = cat([reshape(tril(𝐱_row[:, :, i]), dim, dim, 1) for i in axes(𝐱_row, 3)]..., dims=3)
+    𝐱_imag = cat([reshape(tril(𝐱_row[:, :, i]', -1), dim, dim, 1) for i in axes(𝐱_row, 3)]..., dims=3)
+    𝐱 = to_complex(𝐱_real, 𝐱_imag)
+
+    return 𝐱
+end
+
+function (m::Cholesky2ρ)(x)
+    𝐱 = reshape_cholesky(Zygote.hook(real, x))
+    𝛒 = Flux.batched_mul(𝐱, Flux.batched_adjoint(𝐱))
+    𝛒 = cat([reshape(𝛒[:, :, i]/tr(𝛒[:, :, i]), size(𝛒, 1), size(𝛒, 2), 1) for i in axes(𝛒, 3)]..., dims=3)
+    𝛒 = reshape(𝛒, size(𝛒, 1)*size(𝛒, 2), 1, :)
+
+    return hcat(real.(𝛒), imag.(𝛒))
+end
+
+l2_norm(x) = x ./ sqrt(max(sum(x.^2), 1f-12))
+
+function res_block(
+    ch::NTuple{4, <:Integer},
+    conv_kernel_size::NTuple{3, <:Integer},
+    conv_pad::NTuple{3, <:Any},
+    shortcut_kernel_size::Integer,
+    shortcut_pad::Any,
+    pool_size::Integer,
+    σ=identity
+)
+    conv_layers = Chain(
+        Conv((conv_kernel_size[1], ), ch[1]=>ch[2], pad=conv_pad[1]),
+        BatchNorm(ch[2], σ),
+        Conv((conv_kernel_size[2], ), ch[2]=>ch[3], pad=conv_pad[2]),
+        BatchNorm(ch[3], σ),
+        Conv((conv_kernel_size[3], ), ch[3]=>ch[4], pad=conv_pad[3]),
+        BatchNorm(ch[4]),
+    )
+    shortcut = Chain(
+        Conv((shortcut_kernel_size, ), ch[1]=>ch[end], pad=shortcut_pad),
+        BatchNorm(ch[end])
+    )
+    pool = (pool_size > 0) ? MaxPool((pool_size, )) : identity
+
+    return Chain(
+        Parallel(+, conv_layers, shortcut),
+        x -> σ.(x),
+        pool,
+        BatchNorm(ch[end], σ)
+    )
+end
+
 #############
 # inference #
 #############
