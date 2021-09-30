@@ -17,16 +17,16 @@ begin
 end
 
 # ╔═╡ c55d7af1-0cd3-4b0a-bbd5-0048f15ea851
-m = SqState.get_model("model_q2ρ_sqth_100")
+m = SqState.get_model("model_q2ρ_sqth_th")
 
 # ╔═╡ 8f82e42f-8c2c-4bd0-ab20-95b0930670dc
-args = (0.9,  4.17646, 0.4);
-# args = SqState.rand_arg_sqth((0, 1), (0, 2π), (0, 1))
+# args = (0.9,  3.248, 0.4, 0.1, 0.86, 0.14);
+args = SqState.rand_arg_sqth_th((0, 1), (0, 2π), (0, 1))
 
 # ╔═╡ f0cfd6f3-1e55-46cf-bd58-937e52cb7daa
 begin
 	dim = 100
-	state = SqState.construct_state_sqth(args..., 100)
+	state = SqState.construct_state_sqth_th(args..., 1000)
 	d = Float32.(rand(state, 4096, IsGaussian))
 	ρ = m(reshape(d[2, :], :, 1, 1))
 	ρ = reshape(ρ[:, 1, 1] + im * ρ[:, 2, 1], dim, dim)
@@ -59,6 +59,9 @@ fidelity(ρ, state.𝛒[1:dim, 1:dim])
 # ╔═╡ 11196add-eeac-4cf0-83b7-db3ef0dab40e
 tr(ρ)
 
+# ╔═╡ 91facdae-f128-415c-8f71-8097fe76d2ee
+tr(state.𝛒[1:dim, 1:dim])
+
 # ╔═╡ 35a5ee23-a2df-47c6-a096-a5e1c60328b6
 # begin
 # 	f_dim = 100
@@ -87,10 +90,11 @@ tr(ρ)
 # ╠═8f82e42f-8c2c-4bd0-ab20-95b0930670dc
 # ╠═f0cfd6f3-1e55-46cf-bd58-937e52cb7daa
 # ╠═08ddc8c4-57c7-4b2f-baeb-c424c3227065
-# ╟─e9c31f3c-4f06-43b4-9982-4f69e997cde8
-# ╟─6c0a3a23-335c-4661-8a2f-3729b3f0a1de
+# ╠═e9c31f3c-4f06-43b4-9982-4f69e997cde8
+# ╠═6c0a3a23-335c-4661-8a2f-3729b3f0a1de
 # ╠═6a68f473-cb16-4635-a3b0-9aae0e18d86d
 # ╠═00f15b97-52e0-43aa-a2ee-136c7a8a6e95
 # ╠═11196add-eeac-4cf0-83b7-db3ef0dab40e
+# ╟─91facdae-f128-415c-8f71-8097fe76d2ee
 # ╟─35a5ee23-a2df-47c6-a096-a5e1c60328b6
 # ╟─0171f5c1-2b14-4694-b8b0-14e50591db4b

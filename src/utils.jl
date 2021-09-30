@@ -56,10 +56,6 @@ function ChainRulesCore.rrule(::typeof(to_complex), 𝐱1::AbstractArray, 𝐱2:
     return to_complex(𝐱1, 𝐱2), to_complex_pullback
 end
 
-struct Cholesky2ρ end
-
-Flux.@functor Cholesky2ρ
-
 function reshape_cholesky(x)
     dim = Int(sqrt(size(x, 1)))
     𝐱_row = reshape(x, dim, dim, :)
@@ -70,7 +66,7 @@ function reshape_cholesky(x)
     return 𝐱
 end
 
-function (m::Cholesky2ρ)(x)
+function cholesky2ρ(x)
     𝐱 = reshape_cholesky(Zygote.hook(real, x))
     𝛒 = Flux.batched_mul(𝐱, Flux.batched_adjoint(𝐱))
     𝛒 = cat([reshape(𝛒[:, :, i]/tr(𝛒[:, :, i]), size(𝛒, 1), size(𝛒, 2), 1) for i in axes(𝛒, 3)]..., dims=3)

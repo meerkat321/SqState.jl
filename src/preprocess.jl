@@ -14,7 +14,7 @@ function preprocess_q2σs(prefix::String, file_name::String; batch_size=50)
 end
 
 
-function preprocess_q2ρ(prefix::String, file_name::String; batch_size=50, dim=100)
+function preprocess_q2ρ(prefix::String, file_name::String; batch_size=50, dim=70)
     f = jldopen(joinpath(SqState.training_data_path(), prefix, file_name), "r")
     points = f["points"][2, :, :]
 
