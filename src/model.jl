@@ -1,5 +1,3 @@
-using Zygote, LinearAlgebra, ChainRulesCore
-
 export
     model_q2args_sqth_th,
     model_q2args_sqth

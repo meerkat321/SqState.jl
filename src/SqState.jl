@@ -1,13 +1,14 @@
 module SqState
     using QuantumStateBase
+    using LinearAlgebra
 
-    using Fetch
-    using DataDeps
+    using Fetch, DataDeps, JLD2
 
     using CUDA
     using Flux
     using Flux.Data: DataLoader
-    using JLD2
+    using Zygote, ChainRulesCore
+
 
     using NeuralOperators
 
