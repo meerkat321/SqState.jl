@@ -4,4 +4,6 @@ using SqState
 # train_ae("model_ae2")
 # train_q2ρ("model_q2ρ1_70")
 # train_q2ρ("sqth", "model_q2ρ_sqth_100")
-train_q2argv("sqth", "model_args_sqth")
+
+# train_q2argv("sqth", "model_args_sqth")
+train_q2argv_sqth_th("model_args_sqth_th")

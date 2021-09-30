@@ -22,6 +22,6 @@ function gen_data(prefix::String, gen_func)
     end
 end
 
-# gen_data("sqth_th", gen_data_sqth_th)
+# gen_data("sqth", gen_data_sqth)
 
-gen_data("sqth", gen_data_sqth)
+gen_data("sqth_th", gen_data_sqth_th)
