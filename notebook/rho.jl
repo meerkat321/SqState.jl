@@ -21,7 +21,7 @@ m = SqState.get_model("model_q2ρ_sqth_th")
 
 # ╔═╡ 8f82e42f-8c2c-4bd0-ab20-95b0930670dc
 # args = (0.9,  3.248, 0.4, 0.1, 0.86, 0.14);
-args = SqState.rand_arg_sqth_th((0, 1), (0, 2π), (0, 1))
+args = SqState.rand_arg_sqth_th((0, 1), (0, 2π), (0, 0.5))
 
 # ╔═╡ f0cfd6f3-1e55-46cf-bd58-937e52cb7daa
 begin
