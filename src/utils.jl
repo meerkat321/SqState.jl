@@ -108,6 +108,28 @@ function res_block(
     )
 end
 
+############
+# training #
+############
+
+function update_model!(model_path::String, model_name::String, model)
+    model = cpu(model)
+    jldsave(joinpath(model_path, "$model_name.jld2"); model)
+    @warn "'$model_name' updated!"
+end
+
+function get_device()
+    if has_cuda()
+        @info "CUDA is on"
+        device = gpu
+        CUDA.allowscalar(false)
+    else
+        device = cpu
+    end
+
+    return device
+end
+
 #############
 # inference #
 #############

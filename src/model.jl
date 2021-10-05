@@ -24,31 +24,9 @@ function model_q2ρ_sqth_th()
     )
 end
 
-function model_q2args_sqth_th()
-    modes = (12, )
-    ch = 32=>32
-    σ = leakyrelu
-
-    return Chain(
-        Conv((1, ), 1=>32),
-        FourierOperator(ch, modes, σ, permuted=true),
-        FourierOperator(ch, modes, σ, permuted=true),
-        FourierOperator(ch, modes, σ, permuted=true),
-        FourierOperator(ch, modes, permuted=true),
-        Conv((1, ), 32=>128, σ),
-        Conv((1, ), 128=>1),
-
-        flatten,
-        Dense(4096, 1024, gelu),
-        Dense(1024, 256, gelu),
-        Dense(256, 64, gelu),
-        Dense(64, 6, relu),
-    )
-end
-
 function model_q2args_sqth()
     modes = (12, )
-    ch = 64
+    ch = 32
     σ = leakyrelu
 
     return Chain(
@@ -61,6 +39,6 @@ function model_q2args_sqth()
         Dense(128, 1),
 
         flatten,
-        Dense(4096, 3),
+        Dense(4096, 3, σ),
     )
 end

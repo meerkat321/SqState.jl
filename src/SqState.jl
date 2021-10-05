@@ -27,6 +27,4 @@ module SqState
     include("gen_data.jl")
     include("preprocess.jl")
     include("model.jl")
-    include("training.jl")
-    include("postprocess.jl")
 end

@@ -1,5 +1,5 @@
-function preprocess_q2σs(prefix::String, file_name::String; batch_size=50)
-    f = jldopen(joinpath(SqState.training_data_path(), prefix, file_name), "r")
+function preprocess_q2σs(file::String; batch_size=50)
+    f = jldopen(file, "r")
     points = f["points"][2, :, :]
 
     # 4096 points 1 channel, 10000 data in a data fragment
@@ -14,8 +14,8 @@ function preprocess_q2σs(prefix::String, file_name::String; batch_size=50)
 end
 
 
-function preprocess_q2ρ(prefix::String, file_name::String; batch_size=50, dim=100)
-    f = jldopen(joinpath(SqState.training_data_path(), prefix, file_name), "r")
+function preprocess_q2ρ(file::String; batch_size=50, dim=100)
+    f = jldopen(file, "r")
     points = f["points"]
 
     # 2*4096 points, 10000 data in a data fragment
@@ -30,8 +30,8 @@ function preprocess_q2ρ(prefix::String, file_name::String; batch_size=50, dim=1
     return DataLoader((xs, ys), batchsize=batch_size, shuffle=true)
 end
 
-function preprocess_q2args(prefix::String, file_name::String; batch_size=50)
-    f = jldopen(joinpath(SqState.training_data_path(), prefix, file_name), "r")
+function preprocess_q2args(file::String; batch_size=50)
+    f = jldopen(file, "r")
     points = f["points"]
 
     # 4096 points 1 channel, 10000 data in a data fragment
