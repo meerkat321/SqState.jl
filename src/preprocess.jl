@@ -22,7 +22,7 @@ function preprocess_q2ρ(file::String; batch_size=50, dim=100)
     xs = Float32.(points)
 
     # 𝛒s, 100x100, 10000 data in data fragment
-    ys = reshape(hcat([reshape(f["𝛒s"][i][1:dim, 1:dim], :) for i in 1:size(xs)[end]]...), dim*dim, 1, :)
+    ys = reshape(f["𝛒s"][1:dim, 1:dim, :], dim*dim, 1, :)
     ys = hcat(real.(ys), imag(ys))
 
     close(f)

@@ -1,6 +1,5 @@
 export
     model_q2ρ_sqth_th,
-    model_q2args_sqth_th,
     model_q2args_sqth
 
 function model_q2ρ_sqth_th()
@@ -27,7 +26,7 @@ end
 function model_q2args_sqth()
     modes = (12, )
     ch = 32
-    σ = leakyrelu
+    σ = relu
 
     return Chain(
         Dense(2, ch),
@@ -39,6 +38,6 @@ function model_q2args_sqth()
         Dense(128, 1),
 
         flatten,
-        Dense(4096, 3, σ),
+        Dense(4096, 3),
     )
 end

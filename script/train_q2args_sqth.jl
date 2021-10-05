@@ -32,7 +32,7 @@ for loader4train in data_loaders
         data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader4train] |> device
 
         # descent η
-        (t[] > 100) && (opt.os[2].eta = η₀ / 2^ceil((t-100)/100))
+        (t[] > 100) && (opt.os[2].eta = η₀ / 2^ceil((t[]-100)/100))
 
         # training
         Flux.train!(loss, params(m), data, opt)
