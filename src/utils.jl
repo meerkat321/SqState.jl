@@ -141,5 +141,3 @@ function get_model(model_name::String)
 
     return model
 end
-
-infer(m, data::Vector) = m(reshape(Float32.(data), 4096, 1, 1))

@@ -5,7 +5,7 @@ dir = "sqth"
 device = SqState.get_device()
 model_name = "q2args_sqth"
 batch_size = 25
-epochs = 10
+epochs = 30
 η₀ = 1e-3
 
 m = SqState.model_q2args_sqth() |> device
@@ -32,7 +32,7 @@ for loader4train in data_loaders
         data = [(𝐱, 𝐲) for (𝐱, 𝐲) in loader4train] |> device
 
         # descent η
-        (t[] > 100) && (opt.os[2].eta = η₀ / 2^ceil((t[]-100)/100))
+        (t[] > 300) && (opt.os[2].eta = η₀ / 2^ceil((t[]-300)/300))
 
         # training
         Flux.train!(loss, params(m), data, opt)
