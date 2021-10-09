@@ -69,13 +69,10 @@ end
 function cholesky2ρ(x)
     𝐱 = reshape_cholesky(Zygote.hook(real, x))
     𝛒 = Flux.batched_mul(𝐱, Flux.batched_adjoint(𝐱))
-    𝛒 = cat([reshape(𝛒[:, :, i]/tr(𝛒[:, :, i]), size(𝛒, 1), size(𝛒, 2), 1) for i in axes(𝛒, 3)]..., dims=3)
-    𝛒 = reshape(𝛒, size(𝛒, 1)*size(𝛒, 2), 1, :)
+    𝛒 = cat([reshape(𝛒[:, :, i]/tr(𝛒[:, :, i]), 1, size(𝛒, 1), size(𝛒, 2), 1) for i in axes(𝛒, 3)]..., dims=4)
 
-    return hcat(real.(𝛒), imag.(𝛒))
+    return vcat(real.(𝛒), imag.(𝛒))
 end
-
-l2_norm(x) = x ./ sqrt(max(sum(x.^2), 1f-12))
 
 function res_block(
     ch::NTuple{4, <:Integer},

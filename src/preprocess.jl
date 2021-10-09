@@ -1,9 +1,9 @@
 function preprocess_q2σs(file::String; batch_size=50)
     f = jldopen(file, "r")
-    points = f["points"][2, :, :]
+    points = f["points"]
 
     # 4096 points 1 channel, 10000 data in a data fragment
-    xs = reshape(Float32.(points), (4096, 1, :))
+    xs = Float32.(points)
 
     # σs, 10000 data in data fragment
     ys = f["σs"]
@@ -22,8 +22,7 @@ function preprocess_q2ρ(file::String; batch_size=50, dim=100)
     xs = Float32.(points)
 
     # 𝛒s, 100x100, 10000 data in data fragment
-    ys = reshape(f["𝛒s"][1:dim, 1:dim, :], dim*dim, 1, :)
-    ys = hcat(real.(ys), imag(ys))
+    ys = Float32.(reinterpret(reshape, Float64, f["𝛒s"][1:dim, 1:dim, :]))
 
     close(f)
 
