@@ -1,24 +1,20 @@
-export model
+export model_q2args_sqth
 
-function model()
-    modes = (24, )
-    ch = 64=>64
-    σ = gelu
+function model_q2args_sqth()
+    modes = (12, )
+    ch = 64
+    σ = leakyrelu
 
     return Chain(
-        Conv((1, ), 1=>64),
-        FourierOperator(ch, modes, σ, permuted=true),
-        FourierOperator(ch, modes, σ, permuted=true),
-        FourierOperator(ch, modes, σ, permuted=true),
-        FourierOperator(ch, modes, permuted=true),
-
-        Conv((2, ), 64=>32, σ, stride=2),
-        Conv((2, ), 32=>16, σ, stride=2),
-        Conv((4, ), 16=>8, σ, stride=4),
-        Conv((4, ), 8=>4, σ, stride=4),
+        Dense(2, ch),
+        FourierOperator(ch=>ch, modes, σ),
+        FourierOperator(ch=>ch, modes, σ),
+        FourierOperator(ch=>ch, modes, σ),
+        FourierOperator(ch=>ch, modes),
+        Dense(ch, 4ch, σ),
+        Dense(4ch, 1),
 
         flatten,
-        Dense(4*64, 32, σ),
-        Dense(32, 6, relu),
+        Dense(4096, 3),
     )
 end

@@ -1,5 +1,6 @@
 using SqState
 using LinearAlgebra
+using Flux
 using JLD2
 using Test
 
@@ -8,5 +9,4 @@ using Test
     include("gen_data.jl")
     include("preprocess.jl")
     include("model.jl")
-    include("training.jl")
 end

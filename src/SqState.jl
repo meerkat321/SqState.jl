@@ -1,13 +1,14 @@
 module SqState
     using QuantumStateBase
+    using LinearAlgebra
 
-    using Fetch
-    using DataDeps
+    using Fetch, DataDeps, JLD2
 
     using CUDA
     using Flux
     using Flux.Data: DataLoader
-    using JLD2
+    using Zygote, ChainRulesCore
+
 
     using NeuralOperators
 
@@ -16,7 +17,7 @@ module SqState
             "SqState",
             """Data and models for SqState.""",
             "https://drive.google.com/file/d/1UzaPBpTuhxvmyUWnoOupEr3cRZUMc-0-/view?usp=sharing",
-            "d867cf78dfb0497f372fff29f76426b1dec07ee02147a3b7d59c4f040ed4a04d",
+            "d41f86b618a01678c205536476c463f747e1c21efee125b5a0517fc3423a3ac5",
             fetch_method=gdownload,
             post_fetch_method=unpack
         ))
@@ -26,6 +27,4 @@ module SqState
     include("gen_data.jl")
     include("preprocess.jl")
     include("model.jl")
-    include("training.jl")
-    include("postprocess.jl")
 end
