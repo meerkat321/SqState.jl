@@ -27,3 +27,5 @@ end
 gen_data("sqth", gen_data_sqth)
 
 gen_data("sqth_th", gen_data_sqth_th)
+
+gen_data("sqth_vac", gen_data_sqth_vac)

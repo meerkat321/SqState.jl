@@ -30,6 +30,15 @@ function rand_arg_sqth(r_range, θ_range, n̄_range)
     return r, θ, n̄
 end
 
+function rand_arg_sqth_vac(r_range, θ_range, n̄_range)
+    r = rand2range(r_range)
+    θ = rand2range(θ_range)
+    n̄ = rand2range(n̄_range)
+    c = rand()
+
+    return r, θ, n̄, c
+end
+
 function construct_state_sqth_th(r, θ, n̄, n̄0, c1, c2, dim)
     state =
         c1 * SqueezedThermalState(ξ(r, θ), n̄, dim=dim) +
@@ -40,6 +49,14 @@ end
 
 function construct_state_sqth(r, θ, n̄, dim)
     return SqueezedThermalState(ξ(r, θ), n̄, dim=dim)
+end
+
+function construct_state_sqth_vac(r, θ, n̄, c,  dim)
+    state =
+        c * SqueezedThermalState(ξ(r, θ), n̄, dim=dim) +
+        (1 - c) * VacuumState(rep=StateMatrix, dim=dim)
+
+    return state
 end
 
 #########
