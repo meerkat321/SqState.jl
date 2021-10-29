@@ -62,6 +62,6 @@ function cnn_q2args_sqth()
         block((4, 3, 1, 4), (32, 16, 8, 32, 5), (4, 1, 4), (1, 1, 0)),
 
         flatten,
-        Dense(145, 6, σ)
+        Dense(145, 3, σ)
     )
 end
