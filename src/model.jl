@@ -15,6 +15,6 @@ function model_q2args_sqth()
         Dense(4ch, 1),
 
         flatten,
-        Dense(4096, 3),
+        Dense(4096, 3, relu),
     )
 end
