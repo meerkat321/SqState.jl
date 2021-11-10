@@ -6,7 +6,7 @@ device = SqState.get_device()
 model_name = "q2args_sqth_cnn"
 batch_size = 25
 epochs = 30
-η₀ = 1e-3
+η₀ = 1e-2
 
 m = SqState.cnn_q2args_sqth() |> device
 loss(𝐱, 𝐲) = Flux.mse(m(𝐱), 𝐲)
@@ -32,7 +32,7 @@ for loader4train in data_loaders
         data = [(reshape(𝐱[1, :, :], 4096, 1, :), 𝐲) for (𝐱, 𝐲) in loader4train] |> device
 
         # descent η
-        (t[] > 300) && (opt.eta = η₀ / 2^ceil((t[]-300)/300))
+        (t[] > 100) && (opt.eta = η₀ / 2^ceil((t[]-100)/100))
 
         # training
         Flux.train!(loss, params(m), data, opt)
@@ -49,5 +49,4 @@ for loader4train in data_loaders
         # update indicator
         t[] += 1
     end
-    break
 end

@@ -41,7 +41,7 @@ function block(kernel_size::NTuple{4}, ch::NTuple{5}, stride::NTuple{3}, pad::NT
 end
 
 function cnn_q2args_sqth()
-    σ = leakyrelu
+    σ = relu
 
     return Chain(
         BatchNorm(1, σ),
