@@ -3,8 +3,8 @@ using Flux
 
 dir = "sqth"
 device = SqState.get_device()
-model_name = "q2args_sqth_cnn"
-batch_size = 25
+model_name = "q2args_sqth_res"
+batch_size = 100
 epochs = 30
 η₀ = 1e-2
 
@@ -26,13 +26,13 @@ end
 
 t = Ref{Int64}(1)
 losses = Float32[]
-data4validation = [(reshape(𝐱[1, :, :], 4096, 1, :), 𝐲) for (𝐱, 𝐲) in loader4test] |> device
+data4validation = [(reshape(𝐱[2, :, :], 4096, 1, :), 𝐲) for (𝐱, 𝐲) in loader4test] |> device
 for loader4train in data_loaders
     @time begin
-        data = [(reshape(𝐱[1, :, :], 4096, 1, :), 𝐲) for (𝐱, 𝐲) in loader4train] |> device
+        data = [(reshape(𝐱[2, :, :], 4096, 1, :), 𝐲) for (𝐱, 𝐲) in loader4train] |> device
 
         # descent η
-        (t[] > 100) && (opt.eta = η₀ / 2^ceil((t[]-100)/100))
+        (t[] > 30) && (opt.eta = η₀ / 2^ceil((t[]-30)/30))
 
         # training
         Flux.train!(loss, params(m), data, opt)
