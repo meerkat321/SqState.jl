@@ -1,8 +1,8 @@
 export
-    model_q2args_sqth,
+    q2args_sqth_fno,
     q2args_sqth_res
 
-function model_q2args_sqth()
+function q2args_sqth_fno()
     modes = (12, )
     ch = 64
     σ = leakyrelu
