@@ -1,5 +1,5 @@
 @testset "model" begin
-    m = model_q2args_sqth()
+    m = q2args_sqth_fno()
 
     n = 6
     points, 𝛒s, args, σs = gen_data_sqth(n_data=n)

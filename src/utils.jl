@@ -84,18 +84,12 @@ function res_block(
     σ=identity
 )
     conv_layers = Chain(
-        Conv((conv_kernel_size[1], ), ch[1]=>ch[2], pad=conv_pad[1]),
-        BatchNorm(ch[2], σ),
-        Conv((conv_kernel_size[2], ), ch[2]=>ch[3], pad=conv_pad[2]),
-        BatchNorm(ch[3], σ),
-        Conv((conv_kernel_size[3], ), ch[3]=>ch[4], pad=conv_pad[3]),
-        BatchNorm(ch[4]),
+        Conv((conv_kernel_size[1], ), ch[1]=>ch[2], σ,  pad=conv_pad[1]),
+        Conv((conv_kernel_size[2], ), ch[2]=>ch[3], σ, pad=conv_pad[2]),
+        Conv((conv_kernel_size[3], ), ch[3]=>ch[4], σ, pad=conv_pad[3]),
     )
-    shortcut = Chain(
-        Conv((shortcut_kernel_size, ), ch[1]=>ch[end], pad=shortcut_pad),
-        BatchNorm(ch[end])
-    )
-    pool = (pool_size > 0) ? MaxPool((pool_size, )) : identity
+    shortcut = Conv((shortcut_kernel_size, ), ch[1]=>ch[end], σ, pad=shortcut_pad)
+    pool = (pool_size > 0) ? MeanPool((pool_size, )) : identity
 
     return Chain(
         Parallel(+, conv_layers, shortcut),

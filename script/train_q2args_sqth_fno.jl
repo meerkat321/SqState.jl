@@ -3,12 +3,12 @@ using Flux
 
 dir = "sqth"
 device = SqState.get_device()
-model_name = "q2args_sqth"
+model_name = "q2args_sqth_fno"
 batch_size = 25
 epochs = 30
 η₀ = 1e-3
 
-m = SqState.model_q2args_sqth() |> device
+m = SqState.q2args_sqth_fno() |> device
 loss(𝐱, 𝐲) = Flux.mse(m(𝐱), 𝐲)
 opt = Flux.Optimiser(WeightDecay(1e-4), Flux.ADAM(η₀))
 
