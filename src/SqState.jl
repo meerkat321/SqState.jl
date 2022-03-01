@@ -1,5 +1,6 @@
 module SqState
     using QuantumStateBase
+    using QuantumStateDistributions
     using LinearAlgebra
 
     using Fetch, DataDeps, JLD2
