@@ -30,25 +30,22 @@ export
 function gen_data_sqth(;
     n_data, n_points=4096,
     r_range=(0., 2.), θ_range=(0., 2π), n̄_range=(0., 0.5),
-    point_dim=1000, label_dim=100,
+    dim=100,
 )
     args = Matrix{Float64}(undef, 3, n_data)
     points = Array{Float64, 3}(undef, 2, n_points, n_data)
-    𝛒s = Array{ComplexF64, 3}(undef, label_dim, label_dim, n_data)
+    𝛒s = Array{ComplexF64, 3}(undef, dim, dim, n_data)
     σs = Matrix{Float64}(undef, n_points, n_data)
 
     for i in 1:n_data
         args[:, i] .= r, θ, n̄ = rand_arg_sqth(r_range, θ_range, n̄_range)
 
         # points
-        point_dim = (r > 1) ? point_dim : label_dim
-        state = SqueezedThermalState(r, θ, n̄, dim=point_dim)
+        state = SqueezedThermalState(r, θ, n̄, dim=dim)
         d = GaussianStateBHD(state)
         points[:, :, i] = rand(d, n_points)
         σs[:, i] = QuantumStateDistributions.std(d, points[1, :, i])
         𝛒s[:, :, i] = state
-        # 𝛒s
-        #𝛒s[:, :, i] = (r > 1) ? state.𝛒[1:label_dim, 1:label_dim] : state.𝛒
     end
 
     return points, 𝛒s, args, σs
